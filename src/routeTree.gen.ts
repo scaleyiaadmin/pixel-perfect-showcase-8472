@@ -12,9 +12,16 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as MinhaViagemRouteImport } from './routes/minha-viagem'
+import { Route as AdminConciliacaoRouteImport } from './routes/_admin/conciliacao'
+import { Route as AdminConfiguracoesRouteImport } from './routes/_admin/configuracoes'
+import { Route as AdminControleEmbarqueRouteImport } from './routes/_admin/controle-embarque'
 import { Route as AdminDashboardRouteImport } from './routes/_admin/dashboard'
+import { Route as AdminIntegracoesRouteImport } from './routes/_admin/integracoes'
+import { Route as AdminPassagensRouteImport } from './routes/_admin/passagens'
 import { Route as PainelIndexRouteImport } from './routes/painel/index'
 import { Route as PainelChegadasRouteImport } from './routes/painel/chegadas'
+import { Route as AdminEmpresasIndexRouteImport } from './routes/_admin/empresas.index'
+import { Route as AdminEmpresasCompanyIdRouteImport } from './routes/_admin/empresas.$companyId'
 import { Route as AdminOperacaoDestinosRouteImport } from './routes/_admin/operacao/destinos'
 import { Route as AdminOperacaoEmbarquesRouteImport } from './routes/_admin/operacao/embarques'
 import { Route as AdminOperacaoHorariosRouteImport } from './routes/_admin/operacao/horarios'
@@ -37,9 +44,34 @@ const MinhaViagemRoute = MinhaViagemRouteImport.update({
   path: '/minha-viagem',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminConciliacaoRoute = AdminConciliacaoRouteImport.update({
+  id: '/conciliacao',
+  path: '/conciliacao',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminControleEmbarqueRoute = AdminControleEmbarqueRouteImport.update({
+  id: '/controle-embarque',
+  path: '/controle-embarque',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminIntegracoesRoute = AdminIntegracoesRouteImport.update({
+  id: '/integracoes',
+  path: '/integracoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPassagensRoute = AdminPassagensRouteImport.update({
+  id: '/passagens',
+  path: '/passagens',
   getParentRoute: () => AdminRoute,
 } as any)
 const PainelIndexRoute = PainelIndexRouteImport.update({
@@ -51,6 +83,16 @@ const PainelChegadasRoute = PainelChegadasRouteImport.update({
   id: '/painel/chegadas',
   path: '/painel/chegadas',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminEmpresasIndexRoute = AdminEmpresasIndexRouteImport.update({
+  id: '/empresas/',
+  path: '/empresas/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEmpresasCompanyIdRoute = AdminEmpresasCompanyIdRouteImport.update({
+  id: '/empresas/$companyId',
+  path: '/empresas/$companyId',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminOperacaoDestinosRoute = AdminOperacaoDestinosRouteImport.update({
   id: '/operacao/destinos',
@@ -94,28 +136,42 @@ const AdminOperacaoViagensTripIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/minha-viagem': typeof MinhaViagemRoute
+  '/conciliacao': typeof AdminConciliacaoRoute
+  '/configuracoes': typeof AdminConfiguracoesRoute
+  '/controle-embarque': typeof AdminControleEmbarqueRoute
   '/dashboard': typeof AdminDashboardRoute
+  '/integracoes': typeof AdminIntegracoesRoute
+  '/passagens': typeof AdminPassagensRoute
   '/painel/chegadas': typeof PainelChegadasRoute
   '/painel/': typeof PainelIndexRoute
+  '/empresas/$companyId': typeof AdminEmpresasCompanyIdRoute
   '/operacao/destinos': typeof AdminOperacaoDestinosRoute
   '/operacao/embarques': typeof AdminOperacaoEmbarquesRoute
   '/operacao/horarios': typeof AdminOperacaoHorariosRoute
   '/operacao/linhas': typeof AdminOperacaoLinhasRoute
   '/operacao/plataformas': typeof AdminOperacaoPlataformasRoute
+  '/empresas/': typeof AdminEmpresasIndexRoute
   '/operacao/viagens/$tripId': typeof AdminOperacaoViagensTripIdRoute
   '/operacao/viagens/': typeof AdminOperacaoViagensIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/minha-viagem': typeof MinhaViagemRoute
+  '/conciliacao': typeof AdminConciliacaoRoute
+  '/configuracoes': typeof AdminConfiguracoesRoute
+  '/controle-embarque': typeof AdminControleEmbarqueRoute
   '/dashboard': typeof AdminDashboardRoute
+  '/integracoes': typeof AdminIntegracoesRoute
+  '/passagens': typeof AdminPassagensRoute
   '/painel/chegadas': typeof PainelChegadasRoute
   '/painel': typeof PainelIndexRoute
+  '/empresas/$companyId': typeof AdminEmpresasCompanyIdRoute
   '/operacao/destinos': typeof AdminOperacaoDestinosRoute
   '/operacao/embarques': typeof AdminOperacaoEmbarquesRoute
   '/operacao/horarios': typeof AdminOperacaoHorariosRoute
   '/operacao/linhas': typeof AdminOperacaoLinhasRoute
   '/operacao/plataformas': typeof AdminOperacaoPlataformasRoute
+  '/empresas': typeof AdminEmpresasIndexRoute
   '/operacao/viagens/$tripId': typeof AdminOperacaoViagensTripIdRoute
   '/operacao/viagens': typeof AdminOperacaoViagensIndexRoute
 }
@@ -124,14 +180,21 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_admin': typeof AdminRouteWithChildren
   '/minha-viagem': typeof MinhaViagemRoute
+  '/_admin/conciliacao': typeof AdminConciliacaoRoute
+  '/_admin/configuracoes': typeof AdminConfiguracoesRoute
+  '/_admin/controle-embarque': typeof AdminControleEmbarqueRoute
   '/_admin/dashboard': typeof AdminDashboardRoute
+  '/_admin/integracoes': typeof AdminIntegracoesRoute
+  '/_admin/passagens': typeof AdminPassagensRoute
   '/painel/chegadas': typeof PainelChegadasRoute
   '/painel/': typeof PainelIndexRoute
+  '/_admin/empresas/$companyId': typeof AdminEmpresasCompanyIdRoute
   '/_admin/operacao/destinos': typeof AdminOperacaoDestinosRoute
   '/_admin/operacao/embarques': typeof AdminOperacaoEmbarquesRoute
   '/_admin/operacao/horarios': typeof AdminOperacaoHorariosRoute
   '/_admin/operacao/linhas': typeof AdminOperacaoLinhasRoute
   '/_admin/operacao/plataformas': typeof AdminOperacaoPlataformasRoute
+  '/_admin/empresas/': typeof AdminEmpresasIndexRoute
   '/_admin/operacao/viagens/$tripId': typeof AdminOperacaoViagensTripIdRoute
   '/_admin/operacao/viagens/': typeof AdminOperacaoViagensIndexRoute
 }
@@ -140,28 +203,42 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/minha-viagem'
+    | '/conciliacao'
+    | '/configuracoes'
+    | '/controle-embarque'
     | '/dashboard'
+    | '/integracoes'
+    | '/passagens'
     | '/painel/chegadas'
     | '/painel/'
+    | '/empresas/$companyId'
     | '/operacao/destinos'
     | '/operacao/embarques'
     | '/operacao/horarios'
     | '/operacao/linhas'
     | '/operacao/plataformas'
+    | '/empresas/'
     | '/operacao/viagens/$tripId'
     | '/operacao/viagens/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/minha-viagem'
+    | '/conciliacao'
+    | '/configuracoes'
+    | '/controle-embarque'
     | '/dashboard'
+    | '/integracoes'
+    | '/passagens'
     | '/painel/chegadas'
     | '/painel'
+    | '/empresas/$companyId'
     | '/operacao/destinos'
     | '/operacao/embarques'
     | '/operacao/horarios'
     | '/operacao/linhas'
     | '/operacao/plataformas'
+    | '/empresas'
     | '/operacao/viagens/$tripId'
     | '/operacao/viagens'
   id:
@@ -169,14 +246,21 @@ export interface FileRouteTypes {
     | '/'
     | '/_admin'
     | '/minha-viagem'
+    | '/_admin/conciliacao'
+    | '/_admin/configuracoes'
+    | '/_admin/controle-embarque'
     | '/_admin/dashboard'
+    | '/_admin/integracoes'
+    | '/_admin/passagens'
     | '/painel/chegadas'
     | '/painel/'
+    | '/_admin/empresas/$companyId'
     | '/_admin/operacao/destinos'
     | '/_admin/operacao/embarques'
     | '/_admin/operacao/horarios'
     | '/_admin/operacao/linhas'
     | '/_admin/operacao/plataformas'
+    | '/_admin/empresas/'
     | '/_admin/operacao/viagens/$tripId'
     | '/_admin/operacao/viagens/'
   fileRoutesById: FileRoutesById
@@ -212,11 +296,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MinhaViagemRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_admin/conciliacao': {
+      id: '/_admin/conciliacao'
+      path: '/conciliacao'
+      fullPath: '/conciliacao'
+      preLoaderRoute: typeof AdminConciliacaoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/configuracoes': {
+      id: '/_admin/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof AdminConfiguracoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/controle-embarque': {
+      id: '/_admin/controle-embarque'
+      path: '/controle-embarque'
+      fullPath: '/controle-embarque'
+      preLoaderRoute: typeof AdminControleEmbarqueRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/dashboard': {
       id: '/_admin/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/integracoes': {
+      id: '/_admin/integracoes'
+      path: '/integracoes'
+      fullPath: '/integracoes'
+      preLoaderRoute: typeof AdminIntegracoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/passagens': {
+      id: '/_admin/passagens'
+      path: '/passagens'
+      fullPath: '/passagens'
+      preLoaderRoute: typeof AdminPassagensRouteImport
       parentRoute: typeof AdminRoute
     }
     '/painel/': {
@@ -232,6 +351,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/painel/chegadas'
       preLoaderRoute: typeof PainelChegadasRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_admin/empresas/': {
+      id: '/_admin/empresas/'
+      path: '/empresas'
+      fullPath: '/empresas/'
+      preLoaderRoute: typeof AdminEmpresasIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/empresas/$companyId': {
+      id: '/_admin/empresas/$companyId'
+      path: '/empresas/$companyId'
+      fullPath: '/empresas/$companyId'
+      preLoaderRoute: typeof AdminEmpresasCompanyIdRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/_admin/operacao/destinos': {
       id: '/_admin/operacao/destinos'
@@ -286,23 +419,37 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminConciliacaoRoute: typeof AdminConciliacaoRoute
+  AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
+  AdminControleEmbarqueRoute: typeof AdminControleEmbarqueRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminIntegracoesRoute: typeof AdminIntegracoesRoute
+  AdminPassagensRoute: typeof AdminPassagensRoute
+  AdminEmpresasCompanyIdRoute: typeof AdminEmpresasCompanyIdRoute
   AdminOperacaoDestinosRoute: typeof AdminOperacaoDestinosRoute
   AdminOperacaoEmbarquesRoute: typeof AdminOperacaoEmbarquesRoute
   AdminOperacaoHorariosRoute: typeof AdminOperacaoHorariosRoute
   AdminOperacaoLinhasRoute: typeof AdminOperacaoLinhasRoute
   AdminOperacaoPlataformasRoute: typeof AdminOperacaoPlataformasRoute
+  AdminEmpresasIndexRoute: typeof AdminEmpresasIndexRoute
   AdminOperacaoViagensTripIdRoute: typeof AdminOperacaoViagensTripIdRoute
   AdminOperacaoViagensIndexRoute: typeof AdminOperacaoViagensIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminConciliacaoRoute: AdminConciliacaoRoute,
+  AdminConfiguracoesRoute: AdminConfiguracoesRoute,
+  AdminControleEmbarqueRoute: AdminControleEmbarqueRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminIntegracoesRoute: AdminIntegracoesRoute,
+  AdminPassagensRoute: AdminPassagensRoute,
+  AdminEmpresasCompanyIdRoute: AdminEmpresasCompanyIdRoute,
   AdminOperacaoDestinosRoute: AdminOperacaoDestinosRoute,
   AdminOperacaoEmbarquesRoute: AdminOperacaoEmbarquesRoute,
   AdminOperacaoHorariosRoute: AdminOperacaoHorariosRoute,
   AdminOperacaoLinhasRoute: AdminOperacaoLinhasRoute,
   AdminOperacaoPlataformasRoute: AdminOperacaoPlataformasRoute,
+  AdminEmpresasIndexRoute: AdminEmpresasIndexRoute,
   AdminOperacaoViagensTripIdRoute: AdminOperacaoViagensTripIdRoute,
   AdminOperacaoViagensIndexRoute: AdminOperacaoViagensIndexRoute,
 }
