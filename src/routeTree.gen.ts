@@ -10,33 +10,87 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/_admin'
+import { Route as MinhaViagemRouteImport } from './routes/minha-viagem'
+import { Route as AdminDashboardRouteImport } from './routes/_admin/dashboard'
+import { Route as PainelIndexRouteImport } from './routes/painel/index'
+import { Route as PainelChegadasRouteImport } from './routes/painel/chegadas'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/_admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MinhaViagemRoute = MinhaViagemRouteImport.update({
+  id: '/minha-viagem',
+  path: '/minha-viagem',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AdminRoute,
+} as any)
+const PainelIndexRoute = PainelIndexRouteImport.update({
+  id: '/painel/',
+  path: '/painel/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PainelChegadasRoute = PainelChegadasRouteImport.update({
+  id: '/painel/chegadas',
+  path: '/painel/chegadas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/minha-viagem': typeof MinhaViagemRoute
+  '/dashboard': typeof AdminDashboardRoute
+  '/painel/chegadas': typeof PainelChegadasRoute
+  '/painel/': typeof PainelIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/minha-viagem': typeof MinhaViagemRoute
+  '/dashboard': typeof AdminDashboardRoute
+  '/painel/chegadas': typeof PainelChegadasRoute
+  '/painel': typeof PainelIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_admin': typeof AdminRouteWithChildren
+  '/minha-viagem': typeof MinhaViagemRoute
+  '/_admin/dashboard': typeof AdminDashboardRoute
+  '/painel/chegadas': typeof PainelChegadasRoute
+  '/painel/': typeof PainelIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    '/' | '/minha-viagem' | '/dashboard' | '/painel/chegadas' | '/painel/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/minha-viagem' | '/dashboard' | '/painel/chegadas' | '/painel'
+  id:
+    | '__root__'
+    | '/'
+    | '/_admin'
+    | '/minha-viagem'
+    | '/_admin/dashboard'
+    | '/painel/chegadas'
+    | '/painel/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  MinhaViagemRoute: typeof MinhaViagemRoute
+  PainelChegadasRoute: typeof PainelChegadasRoute
+  PainelIndexRoute: typeof PainelIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +102,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_admin': {
+      id: '/_admin'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/minha-viagem': {
+      id: '/minha-viagem'
+      path: '/minha-viagem'
+      fullPath: '/minha-viagem'
+      preLoaderRoute: typeof MinhaViagemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_admin/dashboard': {
+      id: '/_admin/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/painel/': {
+      id: '/painel/'
+      path: '/painel'
+      fullPath: '/painel/'
+      preLoaderRoute: typeof PainelIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/painel/chegadas': {
+      id: '/painel/chegadas'
+      path: '/painel/chegadas'
+      fullPath: '/painel/chegadas'
+      preLoaderRoute: typeof PainelChegadasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminDashboardRoute: typeof AdminDashboardRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminDashboardRoute: AdminDashboardRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
+  MinhaViagemRoute: MinhaViagemRoute,
+  PainelChegadasRoute: PainelChegadasRoute,
+  PainelIndexRoute: PainelIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
