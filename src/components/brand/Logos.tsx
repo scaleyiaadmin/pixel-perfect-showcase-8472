@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import prefeituraLogo from "@/assets/prefeitura-logo.png.asset.json";
 
 /**
  * Marcas institucionais.
@@ -9,37 +10,12 @@ import { cn } from "@/lib/utils";
 
 export function PrefeituraLogo({ className, inverted }: { className?: string; inverted?: boolean }) {
   return (
-    <div className={cn("flex items-center gap-2.5", className)}>
-      <svg viewBox="0 0 48 48" className="h-9 w-9 shrink-0" aria-hidden="true">
-        <path
-          d="M24 3 44 13v4H4v-4L24 3Z"
-          fill="currentColor"
-          className={inverted ? "text-sidebar-primary" : "text-primary"}
-        />
-        <rect x="9" y="20" width="4.5" height="17" rx="1" fill="currentColor" className={inverted ? "text-sidebar-foreground" : "text-primary"} />
-        <rect x="17" y="20" width="4.5" height="17" rx="1" fill="currentColor" className={inverted ? "text-sidebar-foreground" : "text-primary"} />
-        <rect x="26" y="20" width="4.5" height="17" rx="1" fill="currentColor" className={inverted ? "text-sidebar-foreground" : "text-primary"} />
-        <rect x="34.5" y="20" width="4.5" height="17" rx="1" fill="currentColor" className={inverted ? "text-sidebar-foreground" : "text-primary"} />
-        <rect x="5" y="39" width="38" height="5" rx="1.5" fill="currentColor" className={inverted ? "text-sidebar-primary" : "text-primary"} />
-      </svg>
-      <div className="leading-tight">
-        <p
-          className={cn(
-            "font-display text-[11px] font-bold uppercase tracking-[0.16em]",
-            inverted ? "text-sidebar-foreground" : "text-foreground",
-          )}
-        >
-          Prefeitura de
-        </p>
-        <p
-          className={cn(
-            "font-display text-sm font-bold uppercase tracking-[0.12em]",
-            inverted ? "text-sidebar-primary" : "text-primary",
-          )}
-        >
-          Manhuaçu
-        </p>
-      </div>
+    <div className={cn("flex items-center", inverted && "rounded-md bg-card px-2 py-1", className)}>
+      <img
+        src={prefeituraLogo.url}
+        alt="Prefeitura de Manhuaçu"
+        className="h-10 w-auto object-contain"
+      />
     </div>
   );
 }
