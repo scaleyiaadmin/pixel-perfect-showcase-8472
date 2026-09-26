@@ -18,10 +18,15 @@ import { Route as AdminControleEmbarqueRouteImport } from './routes/_admin/contr
 import { Route as AdminDashboardRouteImport } from './routes/_admin/dashboard'
 import { Route as AdminIntegracoesRouteImport } from './routes/_admin/integracoes'
 import { Route as AdminPassagensRouteImport } from './routes/_admin/passagens'
+import { Route as AdminRelatoriosRouteImport } from './routes/_admin/relatorios'
 import { Route as PainelIndexRouteImport } from './routes/painel/index'
 import { Route as PainelChegadasRouteImport } from './routes/painel/chegadas'
 import { Route as AdminEmpresasIndexRouteImport } from './routes/_admin/empresas.index'
 import { Route as AdminEmpresasCompanyIdRouteImport } from './routes/_admin/empresas.$companyId'
+import { Route as AdminFinanceiroInadimplenciaRouteImport } from './routes/_admin/financeiro/inadimplencia'
+import { Route as AdminFinanceiroPagamentosRouteImport } from './routes/_admin/financeiro/pagamentos'
+import { Route as AdminFinanceiroPendenciasRouteImport } from './routes/_admin/financeiro/pendencias'
+import { Route as AdminFinanceiroTaxasRouteImport } from './routes/_admin/financeiro/taxas'
 import { Route as AdminOperacaoDestinosRouteImport } from './routes/_admin/operacao/destinos'
 import { Route as AdminOperacaoEmbarquesRouteImport } from './routes/_admin/operacao/embarques'
 import { Route as AdminOperacaoHorariosRouteImport } from './routes/_admin/operacao/horarios'
@@ -74,6 +79,11 @@ const AdminPassagensRoute = AdminPassagensRouteImport.update({
   path: '/passagens',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRelatoriosRoute = AdminRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => AdminRoute,
+} as any)
 const PainelIndexRoute = PainelIndexRouteImport.update({
   id: '/painel/',
   path: '/painel/',
@@ -92,6 +102,29 @@ const AdminEmpresasIndexRoute = AdminEmpresasIndexRouteImport.update({
 const AdminEmpresasCompanyIdRoute = AdminEmpresasCompanyIdRouteImport.update({
   id: '/empresas/$companyId',
   path: '/empresas/$companyId',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFinanceiroInadimplenciaRoute =
+  AdminFinanceiroInadimplenciaRouteImport.update({
+    id: '/financeiro/inadimplencia',
+    path: '/financeiro/inadimplencia',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminFinanceiroPagamentosRoute =
+  AdminFinanceiroPagamentosRouteImport.update({
+    id: '/financeiro/pagamentos',
+    path: '/financeiro/pagamentos',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminFinanceiroPendenciasRoute =
+  AdminFinanceiroPendenciasRouteImport.update({
+    id: '/financeiro/pendencias',
+    path: '/financeiro/pendencias',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminFinanceiroTaxasRoute = AdminFinanceiroTaxasRouteImport.update({
+  id: '/financeiro/taxas',
+  path: '/financeiro/taxas',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminOperacaoDestinosRoute = AdminOperacaoDestinosRouteImport.update({
@@ -142,9 +175,14 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AdminDashboardRoute
   '/integracoes': typeof AdminIntegracoesRoute
   '/passagens': typeof AdminPassagensRoute
+  '/relatorios': typeof AdminRelatoriosRoute
   '/painel/chegadas': typeof PainelChegadasRoute
   '/painel/': typeof PainelIndexRoute
   '/empresas/$companyId': typeof AdminEmpresasCompanyIdRoute
+  '/financeiro/inadimplencia': typeof AdminFinanceiroInadimplenciaRoute
+  '/financeiro/pagamentos': typeof AdminFinanceiroPagamentosRoute
+  '/financeiro/pendencias': typeof AdminFinanceiroPendenciasRoute
+  '/financeiro/taxas': typeof AdminFinanceiroTaxasRoute
   '/operacao/destinos': typeof AdminOperacaoDestinosRoute
   '/operacao/embarques': typeof AdminOperacaoEmbarquesRoute
   '/operacao/horarios': typeof AdminOperacaoHorariosRoute
@@ -163,9 +201,14 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AdminDashboardRoute
   '/integracoes': typeof AdminIntegracoesRoute
   '/passagens': typeof AdminPassagensRoute
+  '/relatorios': typeof AdminRelatoriosRoute
   '/painel/chegadas': typeof PainelChegadasRoute
   '/painel': typeof PainelIndexRoute
   '/empresas/$companyId': typeof AdminEmpresasCompanyIdRoute
+  '/financeiro/inadimplencia': typeof AdminFinanceiroInadimplenciaRoute
+  '/financeiro/pagamentos': typeof AdminFinanceiroPagamentosRoute
+  '/financeiro/pendencias': typeof AdminFinanceiroPendenciasRoute
+  '/financeiro/taxas': typeof AdminFinanceiroTaxasRoute
   '/operacao/destinos': typeof AdminOperacaoDestinosRoute
   '/operacao/embarques': typeof AdminOperacaoEmbarquesRoute
   '/operacao/horarios': typeof AdminOperacaoHorariosRoute
@@ -186,9 +229,14 @@ export interface FileRoutesById {
   '/_admin/dashboard': typeof AdminDashboardRoute
   '/_admin/integracoes': typeof AdminIntegracoesRoute
   '/_admin/passagens': typeof AdminPassagensRoute
+  '/_admin/relatorios': typeof AdminRelatoriosRoute
   '/painel/chegadas': typeof PainelChegadasRoute
   '/painel/': typeof PainelIndexRoute
   '/_admin/empresas/$companyId': typeof AdminEmpresasCompanyIdRoute
+  '/_admin/financeiro/inadimplencia': typeof AdminFinanceiroInadimplenciaRoute
+  '/_admin/financeiro/pagamentos': typeof AdminFinanceiroPagamentosRoute
+  '/_admin/financeiro/pendencias': typeof AdminFinanceiroPendenciasRoute
+  '/_admin/financeiro/taxas': typeof AdminFinanceiroTaxasRoute
   '/_admin/operacao/destinos': typeof AdminOperacaoDestinosRoute
   '/_admin/operacao/embarques': typeof AdminOperacaoEmbarquesRoute
   '/_admin/operacao/horarios': typeof AdminOperacaoHorariosRoute
@@ -209,9 +257,14 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/integracoes'
     | '/passagens'
+    | '/relatorios'
     | '/painel/chegadas'
     | '/painel/'
     | '/empresas/$companyId'
+    | '/financeiro/inadimplencia'
+    | '/financeiro/pagamentos'
+    | '/financeiro/pendencias'
+    | '/financeiro/taxas'
     | '/operacao/destinos'
     | '/operacao/embarques'
     | '/operacao/horarios'
@@ -230,9 +283,14 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/integracoes'
     | '/passagens'
+    | '/relatorios'
     | '/painel/chegadas'
     | '/painel'
     | '/empresas/$companyId'
+    | '/financeiro/inadimplencia'
+    | '/financeiro/pagamentos'
+    | '/financeiro/pendencias'
+    | '/financeiro/taxas'
     | '/operacao/destinos'
     | '/operacao/embarques'
     | '/operacao/horarios'
@@ -252,9 +310,14 @@ export interface FileRouteTypes {
     | '/_admin/dashboard'
     | '/_admin/integracoes'
     | '/_admin/passagens'
+    | '/_admin/relatorios'
     | '/painel/chegadas'
     | '/painel/'
     | '/_admin/empresas/$companyId'
+    | '/_admin/financeiro/inadimplencia'
+    | '/_admin/financeiro/pagamentos'
+    | '/_admin/financeiro/pendencias'
+    | '/_admin/financeiro/taxas'
     | '/_admin/operacao/destinos'
     | '/_admin/operacao/embarques'
     | '/_admin/operacao/horarios'
@@ -338,6 +401,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPassagensRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/relatorios': {
+      id: '/_admin/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof AdminRelatoriosRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/painel/': {
       id: '/painel/'
       path: '/painel'
@@ -364,6 +434,34 @@ declare module '@tanstack/react-router' {
       path: '/empresas/$companyId'
       fullPath: '/empresas/$companyId'
       preLoaderRoute: typeof AdminEmpresasCompanyIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/financeiro/inadimplencia': {
+      id: '/_admin/financeiro/inadimplencia'
+      path: '/financeiro/inadimplencia'
+      fullPath: '/financeiro/inadimplencia'
+      preLoaderRoute: typeof AdminFinanceiroInadimplenciaRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/financeiro/pagamentos': {
+      id: '/_admin/financeiro/pagamentos'
+      path: '/financeiro/pagamentos'
+      fullPath: '/financeiro/pagamentos'
+      preLoaderRoute: typeof AdminFinanceiroPagamentosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/financeiro/pendencias': {
+      id: '/_admin/financeiro/pendencias'
+      path: '/financeiro/pendencias'
+      fullPath: '/financeiro/pendencias'
+      preLoaderRoute: typeof AdminFinanceiroPendenciasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/financeiro/taxas': {
+      id: '/_admin/financeiro/taxas'
+      path: '/financeiro/taxas'
+      fullPath: '/financeiro/taxas'
+      preLoaderRoute: typeof AdminFinanceiroTaxasRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/operacao/destinos': {
@@ -425,7 +523,12 @@ interface AdminRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminIntegracoesRoute: typeof AdminIntegracoesRoute
   AdminPassagensRoute: typeof AdminPassagensRoute
+  AdminRelatoriosRoute: typeof AdminRelatoriosRoute
   AdminEmpresasCompanyIdRoute: typeof AdminEmpresasCompanyIdRoute
+  AdminFinanceiroInadimplenciaRoute: typeof AdminFinanceiroInadimplenciaRoute
+  AdminFinanceiroPagamentosRoute: typeof AdminFinanceiroPagamentosRoute
+  AdminFinanceiroPendenciasRoute: typeof AdminFinanceiroPendenciasRoute
+  AdminFinanceiroTaxasRoute: typeof AdminFinanceiroTaxasRoute
   AdminOperacaoDestinosRoute: typeof AdminOperacaoDestinosRoute
   AdminOperacaoEmbarquesRoute: typeof AdminOperacaoEmbarquesRoute
   AdminOperacaoHorariosRoute: typeof AdminOperacaoHorariosRoute
@@ -443,7 +546,12 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
   AdminIntegracoesRoute: AdminIntegracoesRoute,
   AdminPassagensRoute: AdminPassagensRoute,
+  AdminRelatoriosRoute: AdminRelatoriosRoute,
   AdminEmpresasCompanyIdRoute: AdminEmpresasCompanyIdRoute,
+  AdminFinanceiroInadimplenciaRoute: AdminFinanceiroInadimplenciaRoute,
+  AdminFinanceiroPagamentosRoute: AdminFinanceiroPagamentosRoute,
+  AdminFinanceiroPendenciasRoute: AdminFinanceiroPendenciasRoute,
+  AdminFinanceiroTaxasRoute: AdminFinanceiroTaxasRoute,
   AdminOperacaoDestinosRoute: AdminOperacaoDestinosRoute,
   AdminOperacaoEmbarquesRoute: AdminOperacaoEmbarquesRoute,
   AdminOperacaoHorariosRoute: AdminOperacaoHorariosRoute,
