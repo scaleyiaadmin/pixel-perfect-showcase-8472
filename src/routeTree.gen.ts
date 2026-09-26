@@ -15,6 +15,13 @@ import { Route as MinhaViagemRouteImport } from './routes/minha-viagem'
 import { Route as AdminDashboardRouteImport } from './routes/_admin/dashboard'
 import { Route as PainelIndexRouteImport } from './routes/painel/index'
 import { Route as PainelChegadasRouteImport } from './routes/painel/chegadas'
+import { Route as AdminOperacaoDestinosRouteImport } from './routes/_admin/operacao/destinos'
+import { Route as AdminOperacaoEmbarquesRouteImport } from './routes/_admin/operacao/embarques'
+import { Route as AdminOperacaoHorariosRouteImport } from './routes/_admin/operacao/horarios'
+import { Route as AdminOperacaoLinhasRouteImport } from './routes/_admin/operacao/linhas'
+import { Route as AdminOperacaoPlataformasRouteImport } from './routes/_admin/operacao/plataformas'
+import { Route as AdminOperacaoViagensIndexRouteImport } from './routes/_admin/operacao/viagens.index'
+import { Route as AdminOperacaoViagensTripIdRouteImport } from './routes/_admin/operacao/viagens.$tripId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -45,6 +52,44 @@ const PainelChegadasRoute = PainelChegadasRouteImport.update({
   path: '/painel/chegadas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminOperacaoDestinosRoute = AdminOperacaoDestinosRouteImport.update({
+  id: '/operacao/destinos',
+  path: '/operacao/destinos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOperacaoEmbarquesRoute = AdminOperacaoEmbarquesRouteImport.update({
+  id: '/operacao/embarques',
+  path: '/operacao/embarques',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOperacaoHorariosRoute = AdminOperacaoHorariosRouteImport.update({
+  id: '/operacao/horarios',
+  path: '/operacao/horarios',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOperacaoLinhasRoute = AdminOperacaoLinhasRouteImport.update({
+  id: '/operacao/linhas',
+  path: '/operacao/linhas',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOperacaoPlataformasRoute =
+  AdminOperacaoPlataformasRouteImport.update({
+    id: '/operacao/plataformas',
+    path: '/operacao/plataformas',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminOperacaoViagensIndexRoute =
+  AdminOperacaoViagensIndexRouteImport.update({
+    id: '/operacao/viagens/',
+    path: '/operacao/viagens/',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminOperacaoViagensTripIdRoute =
+  AdminOperacaoViagensTripIdRouteImport.update({
+    id: '/operacao/viagens/$tripId',
+    path: '/operacao/viagens/$tripId',
+    getParentRoute: () => AdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -52,6 +97,13 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AdminDashboardRoute
   '/painel/chegadas': typeof PainelChegadasRoute
   '/painel/': typeof PainelIndexRoute
+  '/operacao/destinos': typeof AdminOperacaoDestinosRoute
+  '/operacao/embarques': typeof AdminOperacaoEmbarquesRoute
+  '/operacao/horarios': typeof AdminOperacaoHorariosRoute
+  '/operacao/linhas': typeof AdminOperacaoLinhasRoute
+  '/operacao/plataformas': typeof AdminOperacaoPlataformasRoute
+  '/operacao/viagens/$tripId': typeof AdminOperacaoViagensTripIdRoute
+  '/operacao/viagens/': typeof AdminOperacaoViagensIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -59,6 +111,13 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AdminDashboardRoute
   '/painel/chegadas': typeof PainelChegadasRoute
   '/painel': typeof PainelIndexRoute
+  '/operacao/destinos': typeof AdminOperacaoDestinosRoute
+  '/operacao/embarques': typeof AdminOperacaoEmbarquesRoute
+  '/operacao/horarios': typeof AdminOperacaoHorariosRoute
+  '/operacao/linhas': typeof AdminOperacaoLinhasRoute
+  '/operacao/plataformas': typeof AdminOperacaoPlataformasRoute
+  '/operacao/viagens/$tripId': typeof AdminOperacaoViagensTripIdRoute
+  '/operacao/viagens': typeof AdminOperacaoViagensIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,13 +127,43 @@ export interface FileRoutesById {
   '/_admin/dashboard': typeof AdminDashboardRoute
   '/painel/chegadas': typeof PainelChegadasRoute
   '/painel/': typeof PainelIndexRoute
+  '/_admin/operacao/destinos': typeof AdminOperacaoDestinosRoute
+  '/_admin/operacao/embarques': typeof AdminOperacaoEmbarquesRoute
+  '/_admin/operacao/horarios': typeof AdminOperacaoHorariosRoute
+  '/_admin/operacao/linhas': typeof AdminOperacaoLinhasRoute
+  '/_admin/operacao/plataformas': typeof AdminOperacaoPlataformasRoute
+  '/_admin/operacao/viagens/$tripId': typeof AdminOperacaoViagensTripIdRoute
+  '/_admin/operacao/viagens/': typeof AdminOperacaoViagensIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/minha-viagem' | '/dashboard' | '/painel/chegadas' | '/painel/'
+    | '/'
+    | '/minha-viagem'
+    | '/dashboard'
+    | '/painel/chegadas'
+    | '/painel/'
+    | '/operacao/destinos'
+    | '/operacao/embarques'
+    | '/operacao/horarios'
+    | '/operacao/linhas'
+    | '/operacao/plataformas'
+    | '/operacao/viagens/$tripId'
+    | '/operacao/viagens/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/minha-viagem' | '/dashboard' | '/painel/chegadas' | '/painel'
+  to:
+    | '/'
+    | '/minha-viagem'
+    | '/dashboard'
+    | '/painel/chegadas'
+    | '/painel'
+    | '/operacao/destinos'
+    | '/operacao/embarques'
+    | '/operacao/horarios'
+    | '/operacao/linhas'
+    | '/operacao/plataformas'
+    | '/operacao/viagens/$tripId'
+    | '/operacao/viagens'
   id:
     | '__root__'
     | '/'
@@ -83,6 +172,13 @@ export interface FileRouteTypes {
     | '/_admin/dashboard'
     | '/painel/chegadas'
     | '/painel/'
+    | '/_admin/operacao/destinos'
+    | '/_admin/operacao/embarques'
+    | '/_admin/operacao/horarios'
+    | '/_admin/operacao/linhas'
+    | '/_admin/operacao/plataformas'
+    | '/_admin/operacao/viagens/$tripId'
+    | '/_admin/operacao/viagens/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -137,15 +233,78 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PainelChegadasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_admin/operacao/destinos': {
+      id: '/_admin/operacao/destinos'
+      path: '/operacao/destinos'
+      fullPath: '/operacao/destinos'
+      preLoaderRoute: typeof AdminOperacaoDestinosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/operacao/embarques': {
+      id: '/_admin/operacao/embarques'
+      path: '/operacao/embarques'
+      fullPath: '/operacao/embarques'
+      preLoaderRoute: typeof AdminOperacaoEmbarquesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/operacao/horarios': {
+      id: '/_admin/operacao/horarios'
+      path: '/operacao/horarios'
+      fullPath: '/operacao/horarios'
+      preLoaderRoute: typeof AdminOperacaoHorariosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/operacao/linhas': {
+      id: '/_admin/operacao/linhas'
+      path: '/operacao/linhas'
+      fullPath: '/operacao/linhas'
+      preLoaderRoute: typeof AdminOperacaoLinhasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/operacao/plataformas': {
+      id: '/_admin/operacao/plataformas'
+      path: '/operacao/plataformas'
+      fullPath: '/operacao/plataformas'
+      preLoaderRoute: typeof AdminOperacaoPlataformasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/operacao/viagens/': {
+      id: '/_admin/operacao/viagens/'
+      path: '/operacao/viagens'
+      fullPath: '/operacao/viagens/'
+      preLoaderRoute: typeof AdminOperacaoViagensIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/operacao/viagens/$tripId': {
+      id: '/_admin/operacao/viagens/$tripId'
+      path: '/operacao/viagens/$tripId'
+      fullPath: '/operacao/viagens/$tripId'
+      preLoaderRoute: typeof AdminOperacaoViagensTripIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminOperacaoDestinosRoute: typeof AdminOperacaoDestinosRoute
+  AdminOperacaoEmbarquesRoute: typeof AdminOperacaoEmbarquesRoute
+  AdminOperacaoHorariosRoute: typeof AdminOperacaoHorariosRoute
+  AdminOperacaoLinhasRoute: typeof AdminOperacaoLinhasRoute
+  AdminOperacaoPlataformasRoute: typeof AdminOperacaoPlataformasRoute
+  AdminOperacaoViagensTripIdRoute: typeof AdminOperacaoViagensTripIdRoute
+  AdminOperacaoViagensIndexRoute: typeof AdminOperacaoViagensIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminOperacaoDestinosRoute: AdminOperacaoDestinosRoute,
+  AdminOperacaoEmbarquesRoute: AdminOperacaoEmbarquesRoute,
+  AdminOperacaoHorariosRoute: AdminOperacaoHorariosRoute,
+  AdminOperacaoLinhasRoute: AdminOperacaoLinhasRoute,
+  AdminOperacaoPlataformasRoute: AdminOperacaoPlataformasRoute,
+  AdminOperacaoViagensTripIdRoute: AdminOperacaoViagensTripIdRoute,
+  AdminOperacaoViagensIndexRoute: AdminOperacaoViagensIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
