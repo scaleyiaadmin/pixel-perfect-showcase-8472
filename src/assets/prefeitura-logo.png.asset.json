@@ -1,11 +1,11 @@
 {
-  "version": 1,
   "asset_id": "434b172b-019f-48b9-a1c7-40a3b4b96d72",
-  "project_id": "bfa9bc57-873e-4812-9dc1-3c7165f9a506",
-  "url": "/__l5e/assets-v1/434b172b-019f-48b9-a1c7-40a3b4b96d72/prefeitura-logo.png",
-  "r2_key": "a/v1/bfa9bc57-873e-4812-9dc1-3c7165f9a506/434b172b-019f-48b9-a1c7-40a3b4b96d72/prefeitura-logo.png",
-  "original_filename": "prefeitura-logo.png",
-  "size": 46668,
   "content_type": "image/png",
-  "created_at": "2026-09-26T21:21:45Z"
+  "created_at": "2026-09-26T21:21:45Z",
+  "original_filename": "prefeitura-logo.png",
+  "project_id": "5f61138b-250d-4788-a24b-b11e10f22bdf",
+  "r2_key": "a/v1/5f61138b-250d-4788-a24b-b11e10f22bdf/434b172b-019f-48b9-a1c7-40a3b4b96d72/prefeitura-logo.png",
+  "size": 46668,
+  "url": "/__l5e/assets-v1/434b172b-019f-48b9-a1c7-40a3b4b96d72/prefeitura-logo.png",
+  "version": 1
 }
