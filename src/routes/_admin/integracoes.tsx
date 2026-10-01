@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Building2, Bus, Landmark, ScanLine, type LucideIcon } from "lucide-react";
+import { Building2, Bus, Landmark, Map as MapIcon, ScanLine, type LucideIcon } from "lucide-react";
 import { PageHeader, SectionCard, StatusBadge } from "@/components/common";
 import { integrations } from "@/data/mock";
 
@@ -9,10 +9,14 @@ export const Route = createFileRoute("/_admin/integracoes")({
       { title: "Integrações — SisRodov Manhuaçu" },
       {
         name: "description",
-        content: "Interfaces preparadas para integração com ANTT, empresas, sistema municipal e catracas.",
+        content:
+          "Interfaces preparadas para integração com ANTT, empresas, sistema municipal e catracas.",
       },
       { property: "og:title", content: "Integrações — SisRodov Manhuaçu" },
-      { property: "og:description", content: "Interfaces preparadas para futuras integrações do terminal." },
+      {
+        property: "og:description",
+        content: "Interfaces preparadas para futuras integrações do terminal.",
+      },
     ],
   }),
   component: IntegrationsPage,
@@ -20,6 +24,7 @@ export const Route = createFileRoute("/_admin/integracoes")({
 
 const icons: Record<string, LucideIcon> = {
   ANTT: Bus,
+  "DER-MG": MapIcon,
   Empresas: Building2,
   "Sistema Municipal": Landmark,
   Catracas: ScanLine,
@@ -30,7 +35,7 @@ function IntegrationsPage() {
     <>
       <PageHeader
         title="Integrações"
-        subtitle="Arquitetura preparada para receber dados externos em versões futuras"
+        subtitle="Fontes de dados conectadas e integrações previstas"
       />
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -45,7 +50,7 @@ function IntegrationsPage() {
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-display text-lg font-bold">{i.name}</h3>
-                    <StatusBadge tone="neutral" dot={false}>
+                    <StatusBadge tone={i.badge === "Conectado" ? "success" : "neutral"} dot={false}>
                       {i.badge}
                     </StatusBadge>
                   </div>
@@ -59,8 +64,9 @@ function IntegrationsPage() {
       </div>
 
       <p className="mt-5 text-xs text-muted-foreground italic">
-        Nesta versão nenhuma conexão externa é realizada — as telas demonstram como as integrações serão
-        apresentadas.
+        ANTT e DER-MG são importados pelo script scripts/importar-dados-publicos.ts. As demais
+        integrações dependem de acordo com as empresas, o sistema municipal e o fornecedor das
+        catracas.
       </p>
     </>
   );

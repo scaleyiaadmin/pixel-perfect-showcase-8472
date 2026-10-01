@@ -1,0 +1,152 @@
+# InserirLogInicioFimViagemFretado
+
+O Log Início/Fim de Viagem Fretado deve ser gerado, automaticamente, quando o motorista ou um funcionário da empresa de transporte iniciar/finalizar cada um dos sentidos de uma viagem (ida e volta) através de terminal integrado ao subsistema embarcado.
+
+A execução desse método deve ser realizada pelo subsistema embarcado do transporte rodoviário fretado.
+
+Os dados relativos ao Log Início/Fim de Viagem Fretado devem ser enviados no prazo máximo de 10 (dez) horas de seu registro.
+
+A contagem temporal do prazo limite de 10 (dez) horas para envio do Log se inicia na Data/Hora do Evento e se encerra na Data/Hora de Envio do Log.
+
+ | 
+
+ | Parâmetro
+ | Descrição do Campo
+ | Tamanho
+ | Domínio / Formato
+ | Tipo
+ | Obrigatório
+
+ | idLog
+ | Identificador de Log
+ |  
+ | Domínio: [8]
+ | tinyint
+ | Sim
+
+ | cnpjEmpresaTransporte
+ | CNPJ da empresa de transporte
+ | 14
+ | Tamanho fixo: 14 caracteres
+ | string
+ | Sim
+
+ | placaVeiculo
+ | Placa do veículo
+ | 7
+ | Tamanho fixo: 7 caracteres
+ | string
+ | Sim
+
+ | cpfMotorista
+ | CPF do motorista
+ | 11
+ | Tamanho fixo: 11 caracteres
+ | string
+ | Sim
+
+ | licencaViagem
+ | Número da Licença de Viagem no SISHAB
+LLAAAANNNNNNN
+ | 13
+ | Tamanho fixo: 13 caracteres
+ | string
+ | Sim
+
+ | tipoRegistroViagem
+ | Tipo de Registro de Viagem:
+1 = Iniciar viagem;
+2 = Finalizar viagem para troca de veículo;
+3 = Iniciar viagem após troca de veículo;
+0 = Finalizar viagem;
+
+Pares [Início,Fim] possíveis:
+[1,0]; [1,2]; [3,0]; [3,2]
+ |  
+ | Domínio: [0, 1, 2, 3]
+Ver item 8.1.7
+ | tinyint
+ | Sim
+
+ | codigoSentidoViagem
+ | Sentido da Viagem do Fretamento, conforme Licença de Viagem autorizada pela ANTT
+ |  
+ | Domínio: [0, 1]
+0 = Volta;
+1 = Ida;
+ | tinyint
+ | Sim
+
+ | latitude
+ | Latitude
+ |  
+ | Valores possíveis:
+Mín: -90.000000;
+Máx: 90.000000;
+ | decimal
+ | Sim
+
+ | longitude
+ | Longitude
+ |  
+ | Valores possíveis:
+Mín: -180.000000;
+Máx: 180.000000;
+ | decimal
+ | Sim
+
+ | pdop
+ | PDOP
+(Position Dilution of Precision)
+ |  
+ | Valores possíveis:
+Mín: 0.000;
+Máx: 999.999;
+ | decimal
+ | Sim
+
+ | dataHoraEvento
+ | Data e hora do evento
+
+TZD no Brasil:
+-02:00 (Fernando de Noronha);
+-03:00 (Brasília);
+-04:00 (Amazonas);
+-05:00 (Acre);
+ |  
+ | Formato: AAAA-MM-DDThh:mm:ssTZD
+
+Padrão UTC completo (com TZD) (Time Zone Designator) 
+
+Exemplo:
+2025-07-19T13:46:15-03:00
+ | datetime offset
+ | Sim
+
+ | imei
+ | Número IMEI do equipamento de transmissão
+ | 18
+ | Tamanho:
+Mín: 15 caracteres;
+Máx: 18 caracteres;
+ | string
+ | Sim
+
+ | sequenciamento
+ | Código sequencial de ordenação
+ |  
+ | Valores possíveis:
+Mín: 0;
+Máx: 999999;
+ | integer
+ | Sim
+
+ | idViagem
+ | Código Identificador da Viagem (Rodoviário Fretado)
+
+Número da Licença de Viagem SISHAB
+ | 13
+ | Rodoviário Fretado
+Tamanho: 13 caracteres
+ | string
+ | Sim

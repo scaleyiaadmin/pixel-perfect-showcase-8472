@@ -1,0 +1,412 @@
+# Tráfego Infrator Radar
+
+São as informações das infrações possivelmente cometidas por veículos que circulam pelas rodovias federais concedidas.
+
+ | 
+
+ | AP
+ | CAMPO
+ | PAI
+ | TIPO
+ | OBRIGATÓRIO
+ | TAM.
+ | DESCRIÇÃO/OBSERVAÇÃO
+
+ | 1
+ | DataReferencia
+ | -
+ | D
+ | S
+ | 10
+ | Data referente as informações encaminhadas. (Formato: DD/MM/AAAA)
+
+ | 2
+ | Motivo
+ | -
+ | N
+ | S
+ | 1
+ | Motivo pelo qual está sendo enviado.
+1 = Primeiro envio
+2 = Reenvio por ter sido detectado erro no recebimento dos dados.
+3 = Correção por ter sido detectado erro no processamento dos dados.
+4 = Atualização de algum dado do registro.
+
+ | 3
+ | CnpjConcessionaria
+ | -
+ | C
+ | S
+ | 14
+ | CNPJ da concessionária, somente números.
+
+ | 4
+ | NumeroArquivo
+ | -
+ | N
+ | S
+ | 10
+ | Sequencial numérico do arquivo. (Para cada data de referência o número do arquivo deve ser de 1 até n, onde n é a quantidade total de arquivos enviados na data.)
+
+ | 5
+ | Registros
+ | -
+ | -
+ | S
+ | -
+ | Registros de tráfego de possíveis infratores.
+
+ | 6
+ | GUID
+ | AP5
+ | C
+ | S
+ | 36
+ | Identificador único do registro.
+
+ | 7
+ | CodigoEquipamento
+ | AP5
+ | N
+ | S
+ | 9
+ | Identificador do equipamento.
+
+ | 8
+ | Instante
+ | AP5
+ | D
+ | S
+ | 26
+ | Data/hora que o veículo passou pelo equipamento (Formato: DD/MM/AAAA HH:MM:SS -00:00)
+
+ | 9
+ | Faixa
+ | AP5
+ | N
+ | S
+ | 2
+ | Número da faixa que o veículo passou.
+
+ | 10
+ | CodigoSentido
+ | AP5
+ | N
+ | S
+ | 1
+ | Lista contendo sentidos:
+1 = Crescente
+2 = Decrescente
+
+ | 11
+ | KmHora
+ | AP5
+ | N
+ | S
+ | 3
+ | Quilometragem que o veículo passou
+
+ | 12
+ | TipoClassificacaoVeiculo
+ | AP5
+ | N
+ | S
+ | 1
+ | Tipo classificação veículo:
+1 = Comprimento
+2 = Perfil Magnético
+
+ | 13
+ | ComprimentoVeiculo
+ | AP5
+ | N
+ | S
+ | 10
+ | Medida do veículo em centímetros.
+(Formato: 999999,999)
+
+ | 14
+ | CodigoTipoVeiculo
+ | AP5
+ | N
+ | N
+ | 1
+ | Tipo de Veículo conforme o tipo de classificação:
+
+1 = Moto
+2 = Passeio
+3 = Ônibus
+4 = Comercial
+5 = Não Classificado
+
+ATENÇÃO:
+• É obrigatório se TipoClassificaçaoVeiculo igual a Perfil Magnético (2).
+• Enviar vazio se TipoClassificaçaoVeiculo igual a Comprimento (1).
+
+ | 15
+ | CodigoTipoImagem
+ | AP5
+ | N
+ | S
+ | 1
+ | Tipo de imagem:
+1 = Válida
+2 = Inválida
+
+ | 16
+ | CodigoProblemaImagem
+ | AP5
+ | N
+ | N
+ | 2
+ | Código do Problema identificado na imagem inválida:
+
+1 = Mais de um veículo na imagem
+2 = Veículo sem placa/ representação / ilegível/ encoberta
+3 = Placa não confere com o veículo
+4 = Imagens corrompidas
+5 = Excesso de velocidade não caracterizada
+6 = Velocidade incompatível
+7 = Placa fora de foco
+8 = Falha no modo noturno – sem flash
+9 = Falha no modo noturno – excesso de iluminação
+10 = Veículo fora do enquadramento pela direita
+11 = Veículo fora do enquadramento pela esquerda
+12 = Veículo fora de enquadramento
+13 = Evento Natural
+14 = Placa não cadastrada
+
+ATENÇÃO:
+• É obrigatório se CodigoTipoImagem igual a Inválida (2).
+• Enviar vazio se CodigoTipoImagem igual a Válida (1).
+
+ | 17
+ | CodigoTipoVeiculoDenatran
+ | AP5
+ | N
+ | N
+ | 2
+ | Código do tipo de veículo referente a tabela do DENATRAN
+
+1 = Bicicleta
+2 = Ciclomotor
+3 = Motoneta
+4 = Motocicleta
+5 = Triciclo
+6 = Automóvel
+7 = Micro-ônibus
+8 = Ônibus
+9 = Bonde
+10 = Reboque
+11 = Semi-Reboque
+12 = Charrete
+13 = Camioneta
+14 = Caminhão
+15 = Carroça
+16 = Carro De Mao
+17 = Caminhão Trator
+18 = Trator De Rodas
+19 = Trator De Esteiras
+20 = Trator Misto
+21 = Quadriciclo
+22 = Chassi/Plataforma
+23 = Caminhonete
+24 = Side-Car
+25 = Utilitário
+26 = Motor-Casa
+
+ATENÇÃO:
+• É obrigatório se CodigoTipoImagem igual a Válida (1).
+• Enviar vazio se CodigoTipoImagem igual a Inválida (1).
+
+ | 18
+ | CodigoVelocidadeClassificacaoVeiculo
+ | AP5
+ | N
+ | N
+ | 1
+ | Classificação do veículo quanto a velocidade:
+1 = Leve
+2 = Pesado
+
+ATENÇÃO:
+• É obrigatório se CodigoTipoImagem igual a Válida (1). 
+Enviar vazio se CodigoTipoImagem igual a Inválida (1).
+
+Regras Aplicadas
+
+ | 
+
+ | Nº
+ | DESCRIÇÃO DA REGRA
+ | CÓDIGO ERRO
+ | MENSAGEM DE ERRO
+ | VALIDAÇÃO
+
+ | 01
+ | O serviço deverá validar se o Certificado usado pertence ao CNPJ da concessionária que está cadastrado no sistema do SIR e informado no JSON.
+ | MSG_E01
+ | O certificado usado com CNPJ (CNPJ do certificado formatado) não faz referência ao CNPJ (CNPJ enviado no JSON formatado) registrado no sistema
+ | Recebimento
+
+ | 02
+ | O serviço deverá validar se os campos obrigatórios foram preenchidos (cabeçalho e registros).
+ | MSG_E02
+ | O campo (nome do campo) deve ser preenchido.
+ | Recebimento
+
+ | 03
+ | O serviço deverá validar se o tipo do dado está correto (cabeçalho e registros).
+ | MSG_E03
+ | O campo (nome do campo) está com formato errado.
+ | Recebimento
+
+ | 04
+ | O serviço deverá validar se o tamanho dos atributos está correto (cabeçalho e registros).
+ | MSG_E04
+ | O campo (nome do campo) está com tamanho errado.
+ | Recebimento
+
+ | 05
+ | O serviço deverá verificar se existe campo que não foi estabelecido para o recebimento.
+ | MSG_E05
+ | Estrutura inválida. O campo (nome do campo) não está especificado no contrato.
+ | Recebimento
+
+ | 06
+ | O serviço deverá verificar a ausência de campo que foi estabelecido como obrigatório para o recebimento.
+ | MSG_E06
+ | O campo (nome do campo) não foi informado.
+ | Recebimento
+
+ | 07
+ | O serviço deverá verificar se foi declarado algum registro no arquivo.
+ | MSG_E07
+ | Registro não informado.
+ | Recebimento
+
+ | 08
+ | O serviço deverá verificar se o registro já foi cadastrado na base de dados da ANTT.
+ | MSG_E08
+ | Registro já recebido anteriormente.
+ |  
+
+ | 09
+ | O serviço verifica se o registro possui evento posterior a 2020.
+ | MSG_E09
+ | Registro recebido com data do evento anterior a 2020.
+ | Recebimento
+
+ | 10
+ | O serviço deverá verificar se o registro já foi recebido, validado e armazenado.
+ | MSG_E10
+ | Não foi possível validar o recebimento. Por favor, enviar novamente.
+ | Recebimento
+
+ | 37
+ | O serviço deverá verificar se o código enviado é uma opção válida para o campo.
+ | MSG_E37
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar documentação.
+ | Recebimento
+
+ | 96
+ | O serviço deverá verificar se o código enviado é uma opção válida para o campo.
+O serviço deverá tornar o campo CodigoProblemaImagem obrigatório quando a imagem for inválida.
+
+ | MSG_E96
+ | É obrigatório informar o problema da imagem quando a imagem for inválida. 
+ | Recebimento
+
+ | 99
+ | O serviço deverá verificar se o campo CodigoProblemaImagem está vazio quando a imagem for válida.
+ | MSG_E99
+ | Não é permitido enviar o CodigoProblemaImagem quando a imagem for válida.
+ | Recebimento
+
+ | 100
+ | O serviço deverá verificar se o CodigoEquipamento pertence ao CNPJ da concessionária consta no sistema SIR.
+ | MSG_E100
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar o cadastro no sistema SIR.
+ | Processamento
+
+ | 101
+ | O serviço deverá verificar se a Faixa informada para o CodigoEquipamento consta no sistema SIR.
+ | MSG_E101
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar o cadastro no sistema SIR.
+ | Processamento
+
+ | 102
+ | O serviço deverá verificar se o CodigoEquipamento está ativo na data da passagem no sistema SIR.
+ | MSG_E102
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar o cadastro no sistema SIR.
+ | Processamento
+
+ | 103
+ | O serviço deverá verificar se o CodigoEquipamento pertence a um trecho ativo no sistema SIR.
+ | MSG_E103
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar o cadastro no sistema SIR.
+ | Processamento
+
+ | 104
+ | O serviço deverá verificar se o CodigoEquipamento está cadastrado no sistema SIR.
+ | MSG_E104
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar o cadastro no sistema SIR.
+ | Processamento
+
+ | 105
+ | O serviço deverá verificar se o campo tipoclassificacaoveiculo pertence ao equipamento informado no sistema SIR.
+ | MSG_E105
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar o cadastro no sistema SIR.
+ | Processamento
+
+ | 106
+ | O serviço deverá verificar se o campo CodigoTipoVeiculo foi informado quando o equipamento possuir a funcionalidade de tipo medição igual a perfil magnético.
+ | MSG_E106
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar o cadastro no sistema SIR.
+ | Recebimento
+
+ | 107
+ | O serviço deverá verificar se o campo CodigoTipoVeiculo está vazio quando o equipamento possuir a funcionalidade de tipo medição igual a comprimento.
+ | MSG_E107
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar o cadastro no sistema SIR.
+ | Recebimento
+
+ | 108
+ | O serviço deverá tornar o campo CodigoTipoVeiculo obrigatório quando TipoClassificaçãoVeiculo igual a Perfil Magnético. 
+ | MSG_E108
+ | 
+É obrigatório informar o CodigoTipoVeiculoquando 
+
+TipoClassificacaoVeiculo for Perfil Magnético. 
+
+ | Recebimento
+
+ | 109
+ | O serviço deverá verificar se o campo CodigoTipoVeiculo está vazio quando o TipoClassificaçãoVeiculo igual a comprimento.
+ | MSG_E109
+ | Não é permitido enviar CodigoTipoVeiculoquando TipoClassificacaoVeiculo for Comprimento.
+ | Recebimento
+
+ | 111
+ | O serviço deverá tornar o campo CodigoTipoVeiculoDenatran obrigatório quando a imagem for válida.
+ | MSG_E111
+ | É obrigatório informar o campo CodigoTipoVeiculoDenatran quando a imagem for válida.
+ | Recebimento
+
+ | 112
+ | O serviço deverá verificar se o campo CodigoTipoVeiculoDenatran está vazio quando a imagem for inválida.
+ | MSG_E112
+ | Não é permitido enviar o CodigoTipoVeiculoDenatran para uma imagem inválida.
+ | Recebimento
+
+ | 113
+ | O serviço deverá verificar se a data/hora informada no campo “Instante” é menor ou igual à data atual.
+ | MSG_E113
+ | A data/hora informada no campo “Instante” deve ser menor ou igual à data atual.
+ | Recebimento
+
+ | 114
+ | O serviço deverá verificar se o registro com Motivo igual a 4 já foi cadastrado na base de dados da ANTT.
+ | MSG_E114
+ | O registro enviado não está cadastrado na base da ANTT.
+ | Processamento

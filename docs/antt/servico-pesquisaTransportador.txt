@@ -1,0 +1,19 @@
+# Pesquisa Transportador
+
+| 
+
+ | AP
+ | CAMPO
+ | PAI
+ | TIPO
+ | OBRIGATÓRIO
+ | TAM.
+ | DESCRIÇÃO/OBSERVAÇÃO
+
+ | 1
+ | RNTRC
+ | -
+ | -
+ | S
+ | -
+ |

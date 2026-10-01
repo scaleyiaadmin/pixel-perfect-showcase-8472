@@ -1,0 +1,162 @@
+# InserirLogVelocidadeTempoLocalizacao
+
+O Log Velocidade, Tempo e Localização deve ser gerado, automaticamente:
+
+a cada 30 segundos, no caso de transporte semiurbano regular;
+
+a cada 60 segundos, no caso de transporte rodoviário fretado; ou
+
+a cada 180 segundos, no caso de transporte rodoviário regular.
+
+O intervalo de criação do Log deve ser parametrizável, permitindo alterá-lo a qualquer tempo.
+
+A execução desse método deve ser realizada pelo subsistema embarcado de todos os tipos de transporte (rodoviário regular, rodoviário fretado, semiurbano regular).
+
+Os dados relativos ao Log Velocidade, Tempo e Localização devem ser enviados no prazo máximo de 10 (dez) horas de seu registro.
+
+A contagem temporal do prazo limite de 10 (dez) horas para envio do Log se inicia na Data/Hora do Evento e se encerra na Data/Hora de Envio do Log.
+
+ | 
+
+ | Parâmetro
+ | Descrição do Campo
+ | Tamanho
+ | Domínio / Formato
+ | Tipo
+ | Obrigatório
+
+ | idLog
+ | Identificador de Log
+ |  
+ | Domínio: [4]
+ | tinyint
+ | Sim
+
+ | cnpjEmpresaTransporte
+ | CNPJ da empresa de transporte
+ | 14
+ | Tamanho fixo: 14 caracteres
+ | string
+ | Sim
+
+ | placaVeiculo
+ | Placa do veículo
+ | 7
+ | Tamanho fixo: 7 caracteres
+ | string
+ | Sim
+
+ | velocidadeAtual
+ | Velocidade atual
+ |  
+ | Valores possíveis:
+Mín: 0;
+Máx: 999;
+ | integer
+ | Sim
+
+ | distanciaPercorrida
+ | Quilometragem acumulada pelo veículo, desde o início da viagem, no ponto inicial da linha
+ |  
+ | Valores possíveis:
+Mín: 0;
+Máx: 99999999;
+ | integer
+ | Sim
+
+ | situacaoIgnicaoMotor
+ | Situação da ignição do motor (real ou estimada eletronicamente)
+ |  
+ | Domínio: [0,1]
+0 = Desligado;
+1 = Ligado;
+ | boolean
+ | Não
+
+ | situacaoPortaVeiculo
+ | Situação da porta do veículo (real ou estimada eletronicamente)
+ |  
+ | Domínio: [0,1]
+0 = Fechada;
+1 = Aberta;
+ | boolean
+ | Não
+
+ | latitude
+ | Latitude
+ |  
+ | Valores possíveis:
+Mín: -90.000000;
+Máx: 90.000000;
+ | decimal
+ | Sim
+
+ | longitude
+ | Longitude
+ |  
+ | Valores possíveis:
+Mín: -180.000000;
+Máx: 180.000000;
+ | decimal
+ | Sim
+
+ | pdop
+ | PDOP (Position Dilution of Precision)
+ |  
+ | Valores possíveis:
+Mín: 0.000;
+Máx: 999.999;
+ | decimal
+ | Sim
+
+ | dataHoraEvento
+ | Data e hora do evento
+ |  
+ | Formato: AAAA-MM-DDThh:mm:ssTZD
+Padrão UTC completo (com TZD)
+
+TZD no Brasil:
+-02:00 (Fernando de Noronha)
+-03:00 (Brasília)
+-04:00 (Amazonas)
+-05:00 (Acre)
+
+Exemplo:
+2025-07-19T13:46:15-03:00
+ | datetime offset
+ | Sim
+
+ | imei
+ | Número IMEI do equipamento de transmissão
+ | 18
+ | Valores possíveis:
+Mín: 15;
+Máx: 18 caracteres
+ | string
+ | Sim
+
+ | sequenciamento
+ | Código sequencial de ordenação
+ |  
+ | Valores possíveis:
+Mín: 0;
+Máx: 999999;
+ | integer
+ | Sim
+
+ | idViagem
+ | Código Identificador da Viagem (Rodoviário Regular / Fretado / Semiurbano Regular)
+ |  
+ | Rodoviário Regular
+AAAAMMDD-HHMMSS-NN-NPPPPPPPPPPP
+Tamanho: 32 caracteres (incluindo os 4 hifens)
+
+Rodoviário Fretado
+Número da Licença de Viagem SISHAB
+Tamanho: 13 caracteres
+
+Semiurbano Regular
+AAAAMMDD-HHMMSS-N-NNNN
+Tamanho: 22 caracteres (incluindo os 3 hifens)
+ | string
+ | Sim

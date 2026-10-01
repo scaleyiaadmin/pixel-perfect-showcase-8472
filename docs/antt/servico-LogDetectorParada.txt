@@ -1,0 +1,186 @@
+# InserirLogDetectorParada
+
+O Log Detector de Parada deve ser gerado sempre que houver uma parada relevante do veículo durante a viagem.
+
+No caso de parada que se dê por mais de um motivo, deverá ser gerado um registro de parada específico para cada Motivo de Parada.
+
+A execução desse método deve ser realizada pelo subsistema embarcado de todos os tipos de transporte (rodoviário regular, rodoviário fretado, semiurbano regular).
+
+Os dados relativos ao Log Detector de Parada devem ser enviados no prazo máximo de 10 (dez) horas de seu registro.
+
+A contagem temporal do prazo limite de 10 (dez) horas para envio do Log se inicia na Data/Hora do Evento e se encerra na Data/Hora de Envio do Log.
+
+ | 
+
+ | Parâmetro
+ | Descrição do Campo
+ | Tamanho
+ | Domínio / Formato
+ | Tipo
+ | Obrigatório
+
+ | idLog
+ | Identificador de Log
+ |  
+ | Domínio: [6]
+ | tinyint
+ | Sim
+
+ | cnpjEmpresaTransporte
+ | CNPJ da empresa de transporte
+ | 14
+ | Tamanho fixo: 14 caracteres
+ | string
+ | Sim
+
+ | placaVeiculo
+ | Placa do veículo
+ | 7
+ | Tamanho fixo: 7 caracteres
+ | string
+ | Sim
+
+ | codigoMotivoParada
+ | Motivo da parada ou evento
+ |  
+ | Domínio: [1, 2, 3, 4, 5, 6, 11, 12, 13, 14, 15, 21, 22, 23, 24, 25, 26, 27, 99]
+Domínio conforme Item 8.1.6
+ | tinyint
+ | Sim
+
+ | latitude
+ | Latitude
+ |  
+ | Valores possíveis:
+Mín: -90.000000
+Máx: 90.000000
+ | decimal
+ | Sim
+
+ | longitude
+ | Longitude
+ |  
+ | Valores possíveis:
+Mín: -180.000000
+Máx: 180.000000
+ | decimal
+ | Sim
+
+ | pdop
+ | PDOP (Position Dilution of Precision)
+ |  
+ | Valores possíveis:
+Mín: 0.000
+Máx: 999.999
+ | decimal
+ | Sim
+
+ | dataHoraEvento
+ | Data e hora do evento
+ |  
+ | Formato: AAAA-MM-DDThh:mm:ssTZD
+
+TZD no Brasil:
+-02:00 (Fernando de Noronha)
+-03:00 (Brasília)
+-04:00 (Amazonas)
+-05:00 (Acre)
+
+Padrão UTC completo (com TZD)
+
+Exemplo:
+2025-07-19T13:46:15-03:00
+ | datetime offset
+ | Sim
+
+ | imei
+ | Número IMEI do equipamento de transmissão
+ | 18
+ | Tamanho:
+Mín: 15 caracteres
+Máx: 18 caracteres
+ | string
+ | Sim
+
+ | sequenciamento
+ | Código sequencial de ordenação
+ |  
+ | Valores possíveis:
+Mín: 0
+Máx: 999999
+ | integer
+ | Sim
+
+ | idViagem
+ | Código Identificador da Viagem
+(Rodoviário Regular)
+Informações na sequência
+apresentada e separadas por hífen
+
+Data Programada da Viagem no
+ponto inicial da linha:
+AAAAMMDD
+
+Hora Programada da Viagem no
+ponto inicial da linha:
+HHMMSS
+
+Código Tipo de Viagem: NN
+00 = Não atende à Regularidade
+Mínima
+01 = Atende à Regularidade
+Mínima
+
+Código Sentido da Linha: N
+0 = Volta
+1 = Ida
+
+Prefixo da Linha SIGMA:
+11 caracteres
+
+Código Identificador da Viagem
+(Rodoviário Fretado)
+
+Número da Licença de Viagem
+SISHAB:
+13 caracteres
+
+Código Identificador da Viagem
+(Semiurbano Regular)
+Informações na sequência
+apresentada e separadas por hífen
+
+Data Programada da Viagem no
+ponto inicial da linha:
+AAAAMMDD
+
+Hora Programada da Viagem no
+ponto inicial da linha:
+HHMMSS
+
+Código Sentido da Linha: N
+0 = Volta
+1 = Ida
+
+Número da Linha:
+4 caracteres
+ | 32
+ | Rodoviário Regular
+
+AAAAMMDDHHMMSS-NN-NPPPPPPPPPPP
+
+Tamanho: 32 caracteres (incluindo os 4 hifens)
+
+Rodoviário Fretado
+
+Tamanho: 13 caracteres
+
+Semiurbano Regular
+
+AAAAMMDDHHMMSS-N-NNNN
+
+Tamanho: 22 caracteres
+(incluindo os 3 hifens)
+
+ | string
+ | Sim

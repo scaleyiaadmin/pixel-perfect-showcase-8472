@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   DataTable,
+  DemoBanner,
   PageHeader,
+  QueryState,
   SectionCard,
   StatusBadge,
   type Column,
@@ -9,7 +11,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { auditLogs, companies, platforms, users } from "@/data/mock";
+import { auditLogs, platforms, users } from "@/data/mock";
+import { formatCnpj, useEmpresas } from "@/services/dados-publicos";
 import type { AuditLog, User } from "@/types";
 
 export const Route = createFileRoute("/_admin/configuracoes")({
@@ -18,10 +21,14 @@ export const Route = createFileRoute("/_admin/configuracoes")({
       { title: "Configurações — SisRodov Manhuaçu" },
       {
         name: "description",
-        content: "Usuários, perfis, permissões, parâmetros do painel e log de auditoria do SisRodov Manhuaçu.",
+        content:
+          "Usuários, perfis, permissões, parâmetros do painel e log de auditoria do SisRodov Manhuaçu.",
       },
       { property: "og:title", content: "Configurações — SisRodov Manhuaçu" },
-      { property: "og:description", content: "Usuários, perfis, parâmetros e auditoria do sistema." },
+      {
+        property: "og:description",
+        content: "Usuários, perfis, parâmetros e auditoria do sistema.",
+      },
     ],
   }),
   component: SettingsPage,
@@ -37,29 +44,55 @@ const profiles = [
 ];
 
 function SettingsPage() {
+  const empresas = useEmpresas();
   const userColumns: Column<User>[] = [
     { key: "name", header: "Nome", render: (u) => <span className="font-semibold">{u.name}</span> },
-    { key: "email", header: "E-mail", render: (u) => <span className="text-muted-foreground">{u.email}</span> },
+    {
+      key: "email",
+      header: "E-mail",
+      render: (u) => <span className="text-muted-foreground">{u.email}</span>,
+    },
     { key: "profile", header: "Perfil", render: (u) => u.profile },
-    { key: "last", header: "Último acesso", render: (u) => <span className="tabular">{u.lastAccess}</span> },
+    {
+      key: "last",
+      header: "Último acesso",
+      render: (u) => <span className="tabular">{u.lastAccess}</span>,
+    },
     {
       key: "status",
       header: "Status",
-      render: (u) => <StatusBadge tone={u.active ? "success" : "neutral"}>{u.active ? "Ativo" : "Inativo"}</StatusBadge>,
+      render: (u) => (
+        <StatusBadge tone={u.active ? "success" : "neutral"}>
+          {u.active ? "Ativo" : "Inativo"}
+        </StatusBadge>
+      ),
     },
   ];
 
   const logColumns: Column<AuditLog>[] = [
     { key: "date", header: "Data", render: (l) => <span className="tabular">{l.datetime}</span> },
     { key: "user", header: "Usuário", render: (l) => l.user },
-    { key: "action", header: "Ação", render: (l) => <StatusBadge tone="info" dot={false}>{l.action}</StatusBadge> },
+    {
+      key: "action",
+      header: "Ação",
+      render: (l) => (
+        <StatusBadge tone="info" dot={false}>
+          {l.action}
+        </StatusBadge>
+      ),
+    },
     { key: "module", header: "Módulo", render: (l) => l.module },
-    { key: "desc", header: "Descrição", render: (l) => <span className="text-muted-foreground">{l.description}</span> },
+    {
+      key: "desc",
+      header: "Descrição",
+      render: (l) => <span className="text-muted-foreground">{l.description}</span>,
+    },
   ];
 
   return (
     <>
       <PageHeader title="Configurações" subtitle="Parâmetros do sistema, acessos e auditoria" />
+      <DemoBanner reason="usuários, perfis e logs passam a valer com o login real" />
 
       <Tabs defaultValue="usuarios">
         <TabsList className="flex-wrap">
@@ -92,8 +125,16 @@ function SettingsPage() {
         <TabsContent value="parametros" className="mt-4">
           <SectionCard title="Parâmetros gerais">
             <div className="space-y-4">
-              <Toggle id="p1" label="Exibir indicador de sistema operacional no cabeçalho" defaultChecked />
-              <Toggle id="p2" label="Registrar alterações de plataforma no log de auditoria" defaultChecked />
+              <Toggle
+                id="p1"
+                label="Exibir indicador de sistema operacional no cabeçalho"
+                defaultChecked
+              />
+              <Toggle
+                id="p2"
+                label="Registrar alterações de plataforma no log de auditoria"
+                defaultChecked
+              />
               <Toggle id="p3" label="Destacar diferenças acima de 5 passageiros" defaultChecked />
               <Toggle id="p4" label="Exibir valores financeiros no dashboard" defaultChecked />
             </div>
@@ -104,8 +145,16 @@ function SettingsPage() {
           <SectionCard title="Plataformas cadastradas" bodyClassName="p-0">
             <DataTable
               columns={[
-                { key: "num", header: "Plataforma", render: (p) => <span className="tabular font-semibold">{p.number}</span> },
-                { key: "status", header: "Situação", render: (p) => <span className="capitalize">{p.status}</span> },
+                {
+                  key: "num",
+                  header: "Plataforma",
+                  render: (p) => <span className="tabular font-semibold">{p.number}</span>,
+                },
+                {
+                  key: "status",
+                  header: "Situação",
+                  render: (p) => <span className="capitalize">{p.status}</span>,
+                },
                 { key: "label", header: "Alocação", render: (p) => p.label ?? "—" },
               ]}
               rows={platforms}
@@ -115,13 +164,18 @@ function SettingsPage() {
 
         <TabsContent value="empresas" className="mt-4">
           <SectionCard title="Empresas habilitadas" bodyClassName="p-0">
+            <QueryState isLoading={empresas.isLoading} error={empresas.error} />
             <DataTable
               columns={[
-                { key: "name", header: "Empresa", render: (c) => c.name },
-                { key: "cnpj", header: "CNPJ", render: (c) => <span className="tabular">{c.cnpj}</span> },
-                { key: "antt", header: "Código ANTT", render: (c) => <span className="tabular">{c.anttCode}</span> },
+                { key: "name", header: "Empresa", render: (c) => c.razao_social },
+                {
+                  key: "cnpj",
+                  header: "CNPJ",
+                  render: (c) => <span className="tabular">{formatCnpj(c.cnpj)}</span>,
+                },
+                { key: "fonte", header: "Fonte", render: (c) => c.fonte },
               ]}
-              rows={companies}
+              rows={empresas.data ?? []}
             />
           </SectionCard>
         </TabsContent>
@@ -131,7 +185,11 @@ function SettingsPage() {
             <div className="space-y-4">
               <Toggle id="b1" label="Exibir logo da Prefeitura no painel" defaultChecked />
               <Toggle id="b2" label="Alternar automaticamente entre partidas e chegadas" />
-              <Toggle id="b3" label="Destacar alterações de plataforma por 30 segundos" defaultChecked />
+              <Toggle
+                id="b3"
+                label="Destacar alterações de plataforma por 30 segundos"
+                defaultChecked
+              />
               <Toggle id="b4" label="Modo tela cheia ao abrir" />
             </div>
           </SectionCard>
@@ -147,7 +205,15 @@ function SettingsPage() {
   );
 }
 
-function Toggle({ id, label, defaultChecked }: { id: string; label: string; defaultChecked?: boolean }) {
+function Toggle({
+  id,
+  label,
+  defaultChecked,
+}: {
+  id: string;
+  label: string;
+  defaultChecked?: boolean;
+}) {
   return (
     <div className="flex items-center justify-between gap-4 border-b border-border/60 pb-3 last:border-0">
       <Label htmlFor={id} className="text-sm font-normal">

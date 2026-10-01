@@ -1,0 +1,612 @@
+# Tráfego Praça Pedágio
+
+São informações dos veículos que circulam pelas rodovias federais federais e que foram captadas através de sua passagem pela praça de pedágio.
+
+ | 
+
+ | AP
+ | CAMPO
+ | PAI
+ | TIPO
+ | OBRIGATÓRIO
+ | TAM.
+ | DESCRIÇÃO/OBSERVAÇÃO
+
+ | 1
+ | 
+DataReferencia
+
+ | -
+ | D
+ | S
+ | 10
+ | Data referente a informações encaminhadas. (Formato: DD/MM/AAAA)
+
+ | 2
+ | Motivo
+ | -
+ | N
+ | S
+ | 1
+ | Motivo pelo qual está sendo enviado. 
+1 – Primeiro envio 
+2 – Reenvio por ter sido detectado erro na coleta dos dados. 
+3 – Correção por ter sido detectado erro no processamento dos dados. 
+4 – Atualização de algum dado do registro.
+
+ | 3
+ | CnpjConcessionaria
+ | -
+ | C
+ | S
+ | 14
+ | CNPJ da compra, somente números.
+
+ | 4
+ | NumeroArquivo
+ | -
+ | N
+ | S
+ | 10
+ | Sequencial numérico do arquivo. (Para cada dado de referência o número do arquivo deve ser de 1 até n, onde “N” é a quantidade total de arquivos enviados nos dados.)
+
+ | 5
+ | Registros
+ | -
+ | -
+ | S
+ | -
+ | Registros de trânsito na praça de pedágio.
+
+ | 6
+ | GUID
+ | AP5
+ | C
+ | S
+ | 36
+ | Identificador único do registro.
+
+ | 7
+ | CodigoPraçaPedagio
+ | AP5
+ | N
+ | S
+ | 5
+ | Identificador da praça de pedágio.
+
+ | 8
+ | CodigoCabine
+ | AP5
+ | N
+ | S
+ | 5
+ | Identificação da cabine.
+
+ | 9
+ | Instante
+ | AP5
+ | D
+ | S
+ | 30
+ | Data e hora da passagem pela cabine. (Formato: DD/MM/AAAA HH:MM:SS -00:00)
+
+ | 10
+ | Sentido
+ | AP5
+ | N
+ | S
+ | 1
+ | Sentido da passagem a cabine: 
+1 – Crescente 
+2 – Decrescente
+
+ | 11
+ | TipoVeículo
+ | AP5
+ | N
+ | S
+ | 1
+ | Tipo de veículo: 
+1 – Passeio 
+2 – Comercial 
+3 – Moto
+
+ | 12
+ | QuantidadeEixosVeículo
+ | AP5
+ | N
+ | S
+ | 5
+ | Quantidade de eixos do veículo.
+
+ | 13
+ | Rodagem
+ | AP5
+ | N
+ | S
+ | 1
+ | Tipo de Rodagem: 
+1 – Simples 
+2 – Dupla
+
+ | 14
+ | Isento
+ | AP5
+ | N
+ | S
+ | 1
+ | Identifica veículos isento de cobrança de pedágio: 
+1 – Sim 
+2 – Não
+
+ | 15
+ | MotivoIsencao
+ | AP5
+ | N
+ | N
+ | 1
+ | Motivo pelo qual o veículo é isento de pagamento: 
+1 – Isentado engenharia 
+2 – Isento por lei resolução 
+3 – Isento judicial 
+4 – Isento por contrato 
+ATENÇÃO: 
+◦ Obrigatório se Isento igual a Sim (1). 
+◦ Enviar vazio se Isento igual a Não (2). 
+◦ O Motivo 4 somente deve ser utilizado quando 
+TipoVeiculo igual a Moto (3) e para contratos contratados assinados a partir de 03/2022.
+
+ | 16
+ | Evasao
+ | AP5
+ | N
+ | S
+ | 1
+ | Identifique se o veículo fugiu e não pagou pedágio: 
+1 – Sim 
+2 – Não
+
+ | 17
+ | EixoSuspenso
+ | AP5
+ | N
+ | S
+ | 1
+ | Identifique se houve suspensão de eixo: 
+1 – Sim 
+2 – Não
+
+ | 18
+ | QuantidadeEixosSuspensos
+ | AP5
+ | N
+ | N
+ | 2
+ | Quantidade de eixos suspensos
+
+ATENÇÃO: 
+• Obrigatório se EixoSuspenso igual a Sim (1). 
+• Enviar vazio se EixoSuspenso igual a Não (2).
+
+ | 19
+ | TipoCobrancaEfetuada
+ | AP5
+ | N
+ | S
+ | 1
+ | Tipo de cobrança: 
+1 - Manual 
+2 - Automática TAG 
+3 - Automática OCR/PLACA
+
+ | 20
+ | Placa
+ | AP5
+ | C
+ | N
+ | 7
+ | Placa do veículo
+
+ATENÇÃO: 
+• Obrigatório se MotivoIsencao igual a Isento por lei resolução (2) ou Isento Judicial (3). 
+• Obrigatório se TipoCobrancaEfetuada igual Automática TAG (2) ou Automática OCR/Placa(3).
+
+ | 21
+ | LiberacaoCancela
+ | AP5
+ | N
+ | S
+ | 1
+ | Indica se a passagem na cabine foi liberada: 
+1 - Não 
+2 - Por atingir a fila máxima prevista no contrato 
+3 - Por caso fortuito ou força maior
+
+ | 22
+ | ValorDevido
+ | AP5
+ | N
+ | S
+ | 8
+ | Valor exigido contratualmente 
+(Formato: 99999,99)
+
+ | 23
+ | ValorArrecadado
+ | AP5
+ | N
+ | S
+ | 8
+ | Valor devidamente arrecadado 
+(Formato: 99999,99)
+
+ATENÇÃO: 
+• Enviar vazio se LiberacaoCancela igual a Por atingir fila máxima prevista em contrato (2) ou Por caso fortuito ou força maior (3).
+
+ | 24
+ | CnpjAmap
+ | AP5
+ | C
+ | N
+ | 14
+ | AMAP responsável pela TAG não utilizou nenhum tipo de cobrança automática.
+
+ATENÇÃO: 
+• Obrigatório se TipoCobrancaEfetuada igual a Automática TAG (2) ou Automática OCR/PLACA (3) e Evasão igual a Não (2). 
+• Facultativo se TipoCobrancaEfetuada igual a Automática TAG (2) ou Automática OCR/PLACA (3) e Evasão igual a Sim (1). 
+• Enviar vazio se TipoCobrancaEfetuada igual ao Manual (1).
+
+ | 25
+ | MultiplicadorTarifa
+ | AP5
+ | N
+ | S
+ | 5
+ | Valor pelo qual a tarifa será multiplicada. (Formato: 999,99)
+
+ATENÇÃO: 
+• Multiplicador para TipoVeiculo igual a Moto (3) e Isento igual a Não (2) é 0,5. 
+• Multiplicador para TipoVeiculo igual a Moto (3) e Isento igual a Sim (1) é 0. 
+• Multiplicador para TipoVeiculo igual a Passeio (1) são: 1,0 ou 1,5 ou 2,0. 
+• Multiplicador para TipoVeiculo igual Comercial (2) deve ser números inteiros entre 2,0 e 20,0.
+
+ | 26
+ | VeiculoCarregado
+ | AP5
+ | N
+ | N
+ | 1
+ | Indica se o veículo está carregado com carga. 
+1 - Vazio 
+2 - Carregado 
+3 - Não identificado
+
+ATENÇÃO: 
+◦ Obrigatório se TipoVeiculo igual a Comercial (2). 
+◦ Enviar vazio se TipoVeiculo igual a Passeio (1) ou Moto (3).
+
+ | 27
+ | IDTAG
+ | AP5
+ | C
+ | N
+ | 11
+ | 
+Número do identificador do TAG.
+
+ATENÇÃO: 
+• Obrigatório se TipoCobrancaEfetuada igual a Automática TAG (2) ou Automática OCR/PLACA 
+(3) e Evasão igual a Não (2). 
+• Facultativo se TipoCobrancaEfetuada igual a Automática TAG (2) ou Automática OCR/PLACA 
+(3) e Evasão igual a Sim (1). 
+• Enviar vazio se TipoCobrancaEfetuada igual a Manual (1).
+
+Aplicadas
+
+ | 
+
+ | Nº
+ | DESCRIÇÃO DA REGRA
+ | CÓDIGO ERRO
+ | MENSAGEM DE ERRO
+ | VALIDAÇÃO
+
+ | 01
+ | O serviço deverá validar se o Certificado usado pertence ao CNPJ da entrega que está cadastrado no sistema do SIR e informado no JSON.
+ | MSG_E01
+ | O certificado usado com CNPJ (CNPJ do certificado formatado) não faz referência ao CNPJ (CNPJ enviado no JSON formatado) registrado no sistema
+ | Recebimento
+
+ | 02
+ | O serviço deverá validar se os campos obrigatórios foram preenchidos (cabeçalho e registros).
+ | MSG_E02
+ | O campo (nome do campo) deve ser preenchido.
+ | Recebimento
+
+ | 03
+ | O serviço deverá validar se o tipo do dado está correto (cabeçalho e registros).
+ | MSG_E03
+ | O campo (nome do campo) está com formato errado.
+ | Recebimento
+
+ | 04
+ | O serviço deverá validar se o tamanho dos atributos está correto (cabeçalho e registros).
+ | MSG_E04
+ | O campo (nome do campo) está com tamanho errado.
+ | Recebimento
+
+ | 05
+ | O serviço deverá verificar se existe campo que não foi previsto para a coleta.
+ | MSG_E05
+ | Estrutura inválida. O campo (nome do campo) não está especificado no contrato.
+ | Recebimento
+
+ | 06
+ | O serviço deverá verificar a ausência de campo que foi previsto como obrigatório para a coleta.
+ | MSG_E06
+ | O campo (nome do campo) não foi informado.
+ | Recebimento
+
+ | 07
+ | O serviço deverá verificar se foi declarado algum registro no arquivo.
+ | MSG_E07
+ | Registro não informado.
+ | Recebimento
+
+ | 08
+ | O serviço deverá verificar se o registro já foi cadastrado na base de dados da ANTT.
+ | MSG_E08
+ | Registro já recebido anteriormente.
+ | Processamento
+
+ | 09
+ | O serviço verifica se o registro possui evento posterior a 2020.
+ | MSG_E09
+ | Registro recebido com dados do evento anterior a 2020.
+ | Recebimento
+
+ | 10
+ | O serviço deverá verificar se o registro já foi recebido, validado e armazenado.
+ | MSG_E10
+ | Não foi possível validar o sorteio. Por favor, envie novamente.
+ | Recebimento
+
+ | 14
+ | O serviço deverá verificar se a quantidade de eixo do veículo não é inferior a 2.
+ | MSG_E14
+ | Não é permitido veículo com menos de 2 eixos.
+ | Recebimento
+
+ | 16
+ | O serviço deverá verificar se o veículo do tipo moto não possui mais de 2 eixos.
+ | MSG_E16
+ | Só é permitido veículo do tipo moto com 2 eixos
+ | Recebimento
+
+ | 18
+ | O serviço deverá verificar se o veículo do tipo passeio não possui mais de 4 eixos.
+ | MSG_E18
+ | Não é permitido veículo do tipo passeio com mais de 4 eixos.
+ | Recebimento
+
+ | 19
+ | O serviço deverá verificar se o veículo do tipo comercial não possui mais de 20 eixos.
+ | MSG_E19
+ | Não é permitido veículo do tipo comercial com mais de 20 eixos.
+ | Recebimento
+
+ | 20
+ | O serviço deverá verificar se o veículo do tipo passeio e moto possui suspensão de eixos.
+ | MSG_E20
+ | Não são permitidos eixos suspensos para veículos do tipo passeio e moto.
+ | Recebimento
+
+ | 21
+ | O serviço deverá verificar se, para veículos que possuem eixo suspenso, o total de eixo suspenso é maior que zero e menor que o total de eixos do veículo menos 2.
+ | MSG_E21
+ | Não é permitido que a quantidade de eixos suspensos seja igual a zero ou menor que o total de eixos do veículo menos 2.
+ | Recebimento
+
+ | 37
+ | O serviço deverá verificar se o código enviado é uma opção válida para o campo.
+ | MSG_E37
+ | O código (descreve o código enviado) não é válido para o campo (descreve o nome do campo). Por favor, consulte a documentação.
+ | Recebimento
+
+ | 38
+ | O serviço deverá verificar se a Placa foi informada quando o motivo for autorizado para isento por lei resolução ou isento judicial.
+ | MSG_E38
+ | É obrigatório informar a placa quando o motivo de isenção para isento por lei resolução ou isento judicial.
+ | Recebimento
+
+ | 39
+ | O serviço deverá tornar o campo Veículo Carregado obrigatório quando veículo do tipo comercial.
+ | MSG_E39
+ | É obrigatório informar o campo veículo carregado, se veículo comercial.
+ | Recebimento
+
+ | 40
+ | O serviço deverá verificar se o campo Veículo Carregado está vazio para veículos do tipo passeio e moto.
+ | MSG_E40
+ | Não é permitido o envio de veículo carregado para veículos do tipo passeio e moto.
+ | Recebimento
+
+ | 41
+ | O serviço deverá verificar se o campo Rodagem é igual ao simples para veículos do tipo passeio e moto.
+ | MSG_E41
+ | É obrigatório informar rodagem simples para
+ | Recebimento
+
+ | 42
+ | O serviço deverá tornar o campo Motivo Isenção obrigatória quando o veículo for isento.
+ | MSG_E42
+ | É obrigatório informar o campo motivo autorizado quando o veículo for lançado.
+ | Recebimento
+
+ | 43
+ | O serviço deverá verificar se o campo Motivo Isenção está vazio quando o veículo não for isento.
+ | MSG_E43
+ | Não é permitido enviar motivos autorizados para veículos não isentos.
+ | Recebimento
+
+ | 44
+ | O serviço deverá tornar o campo Quantidade de Eixos Suspensos obrigatório quando houver eixo suspenso.
+ | MSG_E44
+ | É obrigatório informar a quantidade de eixos suspensos quando houver eixo suspenso.
+ | Recebimento
+
+ | 45
+ | O serviço deverá verificar se o campo Quantidade de Eixos Suspenso está vazio quando não houver eixo suspenso.
+ | MSG_E45
+ | Não é permitido enviar a quantidade de eixos suspensos para veículos sem eixo suspenso.
+ | Recebimento
+
+ | 46
+ | O serviço deverá verificar se o campo MultiplicadorTarifa é igual a 0,5 para veículos do tipo Moto não evasor, não isento e com o campo LiberacaoCancela igual a Não (1).
+ | MSG_E46
+ | Não é permitido enviar multiplicador de tarifa diferente de 0,5 para veículos do tipo moto não evasor, não isento e liberação cancela igual a Não (1).
+ | Recebimento
+
+ | 47
+ | O serviço deverá verificar se o Multiplicador de Tarifa é igual a 1,0 ou 1,5 ou 2,0 para veículos do tipo passeio não evasor e liberação cancela igual Não (1).
+ | MSG_E47
+ | Não é permitido enviar multiplicador de tarifa diferente de 1,0 ou 1,5 ou 2,0 para veículos do tipo passeio não evasor e liberação cancela igual Não (1).
+ | Recebimento
+
+ | 48
+ | O serviço deverá verificar se o Multiplicador de Tarifa está entre 2 e 20 para veículos do tipo comercial não evasor e liberação cancela igual Não (1).
+ | MSG_E48
+ | Não é permitido enviar multiplicador de tarifa que não esteja entre 2 e 20 para veículos do tipo comercial não evasor e liberação cancela igual Não (1).
+ | Recebimento
+
+ | 49
+ | O serviço deverá tornar o campo Placa obrigatória quando Tipo de Cobrança Efetuada para Automática TAG ou Automática OCR/Placa.
+ | MSG_E49
+ | É obrigatório informar a Placa do veículo quando o tipo de cobrança efetuado pela Automática TAG ou Automática OCR/Placa.
+ | Recebimento
+
+ | 50
+ | O serviço deverá verificar se o Valor Arrecadado é zero quando o campo Liberação Cancela for igual a "Por atingir fila máxima prevista em contrato" ou "Por caso fortuito ou força maior".
+ | MSG_E50
+ | Não é permitido enviar valor arrecadado para liberação de cancelamento igual a "Por atingir fila máxima prevista em contrato" ou "Por caso fortuito ou força maior".
+ | Recebimento
+
+ | 51
+ | O serviço deverá tornar os campos CNPJ da Amap e IDTAG obrigatórios quando o tipo de cobrança efetuada para Automática TAG ou Automática OCR/PLACA e o campo Evasão for igual a Não (2).
+ | MSG_E51
+ | É obrigatório informar os campos CNPJ da AMAP e IDTAG quando o tipo de cobrança efetuada para Automática TAG ou Automática OCR/PLACA e Evasão igual a Não (2).
+ | Recebimento
+
+ | 52
+ | O serviço deverá verificar se os campos CNPJ do Amap e IDTAG estão vazios quando o Tipo de Cobrança for efetuado manualmente.
+ | MSG_E52
+ | Não é permitido informar os campos CNPJ da AMAP e IDTAG quando o tipo de cobrança for efetuado manualmente.
+ | Recebimento
+
+ | 53
+ | O serviço deverá verificar se o código da praça de pedágio pertence ao CNPJ informado no registro.
+ | MSG_E53
+ | A praça de pedágio não pertence ao CNPJ informado no registro.
+ | Processamento
+
+ | 54
+ | O serviço deverá verificar se a cabine pertence à área de pedágio informada no registro.
+ | MSG_E54
+ | A cabine não pertence à área de pedágio informada no registro.
+ | Processamento
+
+ | 55
+ | O serviço deverá verificar se a cabine possui o sentido informado no registro.
+ | MSG_E55
+ | A cabine não possui o sentido informado no registro.
+ | Processamento
+
+ | 56
+ | O serviço deverá verificar se a praça está ativa na data do instante no sistema SIR.
+ | MSG_E56
+ | A praça informada não estava ativa nos dados de passagem.
+ | Processamento
+
+ | 57
+ | O serviço deverá verificar se o tipo de cobrança efetuada está cadastrado na cabine informada.
+ | MSG_E57
+ | O tipo de cobrança efetuado não é válido para a cabine informada no registro.
+ | Processamento
+
+ | 58
+ | O serviço deverá verificar se o ValorDevido é zero quando o campo Liberação Cancela for igual a "Por atingir fila máxima prevista em contrato".
+ | MSG_E58
+ | Não é permitido enviar Valor devido diferente de zero para liberação de cancelamento igual a "Por atingir fila máxima prevista em contrato".
+ | Recebimento
+
+ | 59
+ | O serviço deverá verificar se o Veículo Carregado está dentro do domínio, quando for tipo de veículo comercial.
+ | MSG_E59
+ | O valor do veículo carregado não é válido para o domínio.
+ | Recebimento
+
+ | 61
+ | O serviço deverá verificar se o Valor Devido é maior que 0, quando o veículo evasor.
+ | MSG_E61
+ | É obrigatório informar o valor devido maior que zero para veículos evasores.
+ | Recebimento
+
+ | 62
+ | O serviço deverá verificar se o veículo é evasor e não está registrado.
+ | MSG_E62
+ | Não é permitido informar veículo evasor e isento no mesmo registro.
+ | Recebimento
+
+ | 63
+ | O serviço deverá verificar se o campo de Rodagem é igual a dupla para veículos do tipo comercial.
+ | MSG_E63
+ | É obrigatório informar rodagem dupla para veículos do tipo comercial.
+ | Recebimento
+
+ | 113
+ | O serviço deverá verificar se o MultiplicadorTarifa é igual a 0 ou 0,5 para veículos do tipo moto evasor ou LiberacaoCancela igual a "Por atingir fila máxima prevista em contrato" ou "Por caso fortuito ou força maior".
+ | MSG_E113
+ | Não é permitido enviar MultiplicadorTarifa diferente de 0 e 0,5 para veículos do tipo moto evasor ou liberação cancela igual a "Por atingir fila máxima prevista em contrato" ou "Por caso fortuito ou força maior".
+ | Recebimento
+
+ | 114
+ | O serviço deverá verificar se o MultiplicadorTarifa é igual a 0 ou 1,0 ou 1,5 ou 2,0 para veículos do tipo Passeio evasor ou LiberacaoCancela igual a "Por atingir fila máxima prevista no contrato “ou "Por caso fortuito ou força maior".
+ | MSG_E114
+ | Não é permitido enviar MultiplicadorTarifa é diferente de 0 ou 1,0 ou 1,5 ou 2,0 para veículos do tipo passeio evasor ou liberação cancela igual a "Por atingir fila máxima prevista em contrato" ou "Por caso fortuito ou força maior".
+ | Recebimento
+
+ | 116
+ | O serviço deverá verificar se os campos MultiplicadorTarifa são iguais a 0 para veículos do tipo Moto (3), quando o campo Isento for igual a Sim (1).
+ | MSG_E116
+ | Não é permitido enviar MultiplicadorTarifa diferente de 0 para veículos do tipo Moto, quando o campo Isento for igual a Sim (1).
+ | Recebimento
+
+ | 117
+ | O serviço deverá verificar se o campo TipoVeiculo é diferente de Moto (3) quando o campo MotivoIsencao for igual a Isento por Contrato (4).
+ | MSG_E117
+ | Não é permitido enviar MotivoIsencao igual a Isento por Contrato (4) para veículos que não sejam do tipo Moto (3).
+ | Recebimento
+
+ | 118
+ | O serviço deverá verificar se o CNPJ está habilitado para enviar MotivoIsenção igual ao Isento por Contrato (4).
+ | MSG_E118
+ | CNPJ não habilitou o envio MotivoIsenção igual ao Isento por Contrato (4).
+ | Recebimento
+
+ | 119
+ | O serviço deverá tornar os campos CNPJ da Amap e IDTAG facultativos quando o tipo de cobrança efetuado para Automática TAG ou Automática OCR/PLACA e o campo Evasão for igual a Sim (1).
+ |  
+ |  
+ | Recebimento
+
+ | 120
+ | O serviço deverá verificar se a data/hora “Instantânea” é menor ou igual à data atual.
+ | MSG_E120
+ | A data/hora informada no “Instante” deve ser menor ou igual à data atual.
+ | Recebimento
+
+ | 121
+ | O serviço deverá verificar se o registro com Motivo igual a 4 já foi cadastrado na base de dados da ANTT.
+ | MSG_E121
+ | O registro enviado não está cadastrado na base da ANTT.
+ | Processamento

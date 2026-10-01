@@ -2,13 +2,7 @@
 // Nesta versão os dados vêm de mocks, mas os tipos já espelham o futuro backend.
 
 export type TripStatus =
-  | "prevista"
-  | "embarque"
-  | "ultima-chamada"
-  | "realizada"
-  | "cancelada"
-  | "atrasada"
-  | "partiu";
+  "prevista" | "embarque" | "ultima-chamada" | "realizada" | "cancelada" | "atrasada" | "partiu";
 
 export type ReconciliationStatus = "conciliado" | "analise" | "divergencia";
 
@@ -156,12 +150,7 @@ export interface User {
   name: string;
   email: string;
   profile:
-    | "Administrador"
-    | "Gestor do Terminal"
-    | "Operacional"
-    | "Financeiro"
-    | "Auditor"
-    | "Consulta";
+    "Administrador" | "Gestor do Terminal" | "Operacional" | "Financeiro" | "Auditor" | "Consulta";
   lastAccess: string;
   active: boolean;
 }
@@ -170,8 +159,8 @@ export interface Integration {
   id: string;
   name: string;
   description: string;
-  status: "Preparado para integração";
-  badge: "Não conectado" | "Ambiente demonstrativo";
+  status: "Preparado para integração" | "Importação mensal";
+  badge: "Não conectado" | "Conectado";
 }
 
 export interface AlertItem {

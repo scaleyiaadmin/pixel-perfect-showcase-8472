@@ -1,8 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Maximize2, PlaneTakeoff } from "lucide-react";
+import { Maximize2 } from "lucide-react";
 import { PrefeituraLogo, RodoviariaLogo } from "@/components/brand/Logos";
-import { companyName, upcomingTrips } from "@/data/mock";
+import {
+  destinoDaPartida,
+  horaCurta,
+  nomeEmpresa,
+  partidasDoDia,
+  useHorarios,
+} from "@/services/dados-publicos";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/painel/")({
@@ -17,7 +23,8 @@ export const Route = createFileRoute("/painel/")({
       { property: "og:title", content: "Painel de Partidas — Nova Rodoviária de Manhuaçu" },
       {
         property: "og:description",
-        content: "Horários, destinos, empresas e plataformas em tempo real no terminal de Manhuaçu.",
+        content:
+          "Horários, destinos, empresas e plataformas em tempo real no terminal de Manhuaçu.",
       },
     ],
   }),
@@ -29,25 +36,29 @@ const boardStatus: Record<string, { label: string; className: string }> = {
   "ultima-chamada": { label: "ÚLTIMA CHAMADA", className: "bg-warning text-warning-foreground" },
   atrasada: { label: "ATRASADO", className: "bg-danger text-danger-foreground" },
   prevista: { label: "PREVISTO", className: "bg-info text-info-foreground" },
-  partiu: { label: "PARTIU", className: "bg-board-row text-board-foreground/70 border border-board-foreground/25" },
-  realizada: { label: "PARTIU", className: "bg-board-row text-board-foreground/70 border border-board-foreground/25" },
+  partiu: {
+    label: "PARTIU",
+    className: "bg-board-row text-board-foreground/70 border border-board-foreground/25",
+  },
+  realizada: {
+    label: "PARTIU",
+    className: "bg-board-row text-board-foreground/70 border border-board-foreground/25",
+  },
   cancelada: { label: "CANCELADO", className: "bg-danger text-danger-foreground" },
 };
 
-export function BoardShell({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  const [clock, setClock] = useState("16:02:14");
+export function BoardShell({ title, children }: { title: string; children: React.ReactNode }) {
+  const [clock, setClock] = useState("");
+  const [today, setToday] = useState("");
 
   useEffect(() => {
-    const tick = () =>
+    const tick = () => {
+      const now = new Date();
       setClock(
-        new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+        now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
       );
+      setToday(now.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" }));
+    };
     tick();
     const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
@@ -74,7 +85,7 @@ export function BoardShell({
         <div className="flex items-center gap-6">
           <div className="text-right">
             <p className="tabular font-board text-5xl leading-none font-bold">{clock}</p>
-            <p className="text-xs tracking-[0.2em] uppercase text-board-foreground/60">26 de setembro de 2026</p>
+            <p className="text-xs tracking-[0.2em] uppercase text-board-foreground/60">{today}</p>
           </div>
           <PrefeituraLogo inverted />
         </div>
@@ -84,10 +95,16 @@ export function BoardShell({
 
       <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-board-foreground/15 px-8 py-5 text-sm text-board-foreground/70">
         <div className="flex gap-4">
-          <Link to="/painel" className="font-board text-xl tracking-[0.2em] uppercase hover:text-board-foreground">
+          <Link
+            to="/painel"
+            className="font-board text-xl tracking-[0.2em] uppercase hover:text-board-foreground"
+          >
             Partidas
           </Link>
-          <Link to="/painel/chegadas" className="font-board text-xl tracking-[0.2em] uppercase hover:text-board-foreground">
+          <Link
+            to="/painel/chegadas"
+            className="font-board text-xl tracking-[0.2em] uppercase hover:text-board-foreground"
+          >
             Chegadas
           </Link>
         </div>
@@ -112,12 +129,24 @@ export function BoardShell({
 }
 
 function BoardDepartures() {
-  const [changed, setChanged] = useState<string | null>(null);
+  const horarios = useHorarios();
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
-    const id = window.setTimeout(() => setChanged(upcomingTrips[3]?.id ?? null), 3500);
-    return () => window.clearTimeout(id);
+    setNow(new Date());
+    const id = window.setInterval(() => setNow(new Date()), 30_000);
+    return () => window.clearInterval(id);
   }, []);
+
+  // Próximas partidas programadas; saem da tela 5 minutos depois do horário.
+  const proximas = now
+    ? partidasDoDia(horarios.data ?? [], now)
+        .filter((h) => {
+          const [hh, mm] = h.hora.split(":").map(Number);
+          return hh * 60 + mm >= now.getHours() * 60 + now.getMinutes() - 5;
+        })
+        .slice(0, 9)
+    : [];
 
   return (
     <BoardShell title="Partidas">
@@ -130,32 +159,41 @@ function BoardDepartures() {
           <span className="text-center">Status</span>
         </div>
 
-        {upcomingTrips.slice(0, 9).map((t) => {
-          const status = boardStatus[t.status] ?? boardStatus.prevista;
-          const isChanged = changed === t.id;
+        {horarios.isLoading && (
+          <p className="py-10 text-center font-board text-2xl text-board-foreground/60">
+            Carregando…
+          </p>
+        )}
+        {horarios.error && (
+          <p className="py-10 text-center font-board text-2xl text-board-foreground/60">
+            Painel temporariamente indisponível.
+          </p>
+        )}
+        {horarios.data && proximas.length === 0 && (
+          <p className="py-10 text-center font-board text-2xl text-board-foreground/60">
+            Sem mais partidas programadas hoje.
+          </p>
+        )}
+
+        {proximas.map((h) => {
+          const status = boardStatus.prevista;
           return (
             <div
-              key={t.id}
-              className={cn(
-                "grid grid-cols-[7rem_1fr_1fr_8rem_14rem] items-center gap-4 border-b border-board-foreground/10 py-4 transition-colors",
-                isChanged && "board-highlight",
-              )}
+              key={h.id}
+              className="grid grid-cols-[7rem_1fr_1fr_8rem_14rem] items-center gap-4 border-b border-board-foreground/10 py-4"
             >
-              <span className="tabular font-board text-4xl font-bold md:text-5xl">{t.scheduled}</span>
+              <span className="tabular font-board text-4xl font-bold md:text-5xl">
+                {horaCurta(h.hora)}
+              </span>
               <span className="font-board text-3xl font-semibold tracking-wide uppercase md:text-4xl">
-                {t.destination}
+                {destinoDaPartida(h)}
               </span>
               <span className="font-board text-2xl tracking-wide text-board-foreground/75 uppercase md:text-3xl">
-                {companyName(t.companyId)}
+                {h.linha.empresa?.razao_social ??
+                  (h.linha.fonte === "DER-MG" ? "Intermunicipal" : nomeEmpresa(h.linha))}
               </span>
-              <span className="text-center font-board text-4xl font-bold md:text-5xl">
-                {isChanged ? (
-                  <span className="text-warning">
-                    03 <span className="text-2xl">→</span> {t.platform}
-                  </span>
-                ) : (
-                  t.platform
-                )}
+              <span className="text-center font-board text-4xl font-bold text-board-foreground/50 md:text-5xl">
+                —
               </span>
               <span className="flex justify-center">
                 <span
@@ -164,7 +202,6 @@ function BoardDepartures() {
                     status.className,
                   )}
                 >
-                  {t.status === "embarque" && <PlaneTakeoff className="h-5 w-5" />}
                   {status.label}
                 </span>
               </span>

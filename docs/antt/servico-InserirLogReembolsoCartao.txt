@@ -1,0 +1,81 @@
+# InserirLogReembolsoCartao
+
+Permite o registro de reembolso de créditos de um determinado cartão.
+
+A execução desse método deve ser realizada, ao menos uma vez ao dia, pelo subsistema não embarcado do transporte semiurbano regular.
+
+Não há prazo para o envio dos dados relativos ao Log Reembolso de Crédito do Cartão, podendo os dados serem enviados a qualquer momento
+
+ | 
+
+ | Parâmetro
+ | Descrição do Campo
+ | Tamanho
+ | Domínio / Format
+ | Tipo
+ | Obrigatório
+
+ | idLog
+ | Identificador de Log
+ |  
+ | Domínio: [12]
+ | tinyint
+ | Sim
+
+ | numeroCartao
+ | Número do cartão que está sendo reembolsado
+ | 20
+ |  
+ | string
+ | Sim
+
+ | codigoTipoCartao
+ | Tipo de cartão
+ |  
+ | Domínio ver Item 8.1.5
+[0, 1, 2, 3]
+ | tinyint
+ | Sim
+
+ | dataHoraReembolso
+ | 
+Data e hora do reembolso
+
+TZD no Brasil:
+-02:00 (Fernando de Noronha);
+-03:00 (Brasília);
+-04:00 (Amazonas);
+-05:00 (Acre);
+
+ |  
+ | 
+Formato: 
+AAAA-MM-DDThh:mm:ssTZD
+
+Padrão UTC completo 
+(com Time Zone Designator)
+
+Exemplo: 
+2025-07-19T13:46:15-03:00 
+
+ | datetime offset
+ | Sim
+
+ | codigoMotivoReembolso
+ | Motivo do reembolso para o usuário
+ | 1
+ | Domínio: 
+[1,2]
+1= Reembolso;
+2 = Transferência de crédito;
+ | tinyint
+ | Sim
+
+ | valorReembolso
+ | Valor reembolsado
+ | 10
+ | Valores possíveis: 
+Min: 0.00;
+Max: 99999999.99;
+ | decimal
+ | Sim

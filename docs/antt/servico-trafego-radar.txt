@@ -1,0 +1,277 @@
+# Tráfego Radar
+
+São informações dos veículos que circulam pelas rodovias federais concedidas e que foram captadas pelos radares.
+
+ | 
+
+ | AP
+ | CAMPO
+ | PAI
+ | TIPO
+ | OBRIGATÓRIO
+ | TAM.
+ | DESCRIÇÃO/OBSERVAÇÃO
+
+ | 1
+ | DataReferencia
+ | -
+ | D
+ | S
+ | 10
+ | Data referente as informações encaminhadas. (Formato: DD/MM/AAAA)
+
+ | 2
+ | Motivo
+ | -
+ | N
+ | S
+ | 1
+ | Motivo pelo qual está sendo enviado.
+1 = Primeiro envio
+2 = Reenvio por ter sido detectado erro no recebimento dos dados.
+3 = Correção por ter sido detectado erro no processamento dos dados.
+4 = Atualização de algum dado do registro.
+
+ | 3
+ | CnpjConcessionaria
+ | -
+ | C
+ | S
+ | 14
+ | CNPJ da concessionária, somente números.
+
+ | 4
+ | NumeroArquivo
+ | -
+ | N
+ | S
+ | 10
+ | Sequencial numérico do arquivo. (Para cada data de referência o número do arquivo deve ser de 1 até n, onde n é a quantidade total de arquivos enviados na data.)
+
+ | 5
+ | Registros
+ | -
+ | -
+ | S
+ | -
+ | Registros de tráfego nos equipamentos de Radar.
+
+ | 6
+ | GUID
+ | AP5
+ | C
+ | S
+ | 36
+ | Identificador único do registro.
+
+ | 7
+ | CodigoEquipamento
+ | AP5
+ | D
+ | S
+ | 9
+ | Identificador do equipamento.
+
+ | 8
+ | Instante
+ | AP5
+ | N
+ | S
+ | 26
+ | Data/hora que o veículo passou pelo equipamento
+(Formato: DD/MM/AAAA HH:MM:SS -00:00)
+
+ | 9
+ | Faixa
+ | AP5
+ | N
+ | S
+ | 2
+ | Número da faixa que o veículo passou pelo equipamento
+
+ | 10
+ | SentidoFaixa
+ | AP5
+ | N
+ | S
+ | 1
+ | Sentido de monitoração da faixa:
+1 = Crescente
+2 = Decrescente
+
+ | 11
+ | Velocidade
+ | AP5
+ | N
+ | S
+ | 13
+ | Velocidade que o veículo passou pelo equipamento.
+
+ | 12
+ | SentidoPassagem
+ | AP5
+ | N
+ | S
+ | 1
+ | Sentido da passagem do veículo:
+1 = Crescente
+2 = Decrescente
+
+ | 13
+ | Comprimento
+ | AP5
+ | N
+ | S
+ | 13
+ | Seis caracteres informando a medida do veículo em metros, considerando vírgula e duas casas decimais.
+Formato: 999,99
+
+ | 14
+ | TipoVeiculo
+ | AP5
+ | N
+ | N
+ | 1
+ | Tipo de Veículo conforme o tipo de classificação:
+
+1 = Moto
+2 = Passeio
+3 = Ônibus
+4 = Comercial
+5 = Não Classificado
+
+ATENÇÃO:
+• É obrigatório se TipoClassificaçaoVeiculo igual a Perfil Magnético (2).
+• Enviar vazio se TipoClassificaçaoVeiculo igual a Comprimento (1).
+
+ | 15
+ | Placa
+ | AP5
+ | C
+ | S
+ | 7
+ | Placa do veículo que passou pelo equipamento.
+
+Regras Aplicadas
+
+ | 
+
+ | Nº
+ | DESCRIÇÃO DA REGRA
+ | CÓDIGO ERRO
+ | MENSAGEM DE ERRO
+ | VALIDAÇÃO
+
+ | 01
+ | O serviço deverá validar se o Certificado usado pertence ao CNPJ da concessionária que está cadastrado no sistema do SIR e informado no JSON.
+ | MSG_E01
+ | O certificado usado com CNPJ (CNPJ do certificado formatado) não faz referência ao CNPJ (CNPJ enviado no JSON formatado) registrado no sistema
+ | Recebimento
+
+ | 02
+ | O serviço deverá validar se os campos obrigatórios foram preenchidos (cabeçalho e registros).
+ | MSG_E02
+ | O campo (nome do campo) deve ser preenchido.
+ | Recebimento
+
+ | 03
+ | O serviço deverá validar se o tipo do dado está correto (cabeçalho e registros).
+ | MSG_E03
+ | O campo (nome do campo) está com formato errado.
+ | Recebimento
+
+ | 04
+ | O serviço deverá validar se o tamanho dos atributos está correto (cabeçalho e registros).
+ | MSG_E04
+ | O campo (nome do campo) está com tamanho errado.
+ | Recebimento
+
+ | 05
+ | O serviço deverá verificar se existe campo que não foi estabelecido para o recebimento.
+ | MSG_E05
+ | Estrutura inválida. O campo (nome do campo) não está especificado no contrato.
+ | Recebimento
+
+ | 06
+ | O serviço deverá verificar a ausência de campo que foi estabelecido como obrigatório para o recebimento.
+ | MSG_E06
+ | O campo (nome do campo) não foi informado.
+ | Recebimento
+
+ | 07
+ | O serviço deverá verificar se foi declarado algum registro no arquivo.
+ | MSG_E07
+ | Registro não informado.
+ | Recebimento
+
+ | 08
+ | O serviço deverá verificar se o registro já foi cadastrado na base de dados da ANTT.
+ | MSG_E08
+ | Registro já recebido anteriormente.
+ | Processamento
+
+ | 09
+ | O serviço verifica se o registro possui evento posterior a 2020.
+ | MSG_E09
+ | Registro recebido com data do evento anterior a 2020.
+ | Recebimento
+
+ | 10
+ | O serviço deverá verificar se o registro já foi recebido, validado e armazenado.
+ | MSG_E10
+ | Não foi possível validar o recebimento. Por favor, enviar novamente.
+ | Recebimento
+
+ | 37
+ | O serviço deverá verificar se o código enviado é uma opção válida para o campo.
+ | MSG_E37
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar documentação.
+ | Recebimento
+
+ | 90
+ | O serviço deverá verificar se o CodigoEquipamento pertence ao CNPJ da concessionária consta no sistema SIR.
+ | MSG_E90
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar o cadastro no sistema SIR.
+ | Processamento
+
+ | 91
+ | O serviço deverá verificar se a Faixa informada para o CodigoEquipamento consta no sistema SIR.
+ | MSG_E91
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar o cadastro no sistema SIR.
+ | Processamento
+
+ | 92
+ | O serviço deverá verificar se o CodigoEquipamento está ativo na data da passagem no sistema SIR.
+ | MSG_E92
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar o cadastro no sistema SIR.
+ | Processamento
+
+ | 93
+ | O serviço deverá verificar se o CodigoEquipamento pertence a um trecho ativo no sistema SIR.
+ | MSG_E93
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar o cadastro no sistema SIR.
+ | Processamento
+
+ | 94
+ | O serviço deverá verificar se o CodigoEquipamento está cadastrado no sistema SIR.
+ | MSG_E94
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar o cadastro no sistema SIR.
+ | Processamento
+
+ | 95
+ | O serviço deverá verificar se o SentidoFaixa pertence a Faixa enviada no sistema SIR.
+ | MSG_E95
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome do campo). Por favor, consultar o cadastro no sistema SIR.
+ | Processamento
+
+ | 109
+ | O serviço deverá verificar se a data/hora informada no campo “Instante” é menor ou igual à data atual.
+ | MSG_E109
+ | A data/hora informada no campo “Instante” deve ser menor ou igual à data atual.
+ | Recebimento
+
+ | 110
+ | O serviço deverá verificar se o registro com Motivo igual a 4 já foi cadastrado na base de dados da ANTT.
+ | MSG_E110
+ | O registro enviado não está cadastrado na base da ANTT.
+ | Processamento

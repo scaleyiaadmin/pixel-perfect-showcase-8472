@@ -10,6 +10,7 @@ import {
   reconciliationTone,
   tripStatusTone,
   type Column,
+  DemoBanner,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,10 +41,14 @@ export const Route = createFileRoute("/_admin/operacao/viagens/")({
       { title: "Viagens — SisRodov Manhuaçu" },
       {
         name: "description",
-        content: "Controle das viagens previstas, em embarque, realizadas e canceladas no Terminal Rodoviário de Manhuaçu.",
+        content:
+          "Controle das viagens previstas, em embarque, realizadas e canceladas no Terminal Rodoviário de Manhuaçu.",
       },
       { property: "og:title", content: "Viagens — SisRodov Manhuaçu" },
-      { property: "og:description", content: "Controle das viagens do Terminal Rodoviário de Manhuaçu." },
+      {
+        property: "og:description",
+        content: "Controle das viagens do Terminal Rodoviário de Manhuaçu.",
+      },
     ],
   }),
   component: TripsPage,
@@ -61,7 +66,10 @@ function TripsPage() {
       allTrips.filter((t) => {
         const q = search.trim().toLowerCase();
         const matchQ =
-          !q || `${t.number} ${t.destination} ${companyName(t.companyId)} ${t.vehicle}`.toLowerCase().includes(q);
+          !q ||
+          `${t.number} ${t.destination} ${companyName(t.companyId)} ${t.vehicle}`
+            .toLowerCase()
+            .includes(q);
         return (
           matchQ &&
           (company === "todas" || t.companyId === company) &&
@@ -74,16 +82,37 @@ function TripsPage() {
 
   const columns: Column<Trip>[] = [
     { key: "date", header: "Data", render: (t) => <span className="tabular">{t.date}</span> },
-    { key: "time", header: "Horário", render: (t) => <span className="tabular font-semibold">{t.scheduled}</span> },
+    {
+      key: "time",
+      header: "Horário",
+      render: (t) => <span className="tabular font-semibold">{t.scheduled}</span>,
+    },
     { key: "company", header: "Empresa", render: (t) => companyName(t.companyId) },
-    { key: "origin", header: "Origem", render: (t) => <span className="text-muted-foreground">{t.origin}</span> },
+    {
+      key: "origin",
+      header: "Origem",
+      render: (t) => <span className="text-muted-foreground">{t.origin}</span>,
+    },
     { key: "dest", header: "Destino", render: (t) => t.destination },
-    { key: "vehicle", header: "Veículo", render: (t) => <span className="tabular text-muted-foreground">{t.vehicle}</span> },
-    { key: "boardings", header: "Embarques", align: "right", render: (t) => <span className="tabular">{t.boardings}</span> },
+    {
+      key: "vehicle",
+      header: "Veículo",
+      render: (t) => <span className="tabular text-muted-foreground">{t.vehicle}</span>,
+    },
+    {
+      key: "boardings",
+      header: "Embarques",
+      align: "right",
+      render: (t) => <span className="tabular">{t.boardings}</span>,
+    },
     {
       key: "status",
       header: "Status",
-      render: (t) => <StatusBadge tone={tripStatusTone[t.status].tone}>{tripStatusTone[t.status].label}</StatusBadge>,
+      render: (t) => (
+        <StatusBadge tone={tripStatusTone[t.status].tone}>
+          {tripStatusTone[t.status].label}
+        </StatusBadge>
+      ),
     },
     {
       key: "conc",
@@ -103,9 +132,19 @@ function TripsPage() {
         subtitle="Programação e execução das viagens do terminal"
         actions={<NewTripDialog />}
       />
+      <DemoBanner />
 
-      <FilterBar search={search} onSearch={setSearch} placeholder="Pesquisar viagem, empresa, destino ou veículo...">
-        <Input type="date" defaultValue="2026-09-26" className="h-9 w-[10.5rem]" aria-label="Data" />
+      <FilterBar
+        search={search}
+        onSearch={setSearch}
+        placeholder="Pesquisar viagem, empresa, destino ou veículo..."
+      >
+        <Input
+          type="date"
+          defaultValue="2026-09-26"
+          className="h-9 w-[10.5rem]"
+          aria-label="Data"
+        />
         <Select value={company} onValueChange={setCompany}>
           <SelectTrigger className="h-9 w-[13rem]">
             <SelectValue placeholder="Empresa" />
@@ -151,7 +190,9 @@ function TripsPage() {
         <DataTable
           columns={columns}
           rows={rows}
-          onRowClick={(t) => navigate({ to: "/operacao/viagens/$tripId", params: { tripId: t.id } })}
+          onRowClick={(t) =>
+            navigate({ to: "/operacao/viagens/$tripId", params: { tripId: t.id } })
+          }
         />
       </SectionCard>
       <p className="mt-3 text-xs text-muted-foreground">

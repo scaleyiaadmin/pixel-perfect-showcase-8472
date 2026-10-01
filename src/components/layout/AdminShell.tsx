@@ -32,10 +32,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PrefeituraLogo, SisRodovLogo } from "@/components/brand/Logos";
-import { allTrips, companies, companyName, currentUser, destinations, notifications, tickets } from "@/data/mock";
+import { allTrips, companyName, currentUser, notifications, tickets } from "@/data/mock";
+import { useEmpresas, useLinhas } from "@/services/dados-publicos";
 import { StatusBadge } from "@/components/common";
 
-type NavItem = { label: string; to: string; icon: typeof Bus; children?: { label: string; to: string }[] };
+type NavItem = {
+  label: string;
+  to: string;
+  icon: typeof Bus;
+  children?: { label: string; to: string }[];
+};
 
 const navigation: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
@@ -76,22 +82,33 @@ const navigation: NavItem[] = [
 function GlobalSearch() {
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
+  const empresas = useEmpresas();
+  const linhas = useLinhas();
 
   const results = useMemo(() => {
     const q = term.trim().toLowerCase();
     if (q.length < 2) return null;
     return {
       viagens: allTrips
-        .filter((t) => `${t.number} ${t.destination} ${companyName(t.companyId)}`.toLowerCase().includes(q))
+        .filter((t) =>
+          `${t.number} ${t.destination} ${companyName(t.companyId)}`.toLowerCase().includes(q),
+        )
         .slice(0, 4),
-      empresas: companies.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 3),
+      empresas: (empresas.data ?? [])
+        .filter((c) => c.razao_social.toLowerCase().includes(q))
+        .slice(0, 3),
       passagens: tickets.filter((t) => t.code.toLowerCase().includes(q)).slice(0, 3),
-      destinos: destinations.filter((d) => d.name.toLowerCase().includes(q)).slice(0, 3),
+      destinos: [...new Set((linhas.data ?? []).flatMap((l) => l.cidades_atendidas))]
+        .filter((d) => d.toLowerCase().includes(q))
+        .slice(0, 3),
     };
-  }, [term]);
+  }, [term, empresas.data, linhas.data]);
 
   const total = results
-    ? results.viagens.length + results.empresas.length + results.passagens.length + results.destinos.length
+    ? results.viagens.length +
+      results.empresas.length +
+      results.passagens.length +
+      results.destinos.length
     : 0;
 
   return (
@@ -107,7 +124,9 @@ function GlobalSearch() {
       />
       {open && results && (
         <div className="absolute top-11 left-0 z-50 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-[var(--shadow-raised)]">
-          {total === 0 && <p className="px-4 py-5 text-sm text-muted-foreground">Nenhum resultado nos dados demonstrativos.</p>}
+          {total === 0 && (
+            <p className="px-4 py-5 text-sm text-muted-foreground">Nenhum resultado.</p>
+          )}
           {results.viagens.length > 0 && (
             <SearchGroup title="Viagens">
               {results.viagens.map((t) => (
@@ -134,7 +153,7 @@ function GlobalSearch() {
                   params={{ companyId: c.id }}
                   className="block px-4 py-2 text-sm hover:bg-muted"
                 >
-                  {c.name}
+                  {c.razao_social}
                 </Link>
               ))}
             </SearchGroup>
@@ -151,8 +170,12 @@ function GlobalSearch() {
           {results.destinos.length > 0 && (
             <SearchGroup title="Destinos">
               {results.destinos.map((d) => (
-                <Link key={d.name} to="/operacao/destinos" className="block px-4 py-2 text-sm hover:bg-muted">
-                  {d.name} · {d.trips} viagens
+                <Link
+                  key={d}
+                  to="/operacao/destinos"
+                  className="block px-4 py-2 text-sm hover:bg-muted"
+                >
+                  {d}
                 </Link>
               ))}
             </SearchGroup>
@@ -166,7 +189,9 @@ function GlobalSearch() {
 function SearchGroup({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="border-b border-border last:border-0">
-      <p className="px-4 pt-3 pb-1 text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">{title}</p>
+      <p className="px-4 pt-3 pb-1 text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
+        {title}
+      </p>
       {children}
     </div>
   );
@@ -183,7 +208,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {navigation.map((item) => {
-          const active = pathname === item.to || (item.children?.some((c) => pathname.startsWith(c.to)) ?? false) || (item.to !== "/dashboard" && pathname.startsWith(item.to));
+          const active =
+            pathname === item.to ||
+            (item.children?.some((c) => pathname.startsWith(c.to)) ?? false) ||
+            (item.to !== "/dashboard" && pathname.startsWith(item.to));
           return (
             <div key={item.label}>
               <Link
@@ -238,7 +266,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             {currentUser.initials}
           </div>
           <div className="min-w-0 flex-1 leading-tight">
-            <p className="truncate text-sm font-semibold text-sidebar-accent-foreground">{currentUser.name}</p>
+            <p className="truncate text-sm font-semibold text-sidebar-accent-foreground">
+              {currentUser.name}
+            </p>
             <p className="truncate text-xs text-sidebar-foreground/70">{currentUser.role}</p>
           </div>
         </div>
@@ -284,7 +314,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-card/90 px-4 backdrop-blur md:px-6">
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Abrir menu">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Abrir menu"
+          >
             <Menu className="h-5 w-5" />
           </Button>
 
@@ -354,8 +390,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <main className="flex-1 px-4 py-6 md:px-6 lg:px-8">{children}</main>
 
         <footer className="border-t border-border px-6 py-4 text-xs text-muted-foreground">
-          SisRodov Manhuaçu · Sistema Municipal de Gestão e Controle do Terminal Rodoviário · Ambiente
-          demonstrativo com dados fictícios.
+          SisRodov Manhuaçu · Sistema Municipal de Gestão e Controle do Terminal Rodoviário · Linhas
+          e horários oficiais da ANTT e do DER-MG.
         </footer>
       </div>
     </div>

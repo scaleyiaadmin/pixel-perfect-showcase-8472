@@ -1,0 +1,867 @@
+# Atendimento
+
+São informações dos atendimentos realizados nas rodovias federais concedidas.
+
+ | 
+
+ | AP
+ | CAMPO
+ | PAI
+ | TIPO
+ | OBRIGATÓRIO
+ | TAM.
+ | DESCRIÇÃO/OBSERVAÇÃO
+
+ | 1
+ | DataReferencia
+ | -
+ | D
+ | S
+ | 10
+ | Data referente as informações encaminhadas. (Formato: DD/MM/AAAA)
+
+ | 2
+ | Motivo
+ | -
+ | N
+ | S
+ | 1
+ | Motivo pelo qual está sendo enviado.
+1 = Primeiro envio.
+2 = Reenvio por ter sido detectado erro no recebimento dos dados.
+3 = Correção por ter sido detectado erro no processamento dos dados.
+4 = Atualização de algum dado do registro.
+
+ | 3
+ | CnpjConcessionaria
+ | -
+ | C
+ | S
+ | 14
+ | CNPJ da concessionária, somente números.
+
+ | 4
+ | NumeroArquivo
+ | -
+ | N
+ | S
+ | 10
+ | Sequencial numérico do arquivo. (Para cada data de referência o número do arquivo deve ser de 1 até n, onde n é a quantidade total de arquivos enviados na data.)
+
+ | 5
+ | Ocorrencia
+ | -
+ | -
+ | S
+ | -
+ | Dados da Ocorrência
+
+ | 6
+ | GUID
+ | AP5
+ | C
+ | S
+ | 36
+ | Identificador único da ocorrência
+
+ | 7
+ | NumeroOcorrencia
+ | AP5
+ | N
+ | S
+ | 4
+ | Nº da ocorrência que gera os atendimentos
+
+ | 8
+ | NumeroOcorrenciaAcidente
+ | AP5
+ | N
+ | N
+ | 10
+ | Nº da ocorrência do acidente
+
+ | 9
+ | Instante
+ | AP5
+ | D
+ | S
+ | 26
+ | Data/hora em que a ocorrência foi aberta. (Formato: DD/MM/AAAA HH:MM:SS - 00:00)
+
+ | 10
+ | TipoContato
+ | AP5
+ | N
+ | S
+ | 1
+ | Quem informou a ocorrência:
+1 = Usuário
+2 = Concessionária
+3 = Outros
+
+ | 11
+ | OrigemContato
+ | AP5
+ | C
+ | S
+ | 255
+ | Forma como a ocorrência foi identificada
+
+ | 12
+ | ConsideracaoGeral
+ | AP5
+ | C
+ | S
+ | 1000
+ | Informações sobre a ocorrência
+
+ | 13
+ | TrechoOcorrencia
+ | AP5
+ | N
+ | S
+ | 8
+ | Código de identificação do trecho da rodovia onde aconteceu a ocorrência.
+
+ | 14
+ | KmOcorrencia
+ | AP5
+ | N
+ | S
+ | 7
+ | Km em que aconteceu a ocorrência.
+
+ | 15
+ | LatitudeOcorrencia
+ | AP5
+ | N
+ | S
+ | 10
+ | Latitude do local em que aconteceu a ocorrência
+
+ | 16
+ | LongitudeOcorrencia
+ | AP5
+ | N
+ | S
+ | 10
+ | Longitude do local em que aconteceu a ocorrência.
+
+ | 17
+ | CodigoEnvolvidos
+ | AP5
+ | N
+ | N
+ | 2
+ | Lista contendo envolvidos:
+1 = Pedestres
+2 = Animais
+3 = Veículos
+
+ | 18
+ | ListaRecursos
+ | AP5
+ |  
+ | S
+ | -
+ | Lista de Recursos Utilizados na Ocorrência
+
+ | 19
+ | RecursoOperacional
+ | AP18
+ | N
+ | S
+ | 255
+ | Identificador do veículo que prestou o atendimento.
+
+ | 20
+ | DataAcionamento
+ | AP18
+ | D
+ | S
+ | 26
+ | Data/Horário em que o veículo foi acionado.
+(Formato: DD/MM/AAAA HH:MM:SS - 00:00)
+
+ | 21
+ | LatitudeAcionamento
+ | AP18
+ | N
+ | S
+ | 10
+ | Latitude do local em que o veículo estava quando foi acionado para atender ao chamado.
+
+ | 22
+ | LongitudeAcionamento
+ | AP18
+ | N
+ | S
+ | 10
+ | Longitude do local em que o veículo estava quando foi acionado para atender ao chamado.
+
+ | 23
+ | DataChegadaAtendimento
+ | AP18
+ | D
+ | N
+ | 26
+ | Data/Horário em que o veículo chegou ao local do atendimento.
+(Formato: DD/MM/AAAA HH:MM:SS - 00:00)
+
+ | 24
+ | DataSaidaAtendimento
+ | AP18
+ | D
+ | N
+ | 26
+ | Data/Horário em que o veículo saiu do local de atendimento.
+(Formato: DD/MM/AAAA HH:MM:SS - 00:00)
+
+ | 25
+ | TipoServicoPrestado
+ | AP18
+ | N
+ | S
+ | 1
+ | Tipo de serviço prestado pelo recurso:
+1 = Mecânico
+2 = Apoio
+3 = Médico
+4 = Combate a incêndio
+5 = Apreensão de animais
+6 = Inspeção
+7 = Vigilância Patrimonial
+
+ | 26
+ | ListaVeiculo
+ | AP5
+ | -
+ | N
+ | -
+ | Listagem de veículos atendidos pelo recurso.
+
+ | 27
+ | Placa
+ | AP26
+ | C
+ | N
+ | 7
+ | Placa do veículo atendido
+
+ATENÇÃO:
+• Obrigatório quando tipo de veículo for automóvel, Caminhão, Moto, Ônibus e utilitário.
+
+ | 28
+ | MarcaModelo
+ | AP26
+ | C
+ | N
+ | 300
+ | Marca/modelo do veículo atendido (Ex: Fiat/Palio)
+
+ATENÇÃO:
+• Obrigatório quando tipo de veículo for Automóvel, Caminhão, Moto, Ônibus e Utilitário.
+
+ | 29
+ | TipoVeiculo
+ | AP26
+ | N
+ | N
+ | 2
+ | Tipo de veículo atendido:
+1 = Automóvel
+2 = Bicicleta
+3 = Caminhão
+4 = Moto
+5 = Ônibus
+6 = Outros
+7 = Tração animal
+8 = Transporte de cargas especial
+9 = Trator/máquinas
+10 = Utilitário
+11 = Não identificado
+
+ATENÇÃO:
+• Obrigatório quando CodigoEnvolvidos iguala Veículos (3).
+
+ | 30
+ | TipoCarga
+ | AP26
+ | N
+ | N
+ | 2
+ | Tipo de carga existente no veículo atendido:
+1 = Animais vivos
+2 = Alimento congelado
+3 = Gás toxico
+4 = Gás potencial explosivo
+5 = Produto químico
+6 = Grãos (granel)
+7 = Grãos (seco)
+8 = Cana de açúcar
+9 = Combustível
+10 = Óleo
+11 = Extra largura
+12 = Outros
+13 = Não identificado
+
+ | 31
+ | RecusouAtendimento
+ | AP26
+ | N
+ | N
+ | 1
+ | Indica se o usuário recusou o atendimento:
+1 = Não
+2 = Sim
+
+ATENÇÃO:
+• Obrigatório quando CodigoEnvolvidos iguala Veículos (3).
+
+ | 32
+ | TermoRecusa
+ | AP26
+ | I
+ | N
+ | 1000000
+ | Imagem do documento que comprove a recusa do atendimento.
+
+ | 33
+ | VitimaHospital
+ | AP26
+ | N
+ | N
+ | 1
+ | Indica se o usuário foi encaminhado para o hospital:
+1 = Não
+2 = Sim
+
+ATENÇÃO:
+• Obrigatório quando CodigoEnvolvidos iguala Veículos (3).
+
+ | 34
+ | ListaHospitalVitima
+ | AP26
+ | -
+ | N
+ | -
+ | Listagem de Hospitais em que o recurso operacional precisou passar para consegui atendimento médico para a vítima.
+
+ | 35
+ | NomeHospitalVitima
+ | AP34
+ | C
+ | N
+ | 200
+ | Nome do hospital
+
+ATENÇÃO:
+• Obrigatório quando VitimaHospital igualsim (2).
+
+ | 36
+ | LatitudeHospitalVitima
+ | AP34
+ | N
+ | N
+ | 10
+ | Latitude da localização do hospital
+
+ATENÇÃO:
+• Obrigatório quando VitimaHospital igualsim (2).
+
+ | 37
+ | LongitudeHospitalVitima
+ | AP34
+ | N
+ | N
+ | 10
+ | Longitude da localização do hospital
+
+ATENÇÃO:
+• Obrigatório quando VitimaHospital igualsim (2).
+
+ | 38
+ | DataEntradaHospitalVitima
+ | AP34
+ | D
+ | N
+ | 26
+ | Data/Hora de entrada no hospital
+(Formato: DD/MM/AAAA HH:MM:SS -00:00)
+
+ATENÇÃO:
+• Obrigatório quando VitimaHospital igualsim (2).
+
+ | 39
+ | DataSaidaHospitalVitima
+ | AP34
+ | D
+ | N
+ | 26
+ | Data/Hora de saída do hospital
+(Formato: DD/MM/AAAA HH:MM:SS -00:00)
+
+ATENÇÃO:
+• Obrigatório quando VitimaHospital igualsim (2).
+
+ | 40
+ | TipoEnvolvidoVitima
+ | AP34
+ | N
+ | N
+ | 1
+ | Tipo do Envolvido:
+1 = Pedestre
+2 = Vítima Veículo
+
+ATENÇÃO:
+• Obrigatório quando VitimaHospital igualsim (2).
+
+ | 41
+ | CPFEnvolvidoVitima
+ | AP34
+ | N
+ | N
+ | 11
+ | CPF do Envolvido.
+
+ATENÇÃO:
+• Opcional
+
+ | 42
+ | ListaAnimal
+ | AP5
+ | -
+ | N
+ | -
+ | Lista de animais apreendidos pelo recurso
+
+ | 43
+ | TipoAnimal
+ | AP42
+ | N
+ | N
+ | 1
+ | Tipo de animal envolvido:
+1 = Animais Silvestres
+2 = Animais Domésticos
+
+ATENÇÃO:
+• Obrigatório quando CodigoEnvolvidos iguala Animais (2).
+
+ | 44
+ | Animal
+ | AP42
+ | N
+ | N
+ | 1
+ | Animal envolvido:
+1 = Pequeno porte
+2 = Médio porte
+3 = Grande porte
+
+ATENÇÃO:
+• Obrigatório quando CodigoEnvolvidos iguala Animais (2).
+
+ | 45
+ | GravidadeAnimal
+ | AP42
+ | N
+ | N
+ | 1
+ | Gravidade dos ferimentos do animal envolvido:
+1 = Ilesos
+2 = Feridos
+3 = Mortos
+4 = Não identificado
+
+ATENÇÃO:
+• Obrigatório quando CodigoEnvolvidos iguala Animais (2).
+
+ | 46
+ | ListaPedestre
+ | AP5
+ | -
+ | N
+ | -
+ | Lista de Pedestres atendidos pelo recurso operacional.
+
+ | 47
+ | PedestreRecusouAtendimento
+ | AP46
+ | N
+ | N
+ | 2
+ | Indica se o usuário recusou o atendimento:
+1 = Não
+2 = Sim
+
+ATENÇÃO:
+• Obrigatório quando CodigoEnvolvidos igual a Pedestre (1).
+
+ | 48
+ | PedestreTermoRecusa
+ | AP46
+ | I
+ | N
+ | -
+ | Imagem do documento que comprove a recusa do atendimento do pedestre.
+
+ | 49
+ | PedestreHospital
+ | AP46
+ | N
+ | N
+ | 2
+ | Indica se o usuário foi encaminhado para o hospital:
+1 = Não
+2 = Sim
+
+ATENÇÃO:
+• Obrigatório quando CodigoEnvolvidos igual a Pedestre (1).
+
+ | 50
+ | ListaHospitalPedestre
+ | AP46
+ | -
+ | N
+ | -
+ | Listagem de Hospitais em que o recurso operacional precisou passar para consegui atendimento médico para o pedestre
+
+ | 51
+ | NomeHospitalPedestre
+ | AP50
+ | C
+ | N
+ | 200
+ | Nome do hospital
+
+ATENÇÃO:
+• Obrigatório quando PedestreHospital igual sim (2).
+
+ | 52
+ | LatitudeHospitalPedestre
+ | AP50
+ | N
+ | N
+ | 10
+ | Latitude da localização do hospital
+
+ATENÇÃO:
+• Obrigatório quando PedestreHospital igual sim (2).
+
+ | 53
+ | LongitudeHospitalPedestre
+ | AP50
+ | N
+ | N
+ | 10
+ | Longitude da localização do hospital
+
+ATENÇÃO:
+• Obrigatório quando PedestreHospital igual sim (2).
+
+ | 54
+ | DataEntradaHospitalPedestre
+ | AP50
+ | D
+ | N
+ | 26
+ | Data/Hora de entrada no hospital
+(Formato: DD/MM/AAAA HH:MM:SS -00:00)
+
+ATENÇÃO:
+• Obrigatório quando PedestreHospital igual sim (2).
+
+ | 55
+ | DataSaidaHospitalPedestre
+ | AP50
+ | D
+ | N
+ | 26
+ | Data/Hora de saída do hospital
+(Formato: DD/MM/AAAA HH:MM:SS -00:00)
+
+ATENÇÃO:
+• Obrigatório quando PedestreHospital igual sim (2).
+
+ | 56
+ | TipoEnvolvidoPedestre
+ | AP50
+ | N
+ | N
+ | 1
+ | Tipo do Envolvido:
+1 = Pedestre
+2 = Vítima Veículo
+
+ATENÇÃO:
+• Obrigatório quando PedestreHospital igual sim (2).
+
+ | 57
+ | CPFEnvolvidoPedestre
+ | AP50
+ | N
+ | N
+ | 11
+ | CPF do Envolvido.
+
+ATENÇÃO:
+• Opcional
+
+Regras Aplicadas
+
+ | 
+
+ | Nº
+ | DESCRIÇÃO DA REGRA
+ | CÓDIGO ERRO
+ | MENSAGEM DE ERRO
+ | VALIDAÇÃO
+
+ | 01
+ | O serviço deverá validar se o Certificado usado pertence ao CNPJ da concessionária que está cadastrado no sistema do SIR e informado no JSON.
+ | MSG_E01
+ | O certificado usado com CNPJ (CNPJ do certificado formatado) não faz referência ao CNPJ (CNPJ enviado no JSON formatado) registrado no sistema
+ | Recebimento
+
+ | 02
+ | O serviço deverá validar se os campos obrigatórios foram preenchidos (cabeçalho e registros).
+ | MSG_E02
+ | O campo (nome do campo) deve ser preenchido.
+ | Recebimento
+
+ | 03
+ | O serviço deverá validar se o tipo do dado está correto (cabeçalho e registros).
+ | MSG_E03
+ | O campo (nome do campo) está com formato errado.
+ | Recebimento
+
+ | 04
+ | O serviço deverá validar se o tamanho dos atributos está correto (cabeçalho e registros).
+ | MSG_E04
+ | O campo (nome do campo) está com tamanho errado.
+ | Recebimento
+
+ | 05
+ | O serviço deverá verificar se existe campo que não foi estabelecido para o recebimento.
+ | MSG_E05
+ | Estrutura inválida. O campo (nome do campo) não está especificado no contrato.
+ | Recebimento
+
+ | 06
+ | O serviço deverá verificar a ausência de campo que foi estabelecido como obrigatório para o recebimento.
+ | MSG_E06
+ | O campo (nome do campo) não foi informado.
+ | Recebimento
+
+ | 07
+ | O serviço deverá verificar se foi declarado algum registro no arquivo.
+ | MSG_E07
+ | Registro não informado.
+ | Recebimento
+
+ | 08
+ | O serviço deverá verificar se o registro já foi cadastrado na base de dados da ANTT.
+ | MSG_E08
+ | Registro já recebido anteriormente.
+ | Processamento
+
+ | 09
+ | O serviço verifica se o registro possui evento posterior a 2020.
+ | MSG_E09
+ | Registro recebido com data do evento anterior a 2020.
+ | Recebimento
+
+ | 10
+ | O serviço deverá verificar se o registro já foi recebido, validado de acordo com as regras de recebimento e armazenado para processamento.
+ | MSG_E10
+ | Não foi possível validar o recebimento. Por favor, enviar novamente.
+ | Recebimento
+
+ | 37
+ | O serviço deverá verificar se o código enviado é uma opção válida para o campo.
+ | MSG_E37
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome docampo). Por favor, consultar documentação.
+ | Recebimento
+
+ | 64
+ | O serviço deverá verificar se o trecho informado pertence ao CNPJ da concessionária no sistema SIR.
+ | MSG_E64
+ | O trecho não pertence ao CNPJ informado no registro.
+ | Processamento
+
+ | 65
+ | O serviço deverá verificar se o trecho informado está ativo na data do acidente no sistema SIR.
+ | MSG_E65
+ | O trecho não está ativo na data do atendimento informado no registro.
+ | Processamento
+
+ | 66
+ | O serviço deverá verificar se o KM + metros pertence ao trecho informado no sistema SIR.
+ | MSG_E66
+ | O KM +m não pertence ao trecho informado no registro.
+ | Processamento
+
+ | 67
+ | O serviço deverá verificar se a Latitude e Longitude estão presentes no estado do trecho informado no sistema SIR, considerando apenas áreas dentro do território brasileiro.
+ | MSG_E67
+ | A latitude e longitude não pertencem ao estado do trecho informado no registro.
+ | Recebimento
+
+ | 120
+ | O serviço deverá verificar se o CPF informado na Lista de Hospitais é valido.
+ | MSG_E120
+ | CPF informado é inválido.
+ | Recebimento
+
+ | 121
+ | O serviço deverá verificar se o array Lista Veículo foi informado quando houver veículo atendido.
+ | MSG_E121
+ | É obrigatório enviar informações do array Lista Veículo quando CodigoEnvolvidos igual a veículos (3).
+ | Recebimento
+
+ | 122
+ | O serviço deverá verificar se o array Lista Animais foi informado quando houver animal atendido.
+ | MSG_E122
+ | É obrigatório enviar informações do array Lista Animal quando CodigoEnvolvidos igual a animal (2).
+ | Recebimento
+
+ | 123
+ | O serviço deverá verificar se o array Lista Pedestre foi informado quando houver pedestre atendido.
+ | MSG_E123
+ | É obrigatório enviar informações do array Lista Pedestre quando CodigoEnvolvidos igual a pedestre (1).
+ | Recebimento
+
+ | 124
+ | O serviço deverá verificar se o array Lista Veículo está vazio quando não houver veículo atendido.
+ | MSG_E124
+ | Não é permitido enviar informações do veículo quando CodigoEnvolvidos for nulo ou diferente de veículos (3).
+ | Recebimento
+
+ | 125
+ | O serviço deverá verificar se o array Lista Animal está vazio quando não houver animal atendido.
+ | MSG_E125
+ | Não é permitido enviar informações do animal quando CodigoEnvolvidos for nulo ou diferente de animal (2).
+ | Recebimento
+
+ | 126
+ | O serviço deverá verificar se o array Lista Pedestre está vazio quando não houver pedestre atendido.
+ | MSG_E126
+ | Não é permitido enviar informações do pedestre quando CodigoEnvolvidos for nulo ou diferente de pedestre (1).
+ | Recebimento
+
+ | 127
+ | O serviço deverá verificar se o array Lista Hospital foi informando quando houver veículo atendido e vítima encaminhada para o hospital.
+ | MSG_E127
+ | É obrigatório enviar informações do array Lista Hospital quando CodigoEnvolvidos igual a veículo (3) e VitimaHospital igual a sim (2).
+ | Recebimento
+
+ | 128
+ | O serviço deverá verificar se o array Lista Hospital foi informando quando houver pedestre atendido e encaminhado para o hospital.
+ | MSG_E128
+ | É obrigatório enviar informações do array Lista Hospital quando CodigoEnvolvidos igual a pedestre (1) e PedestreHospital igual a sim (2).
+ | Recebimento
+
+ | 129
+ | O serviço deverá verificar se todos os campos do array Lista Hospital estão vazios quando houver veículo atendido e vítima não encaminhada para o hospital.
+ | MSG_E129
+ | Não é permitido enviar informações do array Lista Hospital quando CodigoEnvolvidos igual a veículo (3) e VitimaHospital igual a não (1).
+ | Recebimento
+
+ | 130
+ | O serviço deverá verificar se todos os campos do array Lista Hospital estão vazios quando houver pedestre atendido e vítima não encaminhada para o hospital.
+ | MSG_E130
+ | Não é permitido enviar informações do array Lista Hospital quando CodigoEnvolvidos igual a pedestre (1) e PedestreHospital igual a não (1).
+ | Recebimento
+
+ | 131
+ | O serviço deverá verificar se o array Lista de Recursos foi informado.
+ | MSG_E131
+ | É obrigatório enviar todas as informações do array Lista de Recursos.
+ | Recebimento
+
+ | 132
+ | O serviço deverá verificar se os campos TipoVeiculo, RecusouAtendimento e VitimaHospital estão preenchidos quando houver veículo envolvido no atendimento.
+ | MSG_E132
+ | É obrigatório informar TipoVeiculo, RecusouAtendimento, e VitimaHospital quando houver veículo envolvido no atendimento.
+ | Recebimento
+
+ | 133
+ | O serviço deverá verificar se os campos TipoAnimal, Animal e GravidadeAnimal estão preenchidos quando houver animal envolvido no atendimento.
+ | MSG_E133
+ | É obrigatório informar TipoAnimal, Animal e GravidadeAnimal quando houver animal envolvido no atendimento.
+ | Recebimento
+
+ | 134
+ | O serviço deverá verificar se os campos PedestreRecusouAtendimento e PedestreHospital estão preenchidos quando houver pedestre envolvido no atendimento.
+ | MSG_E134
+ | É obrigatório informar PedestreRecusouAtendimento e PedestreHospital quando houver pedestre envolvido no atendimento.
+ | Recebimento
+
+ | 135
+ | O serviço deverá verificar se o campo Placa e MarcaModelo quando foram informados quando veículo envolvido no atendimento e TipoVeiculo igual a Automóvel, Caminhão, Moto, Ônibus, Transporte de cargas especiais, Utilitário.
+ | MSG_E135
+ | É obrigatório informar Placa e MarcaModelo quando houver veículo envolvido no atendimento e o tipo de veículo for Automóvel, Caminhão, Moto, Ônibus, Transporte de cargas especiais e Utilitário.
+ | Recebimento
+
+ | 136
+ | O serviço deverá verificar se o registro com Motivo igual a 4 já foi cadastrado na base de dados da ANTT.
+ | MSG_E136
+ | O registro enviado não está cadastrado na base da ANTT.
+ | Processamento
+
+ | 137
+ | O serviço deverá verificar se o tipo de carga está vazio, quando houver veículo envolvido no atendimento igual a Automóvel, Bicicleta, Moto, Ônibus e Não identificado.
+ | MSG_E137
+ | Não é permitido informar o TipoCarga quando houver veículo envolvido no atendimento e o tipo de veículo for o igual a Automóvel, Bicicleta, Moto, Ônibus, Tração animal, Trator/máquinas e Utilitário.
+ | Recebimento
+
+ | 138
+ | O serviço deverá verificar se o recurso informado pertence ao CNPJ da concessionária no sistema SIR.
+ | MSG_E138
+ | O recurso operacional informado não pertence a concessionária no sistema SIR.
+ | Processamento
+
+ | 139
+ | O serviço deverá verificar se o tipo de serviço informado está de acordo com os serviços prestados pelo recurso no sistema SIR.
+ | MSG_E139
+ | O tipo de serviço informado não pertence ao recurso operacional no sistema SIR.
+ | Processamento
+
+ | 140
+ | O serviço deverá verificar se o campo PlacaVeiculo está vazio, quando houver tipo de veículo igual a bicicleta, Tração animal e não identificado.
+ | MSG_E140
+ | Não é permitido enviar PlacaVeiculo para TipoVeiculo igual a bicicleta, tração animal e não identificado.
+ | Recebimento
+
+ | 141
+ | O serviço deverá verificar se os campos NomeHospital, LatitudeHospital, LongitudeHospital, DataEntradaHospital, DataSaidaHospital e TipoEnvolvido foram informados quando houver pedestre envolvido.
+ | MSG_E141
+ | É obrigatório informar NomeHospital, LatitudeHospital, LongitudeHospital, DataEntradaHospital, DataSaidaHospital e TipoEnvolvido quando houve pedestre envolvido e encaminhado para o hospital.
+ | Recebimento
+
+ | 142
+ | O serviço deverá verificar se a data informada no campo “Instante” é maior ou igual a 01/01/2021.
+ | MSG_E142
+ | A data informada deve ser igual ou maior que 01/01/2021.
+ | Recebimento
+
+ | 143
+ | O serviço deverá verificar se a data informada, nos seguintes campos, é maior ou igual a “Instante”. São eles:
+• DataAcionamento
+• DataChegadaAtendimento
+• DataSaidaAtendimento
+• DataEntradaHospitalVitima
+• DataSaidaHospitalVitima
+• DataEntradaHospitalPedestre,
+• DataSaidaHospitalPedestre
+ | MSG_E143
+ | A data informada deve ser igual ou maior que (dataInstante).
+ | Recebimento
+
+ | 144
+ | O serviço deverá verificar se a data/hora informada no campo “Instante” é menor ou igual à data/hora atual.
+ | MSG_E143
+ | A data/hora informada no “Instante” deve ser menor ou igual à data/hora atual.
+ | Recebimento

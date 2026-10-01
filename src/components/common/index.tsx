@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Inbox, Loader2, type LucideIcon } from "lucide-react";
+import { DatabaseZap, FlaskConical, Search, Inbox, Loader2, type LucideIcon } from "lucide-react";
 
 /* ------------------------------ StatusBadge ------------------------------ */
 
@@ -109,9 +109,13 @@ export function StatCard({
   return (
     <Card className="surface-card gap-0 p-5 transition-shadow hover:shadow-[var(--shadow-raised)]">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          {label}
+        </p>
         {Icon && (
-          <span className={cn("grid h-9 w-9 place-items-center rounded-lg border", toneClass[tone])}>
+          <span
+            className={cn("grid h-9 w-9 place-items-center rounded-lg border", toneClass[tone])}
+          >
             <Icon className="h-4.5 w-4.5" />
           </span>
         )}
@@ -284,8 +288,47 @@ export function LoadingState() {
   );
 }
 
-export function DemoNote({ children }: { children: ReactNode }) {
+/* ------------------------------- DemoBanner ------------------------------ */
+
+/** Aviso para telas que ainda mostram dados fictícios (sem fonte real integrada). */
+export function DemoBanner({
+  reason = "aguardando integração com empresas e catracas",
+}: {
+  reason?: string;
+}) {
   return (
-    <p className="mt-4 text-xs text-muted-foreground italic">{children}</p>
+    <div className="mb-5 flex items-start gap-3 rounded-xl border border-warning/35 bg-warning-soft px-4 py-3 text-sm text-warning-foreground">
+      <FlaskConical className="mt-0.5 h-4 w-4 shrink-0" />
+      <p>
+        <span className="font-semibold">Dados de exemplo.</span> Esta tela ainda não tem fonte real
+        ({reason}).
+      </p>
+    </div>
   );
+}
+
+/** Selo curto de fonte oficial para telas com dados reais. */
+export function SourceNote({ children }: { children: ReactNode }) {
+  return <p className="mt-3 text-xs text-muted-foreground">{children}</p>;
+}
+
+/* ------------------------------- QueryState ------------------------------ */
+
+/** Loading / erro de uma consulta ao banco; devolve null quando os dados chegaram. */
+export function QueryState({ isLoading, error }: { isLoading: boolean; error: unknown }) {
+  if (isLoading) return <LoadingState />;
+  if (error) {
+    const message = error instanceof Error ? error.message : "Falha ao consultar o banco de dados.";
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 py-14 text-center">
+        <DatabaseZap className="h-7 w-7 text-danger" />
+        <p className="max-w-md text-sm text-muted-foreground">{message}</p>
+      </div>
+    );
+  }
+  return null;
+}
+
+export function DemoNote({ children }: { children: ReactNode }) {
+  return <p className="mt-4 text-xs text-muted-foreground italic">{children}</p>;
 }

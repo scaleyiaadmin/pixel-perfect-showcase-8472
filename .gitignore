@@ -30,3 +30,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Segredos e saída local do script de importação
+.env
+.env.*
+!.env.example
+scripts/saida/

@@ -1,0 +1,149 @@
+# InserirLogCancelarPassagem
+
+Realiza a comunicação dos bilhetes cancelados durante um determinado período.
+
+A execução desse método deve ser realizada, ao menos uma vez ao dia, pelo subsistema não embarcado do transporte rodoviário regular.
+
+Os dados relativos ao Log Cancelar Passagem devem ser enviados no prazo máximo de 24 (vinte e quatro) horas de seu registro.
+
+A contagem temporal do prazo limite de 24 (vinte e quatro) horas para envio do Log se inicia na Data/Hora de Cancelamento do Bilhete e se encerra na Data/Hora de Envio do Log.
+
+ | 
+
+ | Parâmetro
+ | Descrição do Campo
+ | Tamanho
+ | Domínio / Formato
+ | Tipo
+ | Obrigatório
+
+ | idLog
+ | Identificador de Log
+ |  
+ | Domínio: [11]
+ | tinyint
+ | Sim
+
+ | cnpjEmpresaTransporte
+ | CNPJ da empresa de transporte
+ | 14
+ | Tamanho fixo: 14 caracteres
+ | string
+ | Sim
+
+ | numeroBilhete
+ | Número do bilhete que será cancelado
+ |  
+ | Valores possíveis:
+Mín: 1;
+Máx: 999999999;
+ | integer
+ | Sim
+
+ | identificacaoLinha
+ | Identificação da linha:
+Prefixo da Linha
+(Rodoviário Regular)
+ | 11
+ | Tamanho fixo: 11 caracteres
+ | string
+ | Sim
+
+ | dataViagemPassageiro
+ | Data de início da viagem do passageiro constante no bilhete
+ |  
+ | Formato:
+Data Local
+AAAA-MM-DD
+ | date
+ | Sim
+
+ | horaViagemPassageiro
+ | Hora de início da viagem do passageiro constante no bilhete
+ |  
+ | Formato:
+Hora Local
+HH:MM:SS
+ | time
+ | Sim
+
+ | codigoMotivoCancelamento
+ | Motivo do cancelamento do bilhete
+ |  
+ | Domínio:
+[1, 2, 3]
+
+1 = Reembolso;
+2 = Remarcação;
+3 = Transferência de titularidade;
+ | tinyint
+ | Sim
+
+ | dataHoraCancelamento
+ | 
+Data e hora do registro do cancelamento do bilhete
+
+TZD no Brasil:
+-02:00 (Fernando de Noronha);
+-03:00 (Brasília);
+-04:00 (Amazonas);
+-05:00 (Acre);
+
+ |  
+ | Formato:
+AAAA-MM-DDThh:mm:ssTZD
+
+Padrão UTC completo (com Time Zone Designator)
+
+Exemplo:
+2025-07-19T13:46:15-03:00
+ | datetime offset
+ | Sim
+
+ | numeroNovoBilhete
+ | Número do novo bilhete gerado
+ |  
+ | Valores possíveis:
+Mín: 1;
+Máx: 999999999;
+ | integer
+ | Não
+
+ | sequenciamento
+ | Código sequencial de ordenação
+ | -
+ | Valores possíveis:
+Mín: 0;
+Máx: 999999;
+ | integer
+ | Sim
+
+ | idViagem
+ | Código Identificador da Viagem (Rodoviário Regular)
+Informações na sequência apresentada e separadas por hífen
+
+Data Programada da Viagem no ponto inicial da linha:
+AAAAMMDD
+
+Hora Programada da Viagem no ponto inicial da linha:
+HHMMSS
+
+Código Tipo de Viagem: NN
+00 = Não atende à Regularidade Mínima
+01 = Atende à Regularidade Mínima
+
+Código Sentido da Linha: N
+0 = Volta
+1 = Ida
+
+Prefixo da Linha SIGMA:
+11 caracteres
+ | 32
+ | Rodoviário Regular
+
+AAAAMMDD-HHMMSS-NN-N-PPPPPPPPPPP
+
+Tamanho: 32 caracteres
+(incluindo os 4 hífens)
+ | string
+ | Sim

@@ -1,0 +1,915 @@
+# Documentação - MONITRIIP
+
+Escopo Técnico
+
+Este documento apresenta:
+
+Como consumir as APIs do MONITRIIP
+
+Requisitos de segurança (OAuth2 + ClientId)
+
+Estrutura dos endpoints e versionamento
+
+Exemplos de integração
+
+Boas práticas de conectividade
+
+Tratamento de erros
+
+Processo de onboarding via portal SISHAB
+
+Catálogo das APIs oficiais
+
+Comunicação com as APIs
+
+Protocolo: HTTPS (TLS 1.2 ou superior)
+
+Método HTTP: POST
+
+Formato do corpo: JSON UTF-8
+
+Formato de data/hora: ISO 8601
+
+Autenticação: OAuth2 (Password Grant Type)
+
+Identificação da aplicação: api_key na query string
+
+Domínio Oficial das APIs
+
+Todas as integrações devem utilizar o domínio oficial:
+
+https://api.antt.gov.br
+
+Não é permitido o uso direto de IPs, hosts internos ou domínios alternativos.
+
+Estrutura Base das APIs MONITRIIP
+
+/monitriip/log/v1/<domínio>/<recurso>
+
+/monitriip → identifica o sistema MONITRIIP
+
+/log → APIs destinadas ao registro de eventos
+
+/v1 → versão atual da API
+
+/domínio → agrupamento funcional
+
+/recurso → operação executada
+
+Exemplo de Estrutura de Endpoint
+
+HML: POST https://api-hml.antt.gov.br/monitriip/log/v1/<domínio>/<recurso>?api_key=<CLIENT_ID>
+PRD: POST https://api.antt.gov.br/monitriip/log/v1/<domínio>/<recurso>?api_key=<CLIENT_ID>
+
+Exemplo de Endpoint Real
+
+HML: POST https://api-hml.antt.gov.br/monitriip/log/v1/bilhetes/venda?api_key=<CLIENT_ID>
+PRD: POST https://api.antt.gov.br/monitriip/log/v1/bilhetes/venda?api_key=<CLIENT_ID>
+
+Segurança das APIs
+
+As APIs operam com dois mecanismos obrigatórios de segurança:
+
+OAuth2 (Password Grant Type) – autenticação da aplicação
+
+api_key – identificação da aplicação remetente
+
+Processo de Onboarding Via Portal SISHAB
+
+O onboarding garante que somente empresas autorizadas realizem chamadas às APIs Monitriip.
+
+Atores
+
+Transportador – empresa detentora da outorga ou serviço
+
+Fornecedor de Tecnologia – provedor de soluções de TI (bilhetagem, telemetria, ERP etc.)
+
+ANTT – órgão regulador e provedor de APIs
+
+Portal SISHAB – sistema central de habilitação e gestão de credenciais
+
+Etapas do Onboarding
+
+Cadastro da empresa no SISHAB
+
+Solicitação de habilitação para uso das APIs do Monitriip
+
+Envio de informações técnicas (ambiente, tecnologia, responsáveis)
+
+Análise pela ANTT (validade da relação fornecedor–transportador e aderência técnica)
+
+Geração das credenciais  (As credenciais serão enviadas ao procurador responsável por e-mail, após o cadastro e a devida vinculação no sistema do SISHAB)
+
+ClientId
+
+ClientSecret
+
+UserId
+
+UserSecret
+
+Scope
+
+Liberação de ambiente de homologação
+
+Homologação técnica – envio de eventos para cenários de teste acordados
+
+Liberação de produção – após aprovação formal da ANTT
+
+Obtenção de Token OAuth2
+
+O token de acesso é obtido no provedor de autorização da ANTT.
+
+Endpoint HML
+
+curl -X POST "https://sso-hml.antt.gov.br/realms/ext-antt/protocol/openid-connect/token" \
+-H "Content-Type: application/x-www-form-urlencoded" \
+-d "grant_type=password" \
+-d "client_id=<CLIENT_ID>" \
+-d "client_secret=<CLIENT_SECRET>" \
+-d "username=<USERID>" \
+-d "password=<USERSECRET>" \
+-d "scope=openid email profile"
+
+Endpoint PRD
+
+curl -X POST "https://sso.antt.gov.br/realms/ext-antt/protocol/openid-connect/token" \
+-H "Content-Type: application/x-www-form-urlencoded" \
+-d "grant_type=password" \
+-d "client_id=<CLIENT_ID>" \
+-d "client_secret=<CLIENT_SECRET>" \
+-d "username=<USERID>" \
+-d "password=<USERSECRET>" \
+-d "scope=openid email profile"
+
+Exemplo de Resposta do Token
+
+{
+  "access_token": "eyJhbGciOi...<TOKEN>...",
+  "expires_in": 300,
+  "refresh_expires_in": 0,
+  "token_type": "Bearer"
+}
+
+Uso do Token nas Chamadas
+
+Authorization: Bearer <TOKEN>
+
+api_key na Chamada
+
+?api_key=<CLIENT_ID>
+
+Finalidades:
+
+Identificar a aplicação ou fornecedor
+
+Permitir auditoria por origem
+
+Aplicar limites e filtros por integrador
+
+Facilitar revogação específica de acesso
+
+Matriz de Erros de Segurança (Tipos Comuns)
+
+ | 
+
+ | Código
+ | Situação
+ | Como corrigir
+
+ | 401
+ | Token ou expirado
+ | Obter novo token OAuth2
+
+ | 403
+ | Credenciais sem permissão para API
+ | Ajustar escopo via SISHAB/ANTT
+
+ | 400
+ | Falha de validação nos campos de payload
+ | Corrigir dados enviados
+
+Boas práticas de Segurança
+
+Armazenar clientSecret, UserSecret e ClientId em cofres de segredos (Vault, KMS etc.)
+
+Não inclua segredos em logs, prints, e-mails ou sistemas de suporte
+
+Renovar o token OAuth2 antes do vencimento
+
+Nunca compartilhe credenciais entre diferentes empresas ou transportadores
+
+Restringir a geração de tokens a serviços backend de confiança
+
+Conectividade
+
+Requisitos de Transporte
+
+Protocolo: HTTPS obrigatório
+
+Cifras: TLS 1.2 ou superior
+
+Redirecionamentos HTTP → HTTPS não são garantidos
+
+Uso sempre o endpoint HTTPS direto
+
+Tempo de Resposta e Tempo Limite
+
+Timeout recomendado do cliente: 30 a 60 segundos
+
+Se ocorrer timeout sem resposta:
+
+Registrador de incidente em log local
+
+Verifique se o evento foi persistido no backend (quando houver recibo posterior)
+
+Aplicar política de nova tentativa com backoff exponencial
+
+Política de Retentativas (Repetir)
+
+Pode  haver tentativa em:
+
+Erros 5xx (falhas de infraestrutura)
+
+Timeouts de conexão ou de resposta
+
+Não deve haver nova tentativa automática em:
+
+Erros 4xx (dados inválidos, autenticação, autorização)
+
+Exemplo de recuo:
+
+1ª tentativa → falha
+
+2ª tentativa → após 30 segundos
+
+3ª tentativa → após 60 segundos
+
+4ª tentativa → após 120 segundos
+
+Registros de Auditoria no Lado do Integrador
+
+Cada sistema integrador deve registrar localmente:
+
+Data e hora da chamada
+
+Ponto final chamado
+
+Corpo JSON enviado (mascarando dados sensíveis, se necessário)
+
+Código HTTP da resposta
+
+Corpo da resposta (recibo e mensagens)
+
+API Gateway e Rotamento
+
+Papel do API Gateway
+
+O domínio https://api.antt.gov.br é exposto por um API Gateway responsável por:
+
+Validar token OAuth2
+
+Validar uma chave de API
+
+Aplicar limites de taxa
+
+Executar políticas de segurança (WAF, mitigação de ataques)
+
+Roteamento interno para sistemas backend
+
+Geração de medições e registros técnicos
+
+Benefícios
+
+Isolamento entre sistemas backend diferentes
+
+Auditório completo por mas
+
+Escalabilidade de
+
+Evolução de versões sem quebra de compatibilidade
+
+Convenção de Paths e Versionamento
+
+Geral
+
+/monitriip/log/v1/<domínio>/<recurso>
+
+Domínios Funcionais
+
+ | 
+
+ | Domínio
+ | Exemplos de Recursos
+
+ | bilhetes
+ | venda, embarque, cancelamento
+
+ | cartões
+ | emissão-recarga, reembolso, leitura-rfid
+
+ | viagens
+ | regular/inicio-fim, fretado/inicio-fim, velocidade-localização, detector-parada
+
+ | jornadas
+ | motoristas
+
+ | ocorrências
+ | rodoviário, semiurbano
+
+Versionamento
+
+Versão atual: v1
+
+Novas versões serão indicadas via /v2 , /v3 , etc.
+
+A compatibilidade é mantida pela versão
+
+Catálogo Oficial das 13 APIs
+
+ | 
+
+ | #
+ | Domínio
+ | API
+ | Caminho Final
+
+ | 1
+ | Bilhetes
+ | VendaPassagem
+ | /monitriip/log/v1/bilhetes/venda
+
+ | 2
+ | Bilhetes
+ | BilheteEmbarque
+ | /monitriip/log/v1/bilhetes/embarque
+
+ | 3
+ | Bilhetes
+ | CancelarPassagem
+ | /monitriip/log/v1/bilhetes/cancelamento
+
+ | 4
+ | Cartões
+ | CartaoEmitidoRecargaEfetuada
+ | /monitriip/log/v1/cartoes/emissao-recarga
+
+ | 5
+ | Cartões
+ | ReembolsoCartão
+ | /monitriip/log/v1/cartoes/reembolso
+
+ | 6
+ | Cartões
+ | LeitorCartaoRFID
+ | /monitriip/log/v1/cartoes/leitura-rfid
+
+ | 7
+ | Viagens
+ | InícioFimViagemRegular
+ | /monitriip/log/v1/viagens/regular/inicio-fim
+
+ | 8
+ | Viagens
+ | InícioFimViagemFretado
+ | /monitriip/log/v1/viagens/fretado/inicio-fim
+
+ | 9
+ | Jornadas
+ | JornadaTrabalhoMotorista
+ | /monitriip/log/v1/jornadas/motoristas
+
+ | 10
+ | Viagens
+ | VelocidadeTempoLocalização
+ | /monitriip/log/v1/viagens/velocidade-localizacao
+
+ | 11
+ | Viagens
+ | DetectorParada
+ | /monitriip/log/v1/viagens/detector-parada
+
+ | 12
+ | Ocorrências
+ | RegistroOcorrenciaRodoviario
+ | /monitriip/log/v1/ocorrencias/rodoviario
+
+ | 13
+ | Ocorrências
+ | RegistroOcorrenciaSemiUrbano
+ | /monitriip/log/v1/ocorrencias/semi-urbano
+
+Detalhamento de APIs e exemplos em cURL
+
+Em todos os exemplos abaixo:
+
+Substituição <TOKEN>pelo access_token OAuth2
+
+Substitua <CLIENT_ID>pela chave fornecida à aplicação
+
+Venda de Passagem
+
+Caminho:
+
+POST /monitriip/log/v1/bilhetes/venda
+
+URL completa:
+
+PROD : https://api.antt.gov.br/monitriip/log/v1/bilhetes/venda?api_key=<CLIENT_ID> 
+HML : https://api-hml.antt.gov.br/monitriip/log/v1/bilhetes/venda?api_key=<CLIENT_ID>
+
+Exemplo em cURL
+
+curl -X POST "https://api.antt.gov.br/monitriip/log/v1/bilhetes/venda?api_key=<CLIENT_ID>" \
+	 -H "Authorization: Bearer <TOKEN>" \
+	 -H "Content-Type: application/json" \
+	 -d '{
+           "idLog": "0",
+           "codigoIdentificadorBilhete": "1",
+           "cnpjEmpresaTransporte": "12345678000110",
+           "chaveBPeEquipFiscal": "12345638923421566660",
+           "numeroBilhete": "30",
+           "dataHoraEmissaoBilhete": "2026-03-12T10:18:28-03:00",
+           "codigoAmbitoTransporte": "2",
+           "identificacaoLinha": "DFMS0099034",
+           "codigoMunicipioEmbarquePassageiro": "1600105",
+           "codigoMunicipioDesembarquePassageiro": "9999999",
+           "codigoClasseConforto": "3",
+           "dataViagemPassageiro": "2026-01-14",
+           "horaViagemPassageiro": "10:30:00",
+           "codigoTipoViagem": "1",
+           "numeroPoltrona": "1",
+           "plataformaEmbarque": "Plataforma 01",
+           "codigoMotivoDesconto": "5",
+           "valorTarifa": "120.5",
+           "percentualDesconto": "80.00", 
+           "aliquotaICMS": "0.12",
+           "valorICMS": "10.70",
+           "valorPedagio": "40.23",
+           "valorTaxaEmbarque": "32.40",
+           "valorTotal": "67.21",
+           "nomePassageiro": "Teste Antonio",
+           "dataNascimentoPassageiro": "2026-01-28",
+           "tipoDocumentoIdentificacaoPassageiro": "5",
+           "documentoIdentificacaoPassageiro": "01010101012",
+           "cpfPassageiro": "01445132550",
+           "celularPassageiro": "289498494949",
+           "origemEmissao": "1",
+           "sequenciamento": "1",
+           "idViagem": "20260128-050720-01-0-PPPPPPPPPPP"
+}'      
+
+Bilhete de Embarque
+
+Caminho:
+
+POST /monitriip/log/v1/bilhetes/embarque
+
+URL completa:
+
+PROD : https://api.antt.gov.br/monitriip/log/v1/bilhetes/embarque?api_key=<CLIENT_ID> 
+HML : https://api-hml.antt.gov.br/monitriip/log/v1/bilhetes/embarque?api_key=<CLIENT_ID>
+
+Exemplo em cURL
+
+curl -X POST "https://api.antt.gov.br/monitriip/log/v1/bilhetes/embarque?api_key=<CLIENT_ID>" \
+	 -H "Authorization: Bearer <TOKEN>" \
+	 -H "Content-Type: application/json" \
+	 -d '{
+           "idLog": "9",
+           "cnpjEmpresaTransporte": "12345678000110",
+           "placaVeiculo": "ABC4D56",
+           "cpfMotorista": "12345678901",
+           "latitude": "-15.7801",
+           "longitude": "-47.9292",
+           "pdop": "2.5",
+           "dataHoraEvento": "2026-04-10T10:01:28-03:00",
+           "imei": "358240051111110",
+           "idViagem": "20250719-134615-01-1-ABCDEFGHIJK",
+           "chaveBPeEquipFiscal": "98765432101234567890123456789012345678901234",
+           "numeroBilhete": "30",
+           "identificacaoLinha": "ROAM0208001",
+           "dataPrevistaViagemPassageiro": "2026-04-10",
+           "horaPrevistaViagemPassageiro": "12:30:00",
+           "codigoMotivoDesconto": "1",
+           "valorTarifa": "189.90",
+           "percentualDesconto": "0.00",
+           "celularPassageiro": "61988887777",
+           "codigoMunicipioEmbarquePassageiro": "5300108",
+           "codigoLocalEmbarquePassageiro": "0000001",
+           "codigoMunicipioDesembarquePassageiro": "3550308",
+           "codigoLocalDesembarquePassageiro": "0000002",
+           "codigoEmbarque": "1",
+           "sequenciamento": "1"
+	 }'
+
+Cancelar Passagem
+
+Caminho:
+
+POST /monitriip/log/v1/bilhetes/cancelamento
+
+URL completa:
+
+PROD : https://api.antt.gov.br/monitriip/log/v1/bilhetes/cancelamento?api_key=<CLIENT_ID> 
+HML : https://api-hml.antt.gov.br/monitriip/log/v1/bilhetes/cancelamento?api_key=<CLIENT_ID>
+
+Exemplo em cURL
+
+curl -X POST "https://api.antt.gov.br/monitriip/log/v1/bilhetes/cancelamento?api_key=<CLIENT_ID>" \
+	 -H "Authorization: Bearer <TOKEN>" \
+	 -H "Content-Type: application/json" \
+	 -d '{
+           "idLog": "11",
+           "cnpjEmpresaTransporte": "12345678000110",
+           "numeroBilhete": "456789123",
+           "identificacaoLinha": "ROAM0208001",
+           "dataViagemPassageiro": "2025-09-25",
+           "horaViagemPassageiro": "18:45:32",
+           "codigoMotivoCancelamento": "2",
+           "dataHoraCancelamento": "2026-04-10T10:01:28-03:00",
+           "numeroNovoBilhete": "999999999",
+           "sequenciamento": "123456",
+           "idViagem": "20260410-110754-01-1-TESTE648712"
+	 }'
+
+Cartão Emitido - Recarga Efetuada
+
+Caminho:
+
+POST /monitriip/log/v1/cartoes/emissao-recarga
+
+URL completa:
+
+PROD : https://api.antt.gov.br/monitriip/log/v1/cartoes/emissao-recarga?api_key=<CLIENT_ID> 
+HML : https://api-hml.antt.gov.br/monitriip/log/v1/cartoes/emissao-recarga?api_key=<CLIENT_ID>
+
+Exemplo em cURL
+
+curl -X POST "https://api.antt.gov.br/monitriip/log/v1/cartoes/emissao-recarga?
+	api_key=" \
+	 -H "Authorization: Bearer <TOKEN>" \
+	 -H "Content-Type: application/json" \
+	 -d '{
+            "idLog": "1",
+             "cnpjEmpresaTransporte": "12345678000110",
+             "codigoAmbitoTransporte": "1",
+             "numeroCartao": "12345678901234567890",
+             "codigoTipoCartao": "1",
+             "dataHoraVenda": "2026-03-12T10:18:28-03:00",
+             "bonusRecarga": "9999",
+             "valorTotalRecarga": "100",
+             "saldoTotalCartao": "110",
+             "nomePassageiro": "João da Silva",
+             "documentoIdentificacaoPassageiro": "123456789012",
+             "cpfPassageiro": "12345678900222",
+             "celularPassageiro": "11999999999",
+             "sequenciamento": "123"
+	 }'	
+
+Reembolso de Crédito do Cartão
+
+Caminho:
+
+POST /monitriip/log/v1/cartoes/reembolso
+
+URL completa:
+
+PROD : https://api.antt.gov.br/monitriip/log/v1/cartoes/reembolso?api_key=<CLIENT_ID> 
+HML : https://api-hml.antt.gov.br/monitriip/log/v1/cartoes/reembolso?api_key=<CLIENT_ID>
+
+Exemplo em cURL
+
+curl -X POST "https://api.antt.gov.br/monitriip/log/v1/cartoes/reembolso?api_key=
+	" \
+	 -H "Authorization: Bearer <TOKEN>" \
+	 -H "Content-Type: application/json" \
+	 -d '{
+           "idLog": "12",
+           "numeroCartao": "12345678912345678912",
+           "codigoTipoCartao": "2",
+           "dataHoraReembolso": "2026-03-12T10:18:28-03:00",
+           "codigoMotivoReembolso": "1",
+           "valorReembolso": "100.00"
+	 }'
+
+Leitor Cartão de Embarque RFID
+
+Caminho:
+
+POST /monitriip/log/v1/cartoes/leitura-rfid
+
+URL completa:
+
+PROD : https://api.antt.gov.br/monitriip/log/v1/cartoes/leitura-rfid?api_key=<CLIENT_ID> 
+HML : https://api-hml.antt.gov.br/monitriip/log/v1/cartoes/leitura-rfid?api_key=<CLIENT_ID>
+
+Exemplo em cURL
+
+curl -X POST "https://api.antt.gov.br/monitriip/log/v1/cartoes/leitura-rfid?
+	api_key=" \
+	 -H "Authorization: Bearer <TOKEN>" \
+	 -H "Content-Type: application/json" \
+	 -d '{
+            "idLog": "10",
+            "cnpjEmpresaTransporte": "12345678000110",
+            "placaVeiculo": "JHN1H04",
+            "latitude": "-23.40239",
+            "longitude": "-46.15990",
+            "pdop": "1.5",
+            "dataHoraEvento": "2026-03-12T10:18:28-03:00",
+            "imei": "123456789012345678",
+            "idViagem": "20250930-104500-1-1234",
+            "numeroCartao": "65478456985412365489",
+            "codigoTipoCartao": "1",
+            "valorTarifa": "32.5",
+            "sequenciamento": "123456"
+	 }'
+
+Inicio - Fim de Viagem Regular
+
+Caminho:
+
+POST /monitriip/log/v1/viagens/regular/inicio-fim
+
+URL completa:
+
+PROD : https://api.antt.gov.br/monitriip/log/v1/viagens/regular/inicio-fim?api_key= <CLIENT_ID> 
+HML : https://api-hml.antt.gov.br/monitriip/log/v1/viagens/regular/inicio-fim?api_key= <CLIENT_ID>​​
+
+Exemplo em cURL 
+
+curl -X POST "https://api.antt.gov.br/monitriip/log/v1/viagens/regular/inicio-fim?
+	api_key=" \
+	 -H "Authorization: Bearer <TOKEN>" \
+	 -H "Content-Type: application/json" \
+	 -d '{
+           "idLog": "7",
+           "cnpjEmpresaTransporte": "12345678000110",
+           "placaVeiculo": "CUF9E36",
+           "cpfMotorista": "12345678901",
+           "identificacaoLinha": "MGRJ0004003",
+           "codigoTipoViagem": "1",
+           "dataProgramadaViagem": "2025-10-31",
+           "horaProgramadaViagem": "01:30:15",
+           "tipoRegistroViagem": "1",
+           "codigoSentidoLinha": "1",
+           "latitude": "90.000000",
+           "longitude": "-180.000000",
+           "pdop": "999.000",
+           "dataHoraEvento": "2026-03-09T13:18:28-03:00",
+           "imei": "123456789012345",
+           "sequenciamento": "1",
+           "idViagem": "20250719-134615-01-1-ABCDEFGHIJK"
+	 }
+
+Inicio - Fim de Viagem Fretado
+
+Caminho:
+
+POST /monitriip/log/v1/viagens/fretado/inicio-fim
+
+URL completa:
+
+PROD : https://api.antt.gov.br/monitriip/log/v1/viagens/fretado/inicio-fim?api_key= <CLIENT_ID> 
+HML : https://api-hml.antt.gov.br/monitriip/log/v1/viagens/fretado/inicio-fim?api_key= <CLIENT_ID>​​
+
+Exemplo em cURL 
+
+curl -X POST "https://api.antt.gov.br/monitriip/log/v1/viagens/fretado/inicio-fim?
+	api_key=" \
+	 -H "Authorization: Bearer <TOKEN>" \
+	 -H "Content-Type: application/json" \
+	 -d '{
+          "idLog": "8",
+          "cnpjEmpresaTransporte": "12345678000110",
+          "placaVeiculo": "ABC7894",
+          "cpfMotorista": "12345678901",
+          "licencaViagem": "1234567890123",
+          "tipoRegistroViagem": "3",
+          "codigoSentidoViagem": "1",
+          "latitude": "90.000000",
+          "longitude": "-180.000000",
+          "pdop": "1",
+          "dataHoraEvento": "2026-03-12T10:18:28-03:00",
+          "imei": "359876104582367",
+          "sequenciamento": "222222",
+          "idViagem": "1234567890123"
+	 }'
+
+Jornada de Trabalho do Motorista
+
+Caminho:
+
+POST /monitriip/log/v1/jornadas/motoristas
+
+URL completa:
+
+PROD : https://api.antt.gov.br/monitriip/log/v1/jornadas/motoristas?api_key=<CLIENT_ID> 
+HML : https://api-hml.antt.gov.br/monitriip/log/v1/jornadas/motoristas?api_key=<CLIENT_ID>
+
+Exemplo em cURL 
+
+curl -X POST "https://api.antt.gov.br/monitriip/log/v1/jornadas/motoristas?
+	api_key=" \
+	 -H "Authorization: Bearer <TOKEN>" \
+	 -H "Content-Type: application/json" \
+	 -d '{
+          "idLog": "5",
+          "cnpjEmpresaTransporte": "12345678000110",
+          "placaVeiculo": "JHN1H04",
+          "cpfMotorista": "12345678901",
+          "tipoRegistroEvento": "1",
+          "latitude": "90.000000",
+          "longitude": "-180.000000",
+          "pdop": "1",
+          "dataHoraEvento": "2026-01-26T11:43:23-03:00",
+          "imei": "359876104582367",
+          "sequenciamento": "222222",
+          "idViagem": "20250723-025533-1-1234"
+	 }'
+
+Velocidade, Tempo e Localização
+
+Caminho:
+
+POST /monitriip/log/v1/viagens/velocidade-localizacao
+
+URL completa:
+
+PROD : https://api.antt.gov.br/monitriip/log/v1/viagens/velocidade-localizacao?api_key= <CLIENT_ID> 
+HML : https://api-hml.antt.gov.br/monitriip/log/v1/viagens/velocidade-localizacao?api_key= <CLIENT_ID>​​
+
+Exemplo em cURL
+
+curl -X POST "https://api.antt.gov.br/monitriip/log/v1/viagens/velocidadelocalizacao?api_key=" \
+	 -H "Authorization: Bearer <TOKEN>" \
+	 -H "Content-Type: application/json" \
+	 -d '{
+          "idLog": "4",
+          "cnpjEmpresaTransporte": "12345678000110",
+          "placaVeiculo": "ABC1234",
+          "velocidadeAtual": "85",
+          "distanciaPercorrida": "25",
+          "situacaoIgnicaoMotor": "1",
+          "situacaoPortaVeiculo": "0",
+          "latitude": "-23.40239",
+          "longitude": "-46.15990",
+          "pdop": "1.5",
+          "dataHoraEvento": "2026-03-12T10:18:28-03:00",
+          "imei": "123456789012345678",
+          "sequenciamento": "2",
+          "idViagem": "20250925-100000-1-1234"
+	}'
+
+Detector de Parada
+
+Caminho:
+
+POST /monitriip/log/v1/viagens/detector-parada
+
+URL completa:
+
+PROD : https://api.antt.gov.br/monitriip/log/v1/viagens/detector-parada?api_key=<CLIENT_ID> 
+HML : https://api-hml.antt.gov.br/monitriip/log/v1/viagens/detector-parada?api_key=<CLIENT_ID>
+
+Exemplo em cURL
+
+curl -X POST "https://api.antt.gov.br/monitriip/log/v1/viagens/detector-parada?
+	api_key=" \
+	 -H "Authorization: Bearer <TOKEN>" \
+	 -H "Content-Type: application/json" \
+	 -d '{
+           "idLog": "6",
+           "cnpjEmpresaTransporte": "12345678000110",
+           "placaVeiculo": "AAA1B23",
+           "codigoMotivoParada": "2",
+           "latitude": "-90.000000",
+           "longitude": "-180.000000",
+           "pdop": "3.2",
+           "dataHoraEvento": "2026-03-12T10:18:28-03:00",
+           "imei": "123456789012345678",
+           "sequenciamento": "1",
+           "idViagem": "20250731-183045-01-1-12345678912"
+	 }'
+
+Registro de Ocorrência Rodoviário
+
+Caminho:
+
+POST /monitriip/log/v1/ocorrencias/rodoviario
+
+URL completa:
+
+PROD : https://api.antt.gov.br/monitriip/log/v1/ocorrencias/rodoviario?api_key= <CLIENT_ID> 
+HML : https://api-hml.antt.gov.br/monitriip/log/v1/ocorrencias/rodoviario?api_key= <CLIENT_ID>​​
+
+Exemplo em cURL
+
+curl -X POST "https://api.antt.gov.br/monitriip/log/v1/ocorrencias/rodoviario?
+	api_key=" \
+	 -H "Authorization: Bearer <TOKEN>" \
+	 -H "Content-Type: application/json" \
+	 -d '{
+           "idLog": "2",
+           "cnpjEmpresaTransporte": "12345678000110",
+           "numeroBilhete": "123456789",
+           "nomeReclamante": "João",
+           "documentoIdentificacaoReclamante": "12345678900",
+           "enderecoReclamante": "Rua das Flores, nº 120, Goiânia - GO",
+           "telefoneContatoReclamante": "61123456789",
+           "emailReclamante": "joao.silva@email.com",
+           "codigoTipoOcorrencia": "5",
+           "dataOcorrencia": "2025-09-23",
+           "horaOcorrencia": "10:38:00",
+           "dataHoraRegistroOcorrencia": "2026-03-12T10:18:28-03:00",
+           "descricaoOcorrencia": "Bagagem danificada.",
+           "numeroProtocolo": "132156481635132165498",
+           "sequenciamento": "1",
+           "idViagem": "20250728-104500-01-1-12345678912"
+	 }'
+
+Registro de Ocorrência Semiurbano
+
+Caminho:
+
+POST /monitriip/log/v1/ocorrencias/semi-urbano
+
+URL completa:
+
+PROD : https://api.antt.gov.br/monitriip/log/v1/ocorrencias/semi-urbano?api_key=<CLIENT_ID> 
+HML : https://api-hml.antt.gov.br/monitriip/log/v1/ocorrencias/semi-urbano?api_key=<CLIENT_ID>
+
+Exemplo em cURL
+
+curl -X POST "https://api.antt.gov.br/monitriip/log/v1/ocorrencias/semi-urbano?
+	api_key=" \
+	 -H "Authorization: Bearer <TOKEN>" \
+	 -H "Content-Type: application/json" \
+	 -d '{
+           "idLog": "3",
+           "cnpjEmpresaTransporte": "12345678000110",
+           "empresaResponsavel": "Viação X Ltda",
+           "identificacaoLinha": "1234",
+           "nomeReclamante": "João",
+           "documentoIdentificacaoReclamante": "12345678901",
+           "enderecoReclamante": "Rua das Palmeiras, nº 200, Taguatinga - DF",
+           "telefoneContatoReclamante": "61123456789",
+           "emailReclamante": "joao.silva@email.com",
+           "codigoTipoOcorrencia": "5",
+           "dataOcorrencia": "2025-07-20",
+           "horaOcorrencia": "10:38:00",
+           "dataHoraRegistroOcorrencia": "2026-03-12T10:18:28-03:00",
+           "descricaoOcorrencia": "Bagagem danificada.",
+           "numeroProtocolo": "20250720110000055",
+           "sequenciamento": "1",
+           "idViagem": "20260215-103000-1-1234"
+	 }'
+
+Modelo de Resposta
+
+Sucesso
+
+Resposta retornada quando o evento é processado e registrado com sucesso pela API.
+
+{
+  "reciboEletronico": "82836b84-ad64-460b-123a-d2f98bb7c98f",
+  "Mensagens": [
+    {
+      "codigo": "MSGA-10-SUC",
+      "mensagem": "Log recebido com sucesso"
+    }
+  ]
+}
+
+Erro de Validação
+
+Resposta retornada quando ocorre falha de validação no payload enviado.
+
+{
+  "reciboEletronico":"3a4a0585-69e3-41a3-123a-bc8b95b28beb",
+  "Mensagens": [
+    {
+      "codigo": "MSGA-01",
+      "mensagem": "Campo obrigatório cnpjEmpresaTransporte não preenchido"
+    }
+  ]
+}
+
+Boas práticas
+
+Utilização do idLog somente para cada evento enviado.
+
+Manter consistência entre eventos correlacionados (bilhetes, viagens, jornada e telemetria).
+
+Não reenviar indefinidamente eventos que retornam erros 4xx .
+
+Implementar retentativas ( retry ) apenas para erros 5xx ou timeout .
+
+Proteger client_secret e api_key com rigor.
+
+Realize a homologação completa antes da liberação em produção.
+
+Versão e documentação das integrações internamente.
+
+Data da última atualização: 13 de abril de 2026

@@ -1,0 +1,749 @@
+# Acidentes
+
+São informações dos acidentes ocorridos ao longo das rodovias federais concedidas.
+
+ | 
+
+ | AP
+ | CAMPO
+ | PAI
+ | TIPO
+ | OBRIGATÓRIO
+ | TAM.
+ | DESCRIÇÃO/OBSERVAÇÃO
+
+ | 1
+ | DataReferencia
+ | -
+ | D
+ | S
+ | 10
+ | Data referente as informações encaminhadas. (Formato: DD/MM/AAAA)
+
+ | 2
+ | Motivo
+ | -
+ | N
+ | S
+ | 1
+ | Motivo pelo qual está sendo enviado.
+1 = Primeiro envio
+2 = Reenvio por ter sido detectado erro no recebimento dos dados.
+3 = Correção por ter sido detectado erro no processamento dos dados.
+4 = Atualização de algum dado do registro.
+
+ | 3
+ | CnpjConcessionaria
+ | -
+ | C
+ | S
+ | 14
+ | CNPJ da concessionária, somente números.
+
+ | 4
+ | NumeroArquivo
+ | -
+ | N
+ | S
+ | 10
+ | Sequencial numérico do arquivo. (Para cada data de referência o número do arquivo deve ser de 1 até n, onde n é a quantidade total de arquivos enviados na data.)
+
+ | 5
+ | Registros
+ | -
+ | -
+ | S
+ | -
+ | Registros de Acidentes.
+
+ | 6
+ | GUID
+ | AP5
+ | C
+ | S
+ | 36
+ | Identificador único do registro
+
+ | 7
+ | NumOcorrencia
+ | AP5
+ | N
+ | S
+ | 5
+ | Número da ocorrência
+
+ | 8
+ | Instante
+ | AP5
+ | D
+ | S
+ | 26
+ | Data/hora que ocorreu o acidente.
+(Formato: DD/MM/AAAA HH:MM:SS -00:00)
+
+ | 9
+ | CodigoEnvolvidos
+ | AP5
+ | N
+ | S
+ | 1
+ | Lista contendo envolvidos:
+1 = Pedestres
+2 = Animais
+3 = Veículos
+
+ | 10
+ | PresencaPRF
+ | AP5
+ | N
+ | S
+ | 1
+ | Informa se teve presença da PRF
+1 = Sim
+2 = Não
+
+ | 11
+ | NumOcorrenciaPRF
+ | AP5
+ | C
+ | N
+ | 11
+ | Número da ocorrência na PRF.
+
+ | 12
+ | TrechoPista
+ | AP5
+ | N
+ | S
+ | 1000
+ | Identificador do trecho onde ocorreu o acidente.
+
+ | 13
+ | TipoOcorrencia
+ | AP5
+ | N
+ | S
+ | 1
+ | Tipo da ocorrência no acidente:
+1 = Com Vítima
+2 = Sem Vítima
+
+ | 14
+ | TipoAcidentePrimario
+ | AP5
+ | N
+ | S
+ | 2
+ | Tipo de acidente primário:
+1 = Colisão traseira
+2 = Colisão frontal
+3 = Colisão transversal
+4 = Colisão lateral no mesmo sentido
+5 = Colisão lateral em sentido contrário
+6 = Atropelamento de animal
+7 = Atropelamento de pedestre
+8 = Atropelamento de ciclista
+9 = Capotamento
+10 = Choque
+11 = Saída de pista
+12 = Tombamento
+13 = Queda de carga
+14 = Queda de moto
+15 = Engavetamento
+16 = Acidentes de outra natureza
+17 = Carreta deu L
+18 = Queda de Bicicleta
+19 = Desatrelamento
+
+ | 15
+ | TipoAcidenteSecundario
+ | AP5
+ | N
+ | N
+ | 2
+ | Tipo de acidente secundário: 
+1 = Colisão traseira
+2 = Colisão frontal
+3 = Colisão transversal
+4 = Colisão lateral no mesmo sentido
+5 = Colisão lateral em sentido contrário
+6 = Atropelamento de animal
+7 = Atropelamento - ambulante
+8 = Atropelamento de ciclista
+9 = Capotamento
+10 = Saída de pista
+11 = Tombamento
+12 = Queda de carga
+13 = Queda de moto
+14 = Engavetamento
+15 = Queda de barreira, ribanceira, ponte ou viaduto
+16 = Incêndio ou Explosão
+17 = Objeto lançado contra veículo
+18 = Soterramento
+19 = Submersão
+20 = Choque árvore
+21 = Choque poste
+22 = Choque sinalização
+23 = Choque na praça - cancela
+24 = Choque na praça – cabine
+25 = Choque na praça – submarino
+26 = Choque defensa ou new jersey
+27 = Choque talude
+28 = Choque com veículo parado no acostamento
+29 = Choque com veículo parado na pista
+30 = Choque com objeto na pista 31=Outros choques
+32 = Carreta em L
+33 = Atropelamento de andarilho
+34 = Atropelamento – Esportista/Romeiro
+35 = Atropelamento Funcionário
+36 = Atropelamento de Morador
+37 = Queda de Bicicleta
+38 = Desatrelamento
+
+ | 16
+ | KmMetros
+ | AP5
+ | N
+ | S
+ | 12
+ | Km + m do trecho onde ocorreu o acidente.
+
+ | 17
+ | Latitude
+ | AP5
+ | N
+ | S
+ | 16
+ | Latitude do local do acidente.
+
+ | 18
+ | Longitude
+ | AP5
+ | N
+ | S
+ | 16
+ | Longitude do local do acidente.
+
+ | 19
+ | VeiculosEnvolvidosAcidentes
+ | AP5
+ | -
+ | S
+ | -
+ | Lista de veículos envolvidos no acidente
+
+ | 20
+ | TipoVeiculoEnvolvidoAcidente
+ | AP19
+ | N
+ | N
+ | 2
+ | Tipo de veículo envolvido no acidente:
+1 = Automóvel
+2 = Bicicleta
+3 = Caminhão
+4 = Moto
+5 = Ônibus
+6 = Outros
+7 = Tração animal
+8 = Transporte de cargas especial
+9 = Trator/máquinas
+10 = Utilitário
+11 = Não identificado
+ATENÇÃO:
+• Obrigatório se CodigoEnvolvidos igual a Veículos (3) e VeiculoEvasor igual a Não (2).
+
+ | 21
+ | PlacaVeiculo
+ | AP19
+ | C
+ | N
+ | 7
+ | Placa do veículo envolvido no acidente
+
+ATENÇÃO:
+• Obrigatório se CodigoEnvolvidos igual a Veículos (3) e VeiculoEvasor igual a Não (2).
+
+ | 22
+ | VeiculoEvasor
+ | AP19
+ | N
+ | S
+ | 1
+ | 
+Indica se o veículo se evadiu do local do acidente:
+1 = Sim
+2 = Não
+
+ATENÇÃO:
+• Obrigatório se CodigoEnvolvidos igual a Veículos (3).
+
+ | 23
+ | MarcaModeloVeiculo
+ | AP19
+ | C
+ | N
+ | 30
+ | Marca e modelo do veículo envolvido. (Ex: Fiat/Palio)
+
+ | 24
+ | TipoCarga
+ | AP19
+ | N
+ | N
+ | 2
+ | Tipo da carga do veículo:
+1 = Animais vivos
+2 = Alimento congelado
+3 = Gás toxico
+4 = Gás potencial explosivo
+5 = Produto químico
+6 = Grãos granel
+7 = Grãos secos
+8 = Cana de Açúcar
+9 = Combustível
+10 = Óleo
+11 = Extra largura
+12 = Outros
+13 = Não identificado
+
+ | 25
+ | OcupantesVeiculos
+ | AP19
+ | N
+ | S
+ | 1
+ | Indica se havia ocupantes no veículo:
+1 = Sim
+2 = Não
+
+ATENÇÃO:
+• Obrigatório se CodigoEnvolvidos igual a Veículos (3) e VeiculoEvasor igual a Não (2).
+
+ | 26
+ | PedestresEnvolvidosAcidente
+ | AP5
+ | -
+ | N
+ | -
+ | Lista de pedestres envolvidos no acidente
+
+ | 27
+ | PedestreEvasor
+ | AP26
+ | N
+ | S
+ | 1
+ | Indica se o pedestre se evadiu do local do acidente:
+1 = Sim
+2 = Não
+
+ATENÇÃO:
+• Obrigatório se CodigoEnvolvidos igual a Pedestre (1).
+
+ | 28
+ | CPFPedestre
+ | AP26
+ | C
+ | N
+ | 11
+ | CPF da vítima
+
+ | 29
+ | SexoPedestre
+ | AP26
+ | N
+ | N
+ | 1
+ | Sexo do pedestre envolvido:
+0 = Indefinido
+1 = Masculino
+2 = Feminino
+
+ATENÇÃO:
+• Obrigatório se CodigoEnvolvidos igual a Pedestre (1) e PedestreEvasor igual a Não (2).
+
+ | 30
+ | IdadePedestre
+ | AP26
+ | N
+ | N
+ | 3
+ | Idade da vítima
+
+ | 31
+ | GravidadePedestre
+ | AP26
+ | N
+ | N
+ | 1
+ | Gravidade do dano causado:
+1 = Ileso
+2 = Levemente ferido
+3 = Moderadamente ferido
+4 = Gravemente ferido
+5 = Morto
+6 = Não Identificado
+
+ATENÇÃO:
+• Obrigatório se CodigoEnvolvidos igual a Pedestre (1) e PedestreEvasor igual a Não (2).
+
+ | 32
+ | AnimaisEnvolvidos Acidentes
+ | AP5
+ | -
+ | N
+ | -
+ | Lista de animais envolvidos no acidente
+
+ | 33
+ | AnimalEvasor
+ | AP32
+ | N
+ | S
+ | 1
+ | Indica se o animal se evadiu do local do acidente:
+1 = Sim
+2 = Não
+
+ATENÇÃO:
+• Obrigatório se CodigoEnvolvidos igual a Animais (2).
+
+ | 34
+ | TipoAnimal
+ | AP32
+ | N
+ | N
+ | 1
+ | Tipo de animal envolvido no acidente:
+1 = Animais Silvestres
+2 = Animais Domésticos
+
+ATENÇÃO:
+• Obrigatório se CodigoEnvolvidos igual a Animais (2) e AnimalEvasor igual a Não (2).
+
+ | 35
+ | Animal
+ | AP32
+ | N
+ | N
+ | 1
+ | Animal envolvido:
+1 = Pequeno Porte
+2 = Médio Porte
+3 = Grande Porte
+ATENÇÃO: 
+• Obrigatório se CodigoEnvolvidos igual a Animais (2) e AnimalEvasor igual a Não (2).
+
+ | 36
+ | GravidadeAnimal
+ | AP32
+ | N
+ | N
+ | 1
+ | Gravidade do dano causado:
+1 = Ileso
+2 = Feridos
+3 = Mortos
+4 = Não identificado
+ATENÇÃO:
+• Obrigatório se CodigoEnvolvidos igual a Animais (2) e AnimalEvasor igual a Não (2).
+
+ | 37
+ | VitimasVeiculosEnvolvidosAcidentes
+ | AP19
+ | -
+ | N
+ | -
+ | Vítimas envolvidas no acidente que ocupavam o veículo
+
+ | 38
+ | CPF
+ | AP37
+ | C
+ | N
+ | 11
+ | CPF do ocupante do veículo
+
+ | 39
+ | Classe
+ | AP37
+ | N
+ | N
+ | 1
+ | Classe do ocupante do veículo:
+1 = Condutor
+2 = Passageiro
+
+ | 40
+ | Sexo
+ | AP37
+ | N
+ | N
+ | 1
+ | Sexo do ocupante do veículo:
+0 = Indefinido
+1 = Masculino
+2 = Feminino
+ATENÇÃO:
+• Obrigatório se CodigoEnvolvidos igual a Veículos (3) e VeiculoEvasor igual a Não (2) e OcupantesVeiculos igual a Sim (1).
+
+ | 41
+ | Idade
+ | AP37
+ | N
+ | N
+ | 3
+ | Idade do ocupante do veículo:
+-1 = Indefinido
+
+ATENÇÃO:
+• Caso não haja informação de idade, o campo em questão deve ser preenchido com (-1).
+
+ | 42
+ | Gravidade
+ | AP37
+ | N
+ | N
+ | 1
+ | Gravidade do dano causado no ocupante do veículo:
+1 = Ileso
+2 = Levemente ferido
+3 = Moderadamente ferido
+4 = Gravemente ferido
+5 = Morto
+6 = Não Identificado
+ATENÇÃO:
+• Obrigatório se CodigoEnvolvidos igual a Veículos (3) e VeiculoEvasor igual a Não (2)e OcupantesVeiculos igual a Sim (1).
+
+Regras Aplicadas
+
+ | 
+
+ | Nº
+ | DESCRIÇÃO DA REGRA
+ | CÓDIGO ERRO
+ | MENSAGEM DE ERRO
+ | VALIDAÇÃO
+
+ | 01
+ | O serviço deverá validar se o Certificado usado pertence ao CNPJ da concessionária que está cadastrado no sistema do SIR e informado no JSON.
+ | MSG_E01
+ | O certificado usado com CNPJ (CNPJ do certificado formatado) não faz referência ao CNPJ (CNPJ enviado no JSON formatado) registrado no sistema
+ | Recebimento
+
+ | 02
+ | O serviço deverá validar se os campos obrigatórios foram preenchidos (cabeçalho e registros).
+ | MSG_E02
+ | O campo (nome do campo) deve ser preenchido.
+ | Recebimento
+
+ | 03
+ | O serviço deverá validar se o tipo do dado está correto (cabeçalho e registros).
+ | MSG_E03
+ | O campo (nome do campo) está com formato errado.
+ | Recebimento
+
+ | 04
+ | O serviço deverá validar se o tamanho dos atributos está correto (cabeçalho e registros).
+ | MSG_E04
+ | O campo (nome do campo) está com tamanho errado.
+ | Recebimento
+
+ | 05
+ | O serviço deverá verificar se existe campo que não foi estabelecido para o recebimento.
+ | MSG_E05
+ | Estrutura inválida. O campo (nome do campo) não está especificado no contrato.
+ | Recebimento
+
+ | 06
+ | O serviço deverá verificar a ausência de campo que foi estabelecido como obrigatório para o recebimento.
+ | MSG_E06
+ | O campo (nome do campo) não foi informado.
+ | Recebimento
+
+ | 07
+ | O serviço deverá verificar se foi declarado algum registro no arquivo.
+ | MSG_E07
+ | Registro não informado.
+ | Recebimento
+
+ | 08
+ | O serviço deverá verificar se o registro já foi cadastrado na base de dados da ANTT.
+ | MSG_E08
+ | Registro já recebido anteriormente.
+ | Processamento
+
+ | 09
+ | O serviço verifica se o registro possui evento posterior a 2020.
+ | MSG_E09
+ | Registro recebido com data do evento anterior a 2020.
+ | Recebimento
+
+ | 10
+ | O serviço deverá verificar se o registro já foi recebido, validado e armazenado.
+ | MSG_E10
+ | Não foi possível validar o recebimento. Por favor, enviar novamente.
+ | Recebimento
+
+ | 37
+ | O serviço deverá verificar se o código enviado é uma opção válida para o campo.
+ | MSG_E37
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome docampo). Por favor, consultar documentação.
+ | Recebimento
+
+ | 23
+ | O serviço deverá verificar se há veículo envolvido no acidente e se o campo o veículo evasor foi informado.
+ | MSG_E23
+ | É obrigatório informar ao menos um veículo ou indicar que houve evasão, quando houver veículo envolvido.
+ | Recebimento
+
+ | 24
+ | O serviço deverá verificar se há pedestre envolvido no acidente e se o campo o pedestre evasor foi informado.
+ | MSG_E24
+ | É obrigatório informar ao menos um pedestre ou indicar que houve evasão, quando houver pedestre envolvido.
+ | Recebimento
+
+ | 25
+ | O serviço deverá verificar se há animal envolvido no acidente e se o campo o animal evasor foi informado.
+ | MSG_E25
+ | É obrigatório informar ao menos um animal ou indicar que houve evasão, quando houver animal envolvido.
+ | Recebimento
+
+ | 26
+ | O serviço deverá verificar se foi informado ocupante do veículo quando veículo não evasor.
+ | MSG_E26
+ | É obrigatório informar ao menos um ocupante do veículo, quando houver veículo envolvido e não evasor.
+ | Recebimento
+
+ | 27
+ | O serviço deverá verificar se teve algum envolvido, não evasor, no acidente com gravidade diferente de ileso ou não identificado, quando a ocorrência for com vítima.
+ | MSG_E27
+ | Para ocorrência com vítima, é obrigatório informar ao menos um envolvido no acidente com gravidade diferente de ileso ou não identificado.
+ | Recebimento
+
+ | 28
+ | O serviço deverá verificar se teve algum envolvido (ocupantes, veiculos e pedestres), não evasor, no acidente com gravidade igual a ileso ou não identificado, quando a ocorrência for sem vítima.
+ | MSG_E28
+ | Para ocorrência sem vítima, é obrigatório informar a gravidade dos envolvido no acidente igual a ileso ou não identificado.
+ | Recebimento
+
+ | 64
+ | O serviço deverá verificar se o trecho informado pertence ao CNPJ da concessionária no sistema SIR.
+ | MSG_E64
+ | O trecho não pertence ao CNPJ informado no registro.
+ | Processamento
+
+ | 65
+ | O serviço deverá verificar se o trecho informado está ativo na data do acidente no sistema SIR.
+ | MSG_E65
+ | O trecho não está ativo na data do acidente informado no registro.
+ | Processamento
+
+ | 66
+ | O serviço deverá verificar se o KM + metros pertence ao trecho informado no sistema SIR.
+ | MSG_E66
+ | O KM +m não pertence ao trecho informado no registro.
+ | Processamento
+
+ | 67
+ | O serviço deverá verificar se a Latitude e Longitude estão presentes no estado do trecho informado no sistema SIR, considerando apenas áreas dentro do território brasileiro.
+ | MSG_E67
+ | A latitude e longitude não pertencem ao estado do trecho informado no registro.
+ | Recebimento
+
+ | 68
+ | O serviço deverá verificar se o campo PlacaVeiculo foi informado quando veículo envolvido e não evasor e tipo veículo igual a Automóvel, Caminhão, Moto, Ônibus, Transporte de cargas especiais e utilitário.
+ | MSG_E68
+ | É obrigatório informar a placa do veículo não evasor quando o tipo de veículo for igual a Automóvel, Caminhão, Moto, Ônibus, Transporte de cargas especiais e utilitário.
+ | Recebimento
+
+ | 69
+ | O serviço deverá verificar se os campos TipoVeiculoEnvolvidoAcidente e OcupantesVeiculos veículos foram informados quando houver veículo envolvido e não evasor.
+ | MSG_E69
+ | É obrigatório informar o tipo de veículo e os ocupantes quando houver veículo envolvido e não evasor.
+ | Recebimento
+
+ | 70
+ | O serviço deverá verificar se os campos Sexo e Gravidade estão preenchidos quando houver veículo envolvido no acidente, não evasor e ocupantes igual a sim.
+ | MSG_E70
+ | É obrigatório informar o sexo e a gravidade dos envolvidos quando houver veículo envolvido e não evasor.
+ | Recebimento
+
+ | 71
+ | O serviço deverá verificar se o campo PlacaVeiculo está vazio, quando houver tipo de veículo igual a bicicleta, Tração animal e não identificado.
+ | MSG_E71
+ | Não é permitido informar a placa para tipo de veículos bicicleta, Tração animal e não identificado.
+ | Recebimento
+
+ | 73
+ | O serviço deverá verificar se os campos CPFPedestre, SexoPedestre, IdadePedestre e GravidadePedestre estão vazios, quando houver pedestre envolvido no acidente e este for evasor.
+ | MSG_E73
+ | Não é permitido enviar informações do CPF, Sexo e Idade do pedestre quando este for evasor.
+ | Recebimento
+
+ | 74
+ | O serviço deverá verificar se os campos SexoPedestre e GravidadePedestre estão preenchidos quando houver pedestre envolvido no acidente e não evasor.
+ | MSG_E74
+ | É obrigatório informar o sexo e a gravidade quando houver pedestre envolvido e não evasor.
+ | Recebimento
+
+ | 75
+ | O serviço deverá verificar se os campos de CPF do pedestre e do ocupante veiculo são válidos quando informados.
+ | MSG_E75
+ | O CPF informado é inválido.
+ | Recebimento
+
+ | 76
+ | O serviço deverá verificar se os campos TipoAnimal, Animal e GravidadeAnimal estão vazios, quando houver animal envolvido no acidente e este for evasor.
+ | MSG_E76
+ | Não é permitido enviar informações do tipo, porte e gravidade do animal quando este for evasor.
+ | Recebimento
+
+ | 77
+ | O serviço deverá verificar se os campos TipoAnimal, Animal e GravidadeAnimal estão preenchidos quando houver animal envolvido no acidente e não evasor.
+ | MSG_E77
+ | É obrigatório informar o tipo, o porte e a gravidade do animal quando houver animal envolvido e não evasor.
+ | Recebimento
+
+ | 78
+ | O serviço deverá verificar se o tipo de carga está vazio, quando houver veículo não evasor e o tipo veículo igual a Automóvel, Bicicleta, Moto, Ônibus e Não identificado.
+ | MSG_E78
+ | Não é permitido enviar o tipo de carga para tipo de veículo igual a Automóvel, Bicicleta, Moto, Ônibus e Não identificado.
+ | Recebimento
+
+ | 79
+ | O serviço deverá verificar se todos os campos do Array VeiculosEnvolvidosAcidentes estão vazios, quando o tipo envolvido for diferente de veículo.
+ | MSG_E79
+ | Não é permitido enviar informações de veículo sem que este esteja envolvido no acidente.
+ | Recebimento
+
+ | 80
+ | O serviço deverá verificar se todos os campos do Array AnimaisEnvolvidosAcidentes estão vazios, quando o tipo envolvido for diferente de animal.
+ | MSG_E80
+ | Não é permitido enviar informações de animal sem que este esteja envolvido no acidente.
+ | Recebimento
+
+ | 81
+ | O serviço deverá verificar se todos os campos do Array PedestresEnvolvidosAcidente estão vazios, quando o tipo envolvido for diferente de pedestre.
+ | MSG_E81
+ | Não é permitido enviar informações de pedestre sem que este esteja envolvido no acidente.
+ | Recebimento
+
+ | 110
+ | O serviço deverá verificar se todos os campos do Array de VitimasVeiculosEnvolvidosAcidentes estão vazios quando veículo envolvido não evasor e ocupantes igual a não.
+ | MSG_E110
+ | Não é permitido enviar informações de vítimas veículo quando houver veículo não evasor e ocupantes veículos igual a não.
+ | Recebimento
+
+ | 111
+ | O serviço deverá verificar se a data/hora informada no campo “Instante” é menor ou igual à data/hora atual.
+ | MSG_E111
+ | A data/hora informada no campo “Instante” deve ser menor ou igual à data/hora atual.
+ | Recebimento
+
+ | 112
+ | O serviço deverá verificar se o registro com Motivo igual a 4 já foi cadastrado na base de dados da ANTT.
+ | MSG_E112
+ | O registro enviado não está cadastrado na base da ANTT.
+ | Processamento

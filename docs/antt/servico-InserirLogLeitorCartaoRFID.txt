@@ -1,0 +1,177 @@
+# InserirLogLeitorCartaoRFID
+
+O Log Leitor Cartão de Embarque RFID deve ser gerado, automaticamente, no momento do embarque, quando da detecção de uma leitura válida.
+
+A execução desse método deve ser realizada pelo subsistema embarcado do transporte semiurbano regular.
+
+Os dados relativos ao Log Leitor Cartão de Embarque RFID devem ser enviados no prazo máximo de 10 (dez) horas de seu registro.
+
+A contagem temporal do prazo limite de 10 (dez) horas para envio do Log se inicia na Data/Hora do Evento e se encerra na Data/Hora de Envio do Log.
+
+Parâmetros (viagem)
+
+ | 
+
+ | Parâmetro
+ | Descrição do Campo
+ | Tamanho
+ | Domínio / Formato
+ | Tipo
+ | Obrigatório
+
+ | idLog
+ | Identificador de Log
+ |  
+ | Domínio: [10]
+ | tinyint
+ | Sim
+
+ | cnpjEmpresaTransporte
+ | CNPJ da empresa de transporte
+ | 14
+ | Tamanho fixo: 14
+ | string
+ | Sim
+
+ | placaVeiculo
+ | Placa do veículo
+ | 7
+ | Tamanho fixo:  7
+ | string
+ | Sim
+
+ | latitude
+ | Latitude
+ |  
+ | Valores possíveis: 
+Mín: -90.000000; 
+Máx: 90.000000; 
+ | decimal
+ | Sim
+
+ | longitude
+ | Longitude
+ |  
+ | Valores possíveis: 
+Mín: -180.000000; 
+Máx: 180.000000;
+ | decimal
+ | Sim
+
+ | pdop
+ | PDOP
+(Position Dilution of Precision)
+ |  
+ | Valores possíveis: 
+Mín: 0.000; 
+Máx: 999.999; 
+ | decimal
+
+ | Sim
+
+ | dataHoraEvento
+ | 
+Data e hora do embarque
+
+O TZD no Brasil pode ser: 
+-02:00 (Fernando de Noronha); 
+-03:00 (Brasília); 
+-04:00 (Amazonas); 
+-05:00 (Acre)
+
+ |  
+ | 
+Formato: AAAA-MM-DDThh:mm:ssTZD
+
+Padrão UTC completo
+(com TZD) 
+(Time Zone Designator)
+
+Exemplo: 2025-07-19T13:46:15-03:00
+
+ | datetime offset 
+ | Sim
+
+ | imei
+ | Número IMEI do equipamento de transmissão
+ | 18
+ | Tamanho: 
+Mín: 15 caracteres 
+Máx: 18 caracteres
+ | string
+ | Sim
+
+ | idViagem
+ | Código Identificador da Viagem
+(Semiurbano Regular)
+Informações na sequência
+apresentada e separadas por hífen
+
+Data Programada da Viagem no
+ponto inicial da linha:
+AAAAMMDD
+
+Hora Programada da Viagem no
+ponto inicial da linha:
+HHMMSS
+
+Código Sentido da Linha: N
+0 = Volta
+1 = Ida
+
+Número da Linha:
+4 caracteres
+ | 22
+ | Semiurbano Regular
+
+AAAAMMDDHHMMSS-N-NNNN
+
+22 caracteres
+(incluindo os 3 hifens)
+
+ | string
+ | Sim
+
+Parâmetros (cartões)
+
+ | 
+
+ | Parâmetro
+ | Descrição do Campo
+ | Tamanho
+ | Domínio / Formato
+ | Tipo
+ | Obrigatório
+
+ | numeroCartao
+ | Número do cartão
+ | 20
+ |  
+ | string
+ | Sim
+
+ | codigoTipoCartao
+ | Tipo de cartão
+ |  
+ | [0, 1, 2, 3]
+Domínio ver Item 8.1.5
+ | tinyint
+ | Sim
+
+ | valorTarifa
+ | Valor debitado (tarifa)
+ |  
+ | Valores possíveis: 
+Min: 0.00; 
+Max: 99999999.99; 
+ | decimal
+ | Sim
+
+ | sequenciamento
+ | Código sequencial de ordenação
+ |  
+ | Valores possíveis: 
+Mín: 0; 
+Máx: 999999; 
+ | integer
+ | Sim

@@ -1,0 +1,29 @@
+# Início rápido
+
+Este portal tem como objetivo a experimentação e visualização do consumo das APIs da Agência Nacional de Transportes Terrestres (ANTT), incluindo Tráfego Praça de Pedágio, Tráfego SAT, Tráfego Radar, Tráfego Infrator Radar, Acidentes, Atendimento e Pavimento, bem como as validações aplicadas aos dados submetidos pela Agência.
+
+As informações disponibilizadas compõem o Sistema de Informações Rodoviárias, administrado pela Superintendência de Infraestrutura Rodoviária (SUROD), permitindo o acompanhamento e entendimento da estrutura, padronização e comportamento dos dados fornecidos pelas APIs.
+
+Consumo em Produção
+
+O consumo das APIs em ambiente produtivo segue processos internos de autorização da ANTT e não é realizado por meio deste portal. Este ambiente tem caráter exclusivamente demonstrativo e informativo.
+
+Primeiros passos
+
+Experimentação das APIs
+
+Este portal foi desenvolvido para apresentar e demonstrar o funcionamento das APIs publicadas, permitindo que o usuário compreenda os endpoints disponíveis, os tipos de dados retornados e as validações aplicadas.
+
+Para a experimentação neste ambiente:
+
+Consulte os painéis e exemplos de dados disponibilizados;
+
+Analise a estrutura das respostas das APIs;
+
+Entenda os campos, validações e padrões adotados;
+
+Utilize as informações como referência para futuras integrações em ambientes autorizados.
+
+Observação: Não há necessidade de login, cadastro ou preenchimento de formulários para utilizar este portal.
+
+ Catálogo de APIs  [../page/catalogo-api]

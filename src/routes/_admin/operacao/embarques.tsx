@@ -10,8 +10,15 @@ import {
   StatusBadge,
   reconciliationTone,
   type Column,
+  DemoBanner,
 } from "@/components/common";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { allTrips, boardingStats, companies, companyName, num } from "@/data/mock";
 import type { Trip } from "@/types";
 
@@ -21,10 +28,14 @@ export const Route = createFileRoute("/_admin/operacao/embarques")({
       { title: "Embarques — SisRodov Manhuaçu" },
       {
         name: "description",
-        content: "Acompanhamento dos embarques registrados por viagem, empresa e destino no terminal de Manhuaçu.",
+        content:
+          "Acompanhamento dos embarques registrados por viagem, empresa e destino no terminal de Manhuaçu.",
       },
       { property: "og:title", content: "Embarques — SisRodov Manhuaçu" },
-      { property: "og:description", content: "Embarques registrados por viagem, empresa e destino." },
+      {
+        property: "og:description",
+        content: "Embarques registrados por viagem, empresa e destino.",
+      },
     ],
   }),
   component: BoardingsPage,
@@ -39,7 +50,8 @@ function BoardingsPage() {
       allTrips.filter((t) => {
         const q = search.trim().toLowerCase();
         return (
-          (!q || `${t.number} ${t.destination} ${companyName(t.companyId)}`.toLowerCase().includes(q)) &&
+          (!q ||
+            `${t.number} ${t.destination} ${companyName(t.companyId)}`.toLowerCase().includes(q)) &&
           (company === "todas" || t.companyId === company)
         );
       }),
@@ -47,12 +59,29 @@ function BoardingsPage() {
   );
 
   const columns: Column<Trip>[] = [
-    { key: "time", header: "Horário", render: (t) => <span className="tabular font-semibold">{t.scheduled}</span> },
+    {
+      key: "time",
+      header: "Horário",
+      render: (t) => <span className="tabular font-semibold">{t.scheduled}</span>,
+    },
     { key: "company", header: "Empresa", render: (t) => companyName(t.companyId) },
     { key: "dest", header: "Destino", render: (t) => t.destination },
-    { key: "trip", header: "Viagem", render: (t) => <span className="tabular text-muted-foreground">{t.number}</span> },
-    { key: "boardings", header: "Embarques", align: "right", render: (t) => <span className="tabular font-semibold">{t.boardings}</span> },
-    { key: "source", header: "Fonte", render: () => <span className="text-muted-foreground">Sistema da empresa</span> },
+    {
+      key: "trip",
+      header: "Viagem",
+      render: (t) => <span className="tabular text-muted-foreground">{t.number}</span>,
+    },
+    {
+      key: "boardings",
+      header: "Embarques",
+      align: "right",
+      render: (t) => <span className="tabular font-semibold">{t.boardings}</span>,
+    },
+    {
+      key: "source",
+      header: "Fonte",
+      render: () => <span className="text-muted-foreground">Sistema da empresa</span>,
+    },
     {
       key: "status",
       header: "Situação",
@@ -66,16 +95,34 @@ function BoardingsPage() {
 
   return (
     <>
-      <PageHeader title="Embarques" subtitle="Consolidação dos embarques informados e registrados no terminal" />
+      <PageHeader
+        title="Embarques"
+        subtitle="Consolidação dos embarques informados e registrados no terminal"
+      />
+      <DemoBanner />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Embarques hoje" value={num(boardingStats.today)} icon={Users} />
-        <StatCard label="Embarques semana" value={num(boardingStats.week)} icon={CalendarDays} tone="info" />
-        <StatCard label="Embarques mês" value={num(boardingStats.month)} icon={CalendarRange} tone="neutral" />
+        <StatCard
+          label="Embarques semana"
+          value={num(boardingStats.week)}
+          icon={CalendarDays}
+          tone="info"
+        />
+        <StatCard
+          label="Embarques mês"
+          value={num(boardingStats.month)}
+          icon={CalendarRange}
+          tone="neutral"
+        />
       </div>
 
       <div className="mt-6">
-        <FilterBar search={search} onSearch={setSearch} placeholder="Pesquisar viagem, empresa ou destino...">
+        <FilterBar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Pesquisar viagem, empresa ou destino..."
+        >
           <Select value={company} onValueChange={setCompany}>
             <SelectTrigger className="h-9 w-[13rem]">
               <SelectValue placeholder="Empresa" />

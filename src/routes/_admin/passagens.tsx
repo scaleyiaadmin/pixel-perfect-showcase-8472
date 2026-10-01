@@ -10,8 +10,15 @@ import {
   StatusBadge,
   type Column,
   type Tone,
+  DemoBanner,
 } from "@/components/common";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { allTrips, companyName, num, ticketStats, tickets } from "@/data/mock";
 import type { Ticket as TicketType } from "@/types";
 
@@ -21,10 +28,14 @@ export const Route = createFileRoute("/_admin/passagens")({
       { title: "Passagens — SisRodov Manhuaçu" },
       {
         name: "description",
-        content: "Passagens emitidas, utilizadas e canceladas nas viagens do Terminal Rodoviário de Manhuaçu.",
+        content:
+          "Passagens emitidas, utilizadas e canceladas nas viagens do Terminal Rodoviário de Manhuaçu.",
       },
       { property: "og:title", content: "Passagens — SisRodov Manhuaçu" },
-      { property: "og:description", content: "Controle de passagens emitidas, utilizadas e canceladas." },
+      {
+        property: "og:description",
+        content: "Controle de passagens emitidas, utilizadas e canceladas.",
+      },
     ],
   }),
   component: TicketsPage,
@@ -46,7 +57,8 @@ function TicketsPage() {
       tickets.filter((t) => {
         const q = search.trim().toLowerCase();
         return (
-          (!q || `${t.code} ${t.destination} ${companyName(t.companyId)}`.toLowerCase().includes(q)) &&
+          (!q ||
+            `${t.code} ${t.destination} ${companyName(t.companyId)}`.toLowerCase().includes(q)) &&
           (status === "todos" || t.status === status)
         );
       }),
@@ -56,32 +68,61 @@ function TicketsPage() {
   const tripNumber = (tripId: string) => allTrips.find((t) => t.id === tripId)?.number ?? "—";
 
   const columns: Column<TicketType>[] = [
-    { key: "code", header: "Passagem", render: (t) => <span className="tabular font-semibold">{t.code}</span> },
-    { key: "trip", header: "Viagem", render: (t) => <span className="tabular text-muted-foreground">{tripNumber(t.tripId)}</span> },
+    {
+      key: "code",
+      header: "Passagem",
+      render: (t) => <span className="tabular font-semibold">{t.code}</span>,
+    },
+    {
+      key: "trip",
+      header: "Viagem",
+      render: (t) => <span className="tabular text-muted-foreground">{tripNumber(t.tripId)}</span>,
+    },
     { key: "company", header: "Empresa", render: (t) => companyName(t.companyId) },
     { key: "origin", header: "Origem", render: (t) => t.origin },
     { key: "dest", header: "Destino", render: (t) => t.destination },
-    { key: "issued", header: "Emissão", render: (t) => <span className="tabular text-muted-foreground">{t.issuedAt}</span> },
+    {
+      key: "issued",
+      header: "Emissão",
+      render: (t) => <span className="tabular text-muted-foreground">{t.issuedAt}</span>,
+    },
     {
       key: "status",
       header: "Status",
-      render: (t) => <StatusBadge tone={statusMap[t.status].tone}>{statusMap[t.status].label}</StatusBadge>,
+      render: (t) => (
+        <StatusBadge tone={statusMap[t.status].tone}>{statusMap[t.status].label}</StatusBadge>
+      ),
     },
   ];
 
   return (
     <>
       <PageHeader title="Passagens" subtitle="Passagens informadas pelas empresas de transporte" />
+      <DemoBanner />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Emitidas hoje" value={num(ticketStats.issued)} icon={Ticket} />
         <StatCard label="Canceladas" value={ticketStats.cancelled} icon={TicketX} tone="danger" />
-        <StatCard label="Utilizadas" value={num(ticketStats.used)} icon={TicketCheck} tone="success" />
-        <StatCard label="Não utilizadas" value={ticketStats.unused} icon={TicketSlash} tone="warning" />
+        <StatCard
+          label="Utilizadas"
+          value={num(ticketStats.used)}
+          icon={TicketCheck}
+          tone="success"
+        />
+        <StatCard
+          label="Não utilizadas"
+          value={ticketStats.unused}
+          icon={TicketSlash}
+          tone="warning"
+        />
       </div>
 
       <div className="mt-6">
-        <FilterBar search={search} onSearch={setSearch} placeholder="Pesquisar passagem, empresa ou destino...">
+        <FilterBar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Pesquisar passagem, empresa ou destino..."
+        >
           <Select value={status} onValueChange={setStatus}>
             <SelectTrigger className="h-9 w-[12rem]">
               <SelectValue placeholder="Status" />

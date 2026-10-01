@@ -8,6 +8,7 @@ import {
   reconciliationTone,
   tripStatusTone,
   DemoNote,
+  DemoBanner,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { allTrips, brl, companyName } from "@/data/mock";
@@ -18,10 +19,14 @@ export const Route = createFileRoute("/_admin/operacao/viagens/$tripId")({
       { title: "Detalhe da viagem — SisRodov Manhuaçu" },
       {
         name: "description",
-        content: "Detalhamento da viagem: empresa, plataforma, veículo, passagens, acessos e conciliação.",
+        content:
+          "Detalhamento da viagem: empresa, plataforma, veículo, passagens, acessos e conciliação.",
       },
       { property: "og:title", content: "Detalhe da viagem — SisRodov Manhuaçu" },
-      { property: "og:description", content: "Passagens, acessos, embarques e conciliação da viagem." },
+      {
+        property: "og:description",
+        content: "Passagens, acessos, embarques e conciliação da viagem.",
+      },
     ],
   }),
   loader: ({ params }) => {
@@ -48,13 +53,16 @@ function TripDetail() {
         subtitle={`${trip.origin} → ${trip.destination} · ${trip.date}`}
         actions={
           <>
-            <StatusBadge tone={tripStatusTone[trip.status].tone}>{tripStatusTone[trip.status].label}</StatusBadge>
+            <StatusBadge tone={tripStatusTone[trip.status].tone}>
+              {tripStatusTone[trip.status].label}
+            </StatusBadge>
             <StatusBadge tone={reconciliationTone[trip.reconciliation].tone} dot={false}>
               {reconciliationTone[trip.reconciliation].label}
             </StatusBadge>
           </>
         }
       />
+      <DemoBanner />
 
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
         <SectionCard title="Dados da viagem" bodyClassName="p-0">
@@ -80,7 +88,9 @@ function TripDetail() {
             <Row label="Relatório empresa" value={trip.companyReport} />
           </ul>
           <div className="mt-5 rounded-lg border border-border bg-muted/60 p-4">
-            <p className="text-xs font-bold tracking-[0.12em] uppercase text-muted-foreground">Situação</p>
+            <p className="text-xs font-bold tracking-[0.12em] uppercase text-muted-foreground">
+              Situação
+            </p>
             <div className="mt-2">
               <StatusBadge tone={reconciliationTone[trip.reconciliation].tone}>
                 {reconciliationTone[trip.reconciliation].label}
@@ -88,8 +98,8 @@ function TripDetail() {
             </div>
             {trip.companyReport !== trip.gateAccess && (
               <p className="mt-2 text-xs text-muted-foreground">
-                Diferença de {Math.abs(trip.companyReport - trip.gateAccess)} passageiros entre fontes — necessita
-                conferência.
+                Diferença de {Math.abs(trip.companyReport - trip.gateAccess)} passageiros entre
+                fontes — necessita conferência.
               </p>
             )}
           </div>
@@ -101,7 +111,13 @@ function TripDetail() {
         <StatCard label="Passagens" value={trip.ticketsIssued} icon={Ticket} />
         <StatCard label="Embarques" value={trip.boardings} icon={Bus} tone="info" />
         <StatCard label="Plataforma" value={trip.platform} icon={MapPin} tone="neutral" />
-        <StatCard label="Pontualidade" value={trip.realized ?? trip.scheduled} icon={Clock} tone="success" hint={`Previsto ${trip.scheduled}`} />
+        <StatCard
+          label="Pontualidade"
+          value={trip.realized ?? trip.scheduled}
+          icon={Clock}
+          tone="success"
+          hint={`Previsto ${trip.scheduled}`}
+        />
       </div>
     </>
   );
@@ -110,7 +126,9 @@ function TripDetail() {
 function Item({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-card px-5 py-4">
-      <dt className="text-[11px] font-bold tracking-[0.12em] uppercase text-muted-foreground">{label}</dt>
+      <dt className="text-[11px] font-bold tracking-[0.12em] uppercase text-muted-foreground">
+        {label}
+      </dt>
       <dd className="mt-1 font-semibold">{value}</dd>
     </div>
   );

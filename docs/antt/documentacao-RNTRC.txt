@@ -1,0 +1,203 @@
+# Documentação - RNTRC
+
+Objetivo
+
+O projeto tem como objetivo modernizar os processos relacionados ao Registro Nacional de Transportadores Rodoviários de Cargas (RNTRC), por meio da adoção de novas ferramentas tecnológicas e da restrição das integrações atuais. Essa modernização visa:
+
+Construir uma nova solução de envio e tratamento de dados dos transportadores e da frota.
+
+Melhorar o desempenho e a confiabilidade na integração com o CONFAZ.
+
+Oferece APIs de consulta para novos parceiros.
+
+Disponibilizar dashboards para monitoramento da integração e envio de dados à SEFAZ.
+
+O projeto busca garantir maior eficiência, confiabilidade e transparência nas integrações de dados, fundamentais para a fiscalização e regulação do transporte rodoviário de cargas pela ANTT.
+
+Além disso, o sistema contempla um mecanismo de envio sob demanda (“on demand”) que permite o envio de dados junto à SEFAZ, especialmente utilizado nos casos em que, mesmo após alteração no cadastro da RNTRC, os dados não são refletidos corretamente na base da SEFAZ.
+
+Arquitetura do serviço
+
+Padrão de comunicação; O meio físico de comunicação utilizado será a Internet com o uso do protocolo HTTP, com autenticação, que além de garantir um duto de comunicação segura na Internet, permite a identificação do servidor e do cliente através de  certificados digitais ou token.
+
+Padrão técnico via certificado digital; A tabela a seguir resume os principais padrões de tecnologia utilizados:
+
+ | CARACTERÍSTICA
+ | DESCRIÇÃO
+
+ | Meio físico de comunicação
+ | Internet
+
+ | Protocolo Internet
+ | TLS versão 1.2, com autenticação mútua através de  certificados digitais.
+
+ | Padrão de troca de mensagens
+ | SOAP
+
+ | Padrão da mensagem
+ | JSON/XML
+
+ | Padrão de certificado digital
+ | X.509 versão 3, emitido pela Autoridade Certificadora credenciada pela Infraestrutura de Chaves Públicas Brasileira – ICP-Brasil, do tipo A1 ou A3, devendo conter o CNPJ do proprietário do certificado digital.
+
+Fluxo de Integração
+
+1. Autenticação:
+
+Reenvio sob demanda → via certificado digital
+
+2. Envio de dados:
+
+SOAP (para reenvio)
+
+3. Operações disponíveis:
+
+Sob Demanda : Permitir o envio dos dados junto à SEFAZ conforme a necessidade, informando a placa  e/ou CNPJ . Quando ambos são informados, os dados da frota e do transportador são enviados simultaneamente.
+
+Essa API será protegida com certificado digital e ativa um processo interno de reenvio dos dados de Frota ou Transportador para sefaz .
+
+ 4. Recebimento das respostas e tratamento das mensagens.
+
+Exemplo sob demanda
+
+Escândalo de chamada:
+
+Homologação de endpoint:  https:// rntrcservices-hml.bus.antt.gov.br/api/v1/RTRNC/SEFAZ/reenvio/ondemand
+
+Produção de endpoint:  https://rntrc.servicos.bus.antt.gov.br/api/v1/RTRNC/SEFAZ/reenvio/ondemand
+
+Carga útil:
+
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns="http://www.example.org/schema/1747748723278">
+  <soapenv:Header/>
+  <soapenv:Corpo>
+    <ns:reenvioRequest>
+       <placa>ABC1234</placa>
+       <cnpj>12345678000199</cnpj>
+    </ns:reenvioRequest>
+  </soapenv:Body>
+</soapenv:Envelope>
+
+Quando enviado apenas o CPF ou CNPJ , a API retornará os dados do transportador .
+
+Quando enviada somente a placa , a API retorna os dados da frota .
+
+Quando para envios de CPF/CNPJ e placa juntos, a API irá:
+
+Retornar os dados do transportador e da frota .
+
+WSDL:
+
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
+                  xmlns:tns="http://www.example.org/wsdl/1747748723232" 
+                  xmlns:tns0="http://www.example.org/schema/1747748723278" 
+                  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+                  xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+                  name="ondemand" 
+                  targetNamespace="http://www.example.org/wsdl/1747748723232">
+
+  <wsdl:types>
+    <xsd:schema xmlns="http://www.example.org/schema/1747748723278" 
+                elementFormDefault="unqualified" 
+                targetNamespace="http://www.example.org/schema/1747748723278">
+
+      <xsd:element name="reenvioRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element minOccurs="0" name="placa" type="xsd:string"/>
+            <xsd:element minOccurs="0" name="cnpj" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <xsd:element name="reenvioResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="xMotivo" type="xsd:string"/>
+            <xsd:element name="cStat" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <xsd:element name="operationRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="in" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <xsd:element name="operationResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="out" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+    </xsd:schema>
+  </wsdl:types>
+
+  <wsdl:message name="reenvioRequest">
+    <wsdl:part element="tns0:reenvioRequest" name="parameters"/>
+  </wsdl:message>
+
+  <wsdl:message name="reenvioResponse">
+    <wsdl:part element="tns0:reenvioResponse" name="parameters"/>
+  </wsdl:message>
+
+  <wsdl:portType name="ondemand">
+    <wsdl:operation name="reenvio">
+      <wsdl:input message="tns:reenvioRequest" name="reenvioInput"/>
+      <wsdl:output message="tns:reenvioResponse" name="reenvioOutput"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="SOAPServiceBinding" type="tns:ondemand">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+    <wsdl:operation name="reenvio">
+      <soap:operation soapAction="reenvio" style="document"/>
+      <wsdl:input name="reenvioInput">
+        <soap:body parts="parameters" use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="reenvioOutput">
+        <soap:body parts="parameters" use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="ondemand">
+    <wsdl:port binding="tns:SOAPServiceBinding" name="ondemandSOAP">
+      <soap:address location="http://0.0.0.0:9999/SOAPServiceBinding/ondemand/"/>
+    </wsdl:port>
+  </wsdl:service>
+
+</wsdl:definitions>
+
+   Exemplo de resposta de erro:   
+
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tns1="http://www.example.org/schema/1747748723278" xmlns:tns2="http://www.example.org/wsdl/1747748723232">
+    <soapenv:Header/>
+    <soapenv:Body>
+        <tns1:reenvioResponse>
+            <xMotivo>Serviço indisponivel favor tente novamente</xMotivo>
+            <cStat>500</cStat>
+        </tns1:reenvioResponse>
+    </soapenv:Body>
+</soapenv:Envelope>
+
+Isso indica apenas que o pedido foi aceito. O processamento dos dados e a atualização são realizados de forma assíncrona .
+
+Códigos de Retorno
+
+Códigos de erro comuns:
+
+200 : Ok.
+
+403 : Acesso negado.
+
+500 : Erro interno do servidor.
+
+Data da última atualização: 16 de julho de 2026

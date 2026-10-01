@@ -1,0 +1,182 @@
+# InserirLogRegistroOcorrenciaRodoviario
+
+O Log Registro de Ocorrência Rodoviário deve ser gerado, automaticamente, quando um passageiro registrar uma ocorrência em um Ponto de Registro de Ocorrências.
+
+A execução desse método deve ser realizada, ao menos uma vez ao dia, pelo subsistema não embarcado do transporte rodoviário regular.
+
+Os dados relativos ao Log Registro de Ocorrência Rodoviário devem ser enviados no prazo máximo de 24 (vinte e quatro) horas de seu registro.
+
+A contagem temporal do prazo limite de 24 (vinte e quatro) horas para envio do Log se inicia na Data/Hora do Registro da Ocorrência e se encerra na Data/Hora de Envio do Log.
+
+ | 
+
+ | Parâmetro
+ | Descrição do Campo
+ | Tamanho
+ | Domínio / Formato
+ | Tipo
+ | Obrigatório
+
+ | idLog
+ | Identificador de Log
+ |  
+ | Domínio: [2]
+ | tinyint
+ | Sim
+
+ | cnpjEmpresaTransporte
+ | CNPJ da empresa deTransporte
+ | 14
+ | Tamanho fixo: 14 caracteres
+ | string
+ | Sim
+
+ | numeroBilhete
+ | Número do bilhete
+ |  
+ | 
+Valores possíveis:
+Mín: 1;
+Máx: 999999999;
+
+ | integer
+ | Não
+
+ | nomeReclamante
+ | Nome completo do reclamante
+ | 50
+ |  
+ | string
+ | Sim
+
+ | documentoIdentificacaoReclamante
+ | Documento de identificação do reclamante
+ | 20
+ |  
+ | string
+ | Não
+
+ | enderecoReclamante
+ | Endereço do reclamante
+ | 180
+ |  
+ | string
+ | Não
+
+ | telefoneContatoReclamante
+ | Telefone de contato do reclamante
+ | 14
+ |  
+ | string
+ | Sim
+
+ | emailReclamante
+ | E-mail do reclamante
+ | 50
+ |  
+ | string
+ | Não
+
+ | codigoTipoOcorrencia
+ | Tipo de ocorrência
+ |  
+ | 
+Domínio ver Item 8.1.4
+[0, 1, 2, 3, 4, 5, 6, 7, 8] 
+
+ | tinyint
+ | Sim
+
+ | dataOcorrencia
+ | Data da ocorrência
+ |  
+ | 
+Formato:
+Data Local AAAA-MM-DD;
+
+ | date
+ | Sim
+
+ | horaOcorrencia
+ | Hora da ocorrência
+ |  
+ | 
+Formato:
+Hora Local HH:MM:SS; 
+
+ | time
+ | Sim
+
+ | dataRegistroOcorrencia
+ | 
+Data e hora do registro da ocorrência
+
+O TZD no Brasil pode ser:
+
+-02:00 (Fernando de Noronha);
+
+-03:00 (Brasília);
+
+-04:00 (Amazonas);
+
+-05:00 (Acre)
+
+ |  
+ | 
+Formato: AAAA-MM-DDThh:mm:ssTZD
+
+Padrão UTC completo (com Time Zone Designator)
+
+Exemplo: 2025-07-19T13:46:15-03:00 
+
+ | datetime offset
+ | Sim
+
+ | descricaoOcorrencia
+ | Descrição da ocorrência
+ | 4000
+ |  
+ | string
+ | Sim
+
+ | numeroProtocolo
+ | Número do Protocolo
+ | 21
+ |  
+ | string
+ | Sim
+
+ | sequenciamento
+ | Código sequencial de ordenação
+ |  
+ | 
+Valores possíveis:
+Mín: 0;
+Máx: 999999; 
+
+ | integer
+ | Sim
+
+ | idViagem
+ | Código Identificador da Viagem (Rodoviário Regular) Informações na sequência apresentada e separadas por hífen
+
+Data Programada da Viagem no ponto inicial da linha: AAAAMMDD
+
+Hora Programada da Viagem no ponto inicial da linha: HHMMSS
+
+Código Tipo de Viagem: NN 00 = Não atende à Regularidade Mínima 01 = Atende à Regularidade Mínima
+
+Código Sentido da Linha: N 0 = Volta 1 = Ida
+
+Prefixo da Linha SIGMA:
+11 caracteres
+ | 32
+ | 
+Rodoviário Regular
+
+AAAAMMDD-HHMMSS-NN N-PPPPPPPPPPP
+
+Tamanho: 32 caracteres (incluindo os 4 hifens)
+
+ | string
+ | Não

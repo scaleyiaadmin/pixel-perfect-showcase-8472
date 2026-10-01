@@ -1,0 +1,143 @@
+# InserirLogJornadaTrabalhoMotorista
+
+Para registro da jornada de trabalho do(s) motorista(s), deve ser gerado, a cada trecho da viagem executado por um mesmo motorista, 1 (um) Log Jornada de Trabalho do Motorista (Início do Período de Condução) e 1 (um) Log Jornada de Trabalho do Motorista (Fim do Período de Condução).
+
+O registro deve ser gerado, automaticamente, sempre que o motorista se identificar.
+
+O primeiro Log a ser gerado na viagem, relativo ao Log Jornada de Trabalho (Início do Período de Condução) do motorista que inicia a viagem, deve ocorrer, quando do início do deslocamento do veículo, no ponto inicial da linha, após o embarque dos passageiros.
+
+O último Log a ser gerado na viagem, relativo ao Log Jornada de Trabalho (Fim do Período de Condução) do motorista que finaliza a viagem, deve ocorrer, quando da parada do veículo, no ponto final da linha, antes do desembarque dos passageiros.
+
+A execução desse método deve ser realizada pelo subsistema embarcado de todos os tipos de transporte (rodoviário regular, rodoviário fretado, semiurbano regular).
+
+Os dados relativos ao Log Jornada de Trabalho do Motorista devem ser enviados no prazo máximo de 10 (dez) horas de seu registro.
+
+A contagem temporal do prazo limite de 10 (dez) horas para envio do Log se inicia na Data/Hora do Evento e se encerra na Data/Hora de Envio do Log.
+
+ | 
+
+ | Parâmetro
+ | Descrição do Campo
+ | Tamanho
+ | Domínio / Formato
+ | Tipo
+ | Obrigatório
+
+ | idLog
+ | Identificador de Log
+ |  
+ | Domínio: [5]
+ | tinyint
+ | Sim
+
+ | cnpjEmpresaTransporte
+ | CNPJ da empresa de transporte
+ | 14
+ | Tamanho fixo: 14 caracteres
+ | string
+ | Sim
+
+ | placaVeiculo
+ | Placa do veículo
+ | 7
+ | Tamanho fixo: 7 caracteres
+ | string
+ | Sim
+
+ | cpfMotorista
+ | CPF do motorista
+ | 11
+ | Tamanho fixo: 11 caracteres
+ | string
+ | Sim
+
+ | tipoRegistroEvento
+ | Tipo de registro do evento:
+
+0 = Fim do período de condução;
+1 = Início do período de condução;
+
+Par [Início, Fim] possível: [1, 0]
+ |  
+ | Domínio: [0,1]
+ | tinyint
+ | Sim
+
+ | latitude
+ | Latitude
+ |  
+ | Valores possíveis:
+Mín: -90.000000;
+Máx: 90.000000;
+ | decimal
+ | Sim
+
+ | longitude
+ | Longitude
+ |  
+ | Valores possíveis:
+Mín: -180.000000;
+Máx: 180.000000;
+ | decimal
+ | Sim
+
+ | pdop
+ | PDOP (Position Dilution of Precision)
+ |  
+ | Valores possíveis:
+Mín: 0.000;
+Máx: 999.999;
+ | decimal
+ | Sim
+
+ | dataHoraEvento
+ | Data e hora do evento
+ |  
+ | Formato: AAAA-MM-DDThh:mm:ssTZD
+Padrão UTC completo (com TZD)
+
+TZD no Brasil:
+-02:00 (Fernando de Noronha)
+-03:00 (Brasília)
+-04:00 (Amazonas)
+-05:00 (Acre)
+
+Exemplo:
+2025-07-19T13:46:15-03:00
+ | datetime offset
+ | Sim
+
+ | imei
+ | Número IMEI do equipamento de transmissão
+ | 18
+ | Valores possíveis:
+Mín: 15;
+Máx: 18 caracteres
+ | string
+ | Sim
+
+ | sequenciamento
+ | Código sequencial de ordenação
+ |  
+ | Valores possíveis:
+Mín: 0;
+Máx: 999999;
+ | integer
+ | Sim
+
+ | idViagem
+ | Código Identificador da Viagem (Rodoviário Regular / Fretado / Semiurbano Regular)
+ |  
+ | Rodoviário Regular
+AAAAMMDD-HHMMSS-NN-NPPPPPPPPPPP
+Tamanho: 32 caracteres (incluindo os 4 hifens)
+
+Rodoviário Fretado
+Número da Licença de Viagem SISHAB
+Tamanho: 13 caracteres
+
+Semiurbano Regular
+AAAAMMDD-HHMMSS-N-NNNN
+Tamanho: 22 caracteres (incluindo os 3 hifens)
+ | string
+ | Sim

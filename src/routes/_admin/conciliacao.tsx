@@ -9,6 +9,7 @@ import {
   StatusBadge,
   type Column,
   type Tone,
+  DemoBanner,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +19,15 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { brl, companyName, dashboardStats, discrepancies, divergentTrip, featuredTrip, num } from "@/data/mock";
+import {
+  brl,
+  companyName,
+  dashboardStats,
+  discrepancies,
+  divergentTrip,
+  featuredTrip,
+  num,
+} from "@/data/mock";
 import type { Discrepancy, Trip } from "@/types";
 
 export const Route = createFileRoute("/_admin/conciliacao")({
@@ -59,16 +68,44 @@ function ReconciliationPage() {
   const [selected, setSelected] = useState<Discrepancy | null>(null);
 
   const columns: Column<Discrepancy>[] = [
-    { key: "trip", header: "Viagem", render: (d) => <span className="tabular font-semibold">{d.tripNumber}</span> },
+    {
+      key: "trip",
+      header: "Viagem",
+      render: (d) => <span className="tabular font-semibold">{d.tripNumber}</span>,
+    },
     { key: "company", header: "Empresa", render: (d) => companyName(d.companyId) },
-    { key: "tickets", header: "Passagens", align: "right", render: (d) => <span className="tabular">{d.tickets}</span> },
-    { key: "gate", header: "Catraca", align: "right", render: (d) => <span className="tabular">{d.gate}</span> },
-    { key: "report", header: "Relatório", align: "right", render: (d) => <span className="tabular">{d.report}</span> },
-    { key: "diff", header: "Diferença", align: "right", render: (d) => <span className="tabular font-semibold">{d.difference}</span> },
+    {
+      key: "tickets",
+      header: "Passagens",
+      align: "right",
+      render: (d) => <span className="tabular">{d.tickets}</span>,
+    },
+    {
+      key: "gate",
+      header: "Catraca",
+      align: "right",
+      render: (d) => <span className="tabular">{d.gate}</span>,
+    },
+    {
+      key: "report",
+      header: "Relatório",
+      align: "right",
+      render: (d) => <span className="tabular">{d.report}</span>,
+    },
+    {
+      key: "diff",
+      header: "Diferença",
+      align: "right",
+      render: (d) => <span className="tabular font-semibold">{d.difference}</span>,
+    },
     {
       key: "situation",
       header: "Situação",
-      render: (d) => <StatusBadge tone={situationMap[d.situation].tone}>{situationMap[d.situation].label}</StatusBadge>,
+      render: (d) => (
+        <StatusBadge tone={situationMap[d.situation].tone}>
+          {situationMap[d.situation].label}
+        </StatusBadge>
+      ),
     },
     {
       key: "action",
@@ -90,6 +127,7 @@ function ReconciliationPage() {
         title="Conciliação 360°"
         subtitle="Cruze informações operacionais, passagens e embarques para identificar divergências."
       />
+      <DemoBanner />
 
       <SectionCard title="Fluxo da informação">
         <div className="flex flex-wrap items-center gap-2">
@@ -107,22 +145,42 @@ function ReconciliationPage() {
         <div className="mt-6 grid grid-cols-3 gap-3">
           <Indicator label="Conciliados" value={num(dashboardStats.reconciled)} tone="success" />
           <Indicator label="Em análise" value={String(dashboardStats.inAnalysis)} tone="warning" />
-          <Indicator label="Divergências" value={String(dashboardStats.divergences)} tone="danger" />
+          <Indicator
+            label="Divergências"
+            value={String(dashboardStats.divergences)}
+            tone="danger"
+          />
         </div>
         <div className="mt-4 flex h-3 overflow-hidden rounded-full">
-          <div className="bg-success" style={{ width: `${(dashboardStats.reconciled / total) * 100}%` }} />
-          <div className="bg-warning" style={{ width: `${(dashboardStats.inAnalysis / total) * 100}%` }} />
-          <div className="bg-danger" style={{ width: `${(dashboardStats.divergences / total) * 100}%` }} />
+          <div
+            className="bg-success"
+            style={{ width: `${(dashboardStats.reconciled / total) * 100}%` }}
+          />
+          <div
+            className="bg-warning"
+            style={{ width: `${(dashboardStats.inAnalysis / total) * 100}%` }}
+          />
+          <div
+            className="bg-danger"
+            style={{ width: `${(dashboardStats.divergences / total) * 100}%` }}
+          />
         </div>
       </SectionCard>
 
       <div className="mt-6 grid gap-5 lg:grid-cols-2">
         <TripReconciliationCard trip={featuredTrip} />
-        <TripReconciliationCard trip={divergentTrip} onAnalyze={() => setSelected(discrepancies[0])} />
+        <TripReconciliationCard
+          trip={divergentTrip}
+          onAnalyze={() => setSelected(discrepancies[0])}
+        />
       </div>
 
       <div className="mt-6">
-        <SectionCard title="Diferenças identificadas" description="Linguagem neutra: o sistema apenas apresenta as diferenças entre as fontes." bodyClassName="p-0">
+        <SectionCard
+          title="Diferenças identificadas"
+          description="Linguagem neutra: o sistema apenas apresenta as diferenças entre as fontes."
+          bodyClassName="p-0"
+        >
           <DataTable columns={columns} rows={discrepancies} />
         </SectionCard>
       </div>
@@ -149,7 +207,8 @@ function ReconciliationPage() {
                 {situationMap[selected.situation].label}
               </StatusBadge>
               <DemoNote>
-                O sistema identifica e apresenta a diferença entre as fontes, sem qualquer julgamento.
+                O sistema identifica e apresenta a diferença entre as fontes, sem qualquer
+                julgamento.
               </DemoNote>
             </div>
           )}
@@ -159,7 +218,15 @@ function ReconciliationPage() {
   );
 }
 
-function Indicator({ label, value, tone }: { label: string; value: string; tone: "success" | "warning" | "danger" }) {
+function Indicator({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "success" | "warning" | "danger";
+}) {
   const classes = {
     success: "border-success/25 bg-success-soft text-success",
     warning: "border-warning/30 bg-warning-soft text-warning-foreground",
@@ -211,7 +278,9 @@ function TripReconciliationCard({ trip, onAnalyze }: { trip: Trip; onAnalyze?: (
 function Metric({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="rounded-lg border border-border bg-muted/40 px-3 py-2.5">
-      <dt className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground">{label}</dt>
+      <dt className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground">
+        {label}
+      </dt>
       <dd className="tabular mt-0.5 font-display text-lg font-bold">{value}</dd>
     </div>
   );
@@ -221,7 +290,9 @@ function Line({ label, value, highlight }: { label: string; value: number; highl
   return (
     <div className="flex items-center justify-between border-b border-border/60 pb-2 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span className={`tabular font-display text-lg font-bold ${highlight ? "text-warning-foreground" : ""}`}>
+      <span
+        className={`tabular font-display text-lg font-bold ${highlight ? "text-warning-foreground" : ""}`}
+      >
         {value}
       </span>
     </div>

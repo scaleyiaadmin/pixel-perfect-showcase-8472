@@ -10,43 +10,43 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   ArrowRight,
-  Bus,
   Building2,
   CheckCircle2,
-  CircleDollarSign,
+  Clock,
   Info,
+  Route as RouteIcon,
   Ticket,
-  TrendingDown,
-  Users,
 } from "lucide-react";
 import {
   DemoNote,
   PageHeader,
+  QueryState,
   SectionCard,
+  SourceNote,
   StatCard,
   StatusBadge,
   DataTable,
-  tripStatusTone,
   type Column,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { PrefeituraLogo, RodoviariaLogo } from "@/components/brand/Logos";
+import { alerts, dashboardStats, num } from "@/data/mock";
 import {
-  TODAY_LABEL,
-  alerts,
-  boardingsByCompany,
-  boardingsLast7Days,
-  brl,
-  companyName,
-  dashboardStats,
-  nextTrip,
-  num,
-  upcomingTrips,
-} from "@/data/mock";
-import type { Trip } from "@/types";
+  destinoDaPartida,
+  horaCurta,
+  mesAno,
+  nomeEmpresa,
+  partidasDoDia,
+  useEmpresas,
+  useHorarios,
+  useLinhas,
+  usePassagensMensais,
+  type Horario,
+} from "@/services/dados-publicos";
 
 export const Route = createFileRoute("/_admin/dashboard")({
   head: () => ({
@@ -82,23 +82,70 @@ const alertTone = {
 } as const;
 
 function Dashboard() {
-  const columns: Column<Trip>[] = [
-    { key: "time", header: "Horário", render: (t) => <span className="tabular font-semibold">{t.scheduled}</span> },
-    { key: "dest", header: "Destino", render: (t) => t.destination },
-    { key: "company", header: "Empresa", render: (t) => <span className="text-muted-foreground">{companyName(t.companyId)}</span> },
-    { key: "platform", header: "Plataforma", align: "center", render: (t) => <span className="tabular">{t.platform}</span> },
-    { key: "pax", header: "Passageiros", align: "right", render: (t) => <span className="tabular">{t.boardings}</span> },
+  const empresas = useEmpresas();
+  const linhas = useLinhas();
+  const horarios = useHorarios();
+  const passagens = usePassagensMensais();
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => setNow(new Date()), []);
+
+  const hoje = now ? partidasDoDia(horarios.data ?? [], now) : [];
+  const minutosAgora = now ? now.getHours() * 60 + now.getMinutes() : 0;
+  const proximas = hoje.filter((h) => {
+    const [hh, mm] = h.hora.split(":").map(Number);
+    return hh * 60 + mm >= minutosAgora;
+  });
+  const proxima = proximas[0];
+
+  const { porMes, ultimoMes, topDestinos } = useMemo(() => {
+    const data = passagens.data ?? [];
+    const meses = new Map<string, number>();
+    for (const p of data) meses.set(p.mes_emissao, (meses.get(p.mes_emissao) ?? 0) + p.quantidade);
+    const porMes = [...meses.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([mes, passagens]) => ({ mes: mesAno(mes), passagens }));
+    const ultimo = [...meses.keys()].sort().at(-1) ?? "";
+    const destinos = new Map<string, number>();
+    for (const p of data) {
+      if (p.mes_emissao !== ultimo || p.origem !== "Manhuaçu") continue;
+      destinos.set(p.destino, (destinos.get(p.destino) ?? 0) + p.quantidade);
+    }
+    const topDestinos = [...destinos.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([destino, passagens]) => ({ destino, passagens }));
+    return { porMes, ultimoMes: ultimo, topDestinos };
+  }, [passagens.data]);
+
+  const columns: Column<Horario>[] = [
+    {
+      key: "time",
+      header: "Horário",
+      render: (h) => <span className="tabular font-semibold">{horaCurta(h.hora)}</span>,
+    },
+    { key: "dest", header: "Destino", render: (h) => destinoDaPartida(h) },
+    {
+      key: "company",
+      header: "Empresa",
+      render: (h) => <span className="text-muted-foreground">{nomeEmpresa(h.linha)}</span>,
+    },
+    {
+      key: "line",
+      header: "Linha",
+      render: (h) => <span className="tabular text-muted-foreground">{h.linha.codigo}</span>,
+    },
     {
       key: "status",
       header: "Status",
-      render: (t) => (
-        <StatusBadge tone={tripStatusTone[t.status].tone}>{tripStatusTone[t.status].label}</StatusBadge>
-      ),
+      render: () => <StatusBadge tone="info">Previsto</StatusBadge>,
     },
   ];
 
-  const totalConc = dashboardStats.reconciled + dashboardStats.inAnalysis + dashboardStats.divergences;
+  const totalConc =
+    dashboardStats.reconciled + dashboardStats.inAnalysis + dashboardStats.divergences;
   const pct = (v: number) => (v / totalConc) * 100;
+  const passagensUltimoMes = porMes.at(-1)?.passagens;
 
   return (
     <>
@@ -109,58 +156,77 @@ function Dashboard() {
 
       <PageHeader
         title="Dashboard"
-        subtitle="Visão geral da operação do Terminal Rodoviário de Manhuaçu"
+        subtitle="Visão geral do Terminal Rodoviário de Manhuaçu"
         actions={
-          <>
-            <StatusBadge tone="success">Sistema operacional</StatusBadge>
-            <span className="text-sm font-medium text-muted-foreground">{TODAY_LABEL}</span>
-          </>
+          <span className="text-sm font-medium text-muted-foreground">
+            {now?.toLocaleDateString("pt-BR", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </span>
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <StatCard label="Viagens hoje" value={dashboardStats.tripsToday} icon={Bus} trend="+8,4%" hint="em relação ao período anterior" />
-        <StatCard label="Embarques hoje" value={num(dashboardStats.boardingsToday)} icon={Users} tone="info" hint="acessos confirmados no terminal" />
-        <StatCard label="Passagens registradas" value={num(dashboardStats.ticketsToday)} icon={Ticket} tone="primary" hint="emitidas pelas empresas" />
-        <StatCard label="Empresas ativas" value={dashboardStats.activeCompanies} icon={Building2} tone="neutral" hint="operando no terminal" />
-        <StatCard label="Taxas pendentes" value={brl(dashboardStats.pendingFees)} icon={CircleDollarSign} tone="warning" hint="informação demonstrativa" />
-        <StatCard label="Inadimplência" value={brl(dashboardStats.overdue)} icon={TrendingDown} tone="danger" hint="informação demonstrativa" />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="Partidas programadas hoje"
+          value={horarios.data ? hoje.length : "—"}
+          icon={Clock}
+          hint="ANTT e DER-MG"
+        />
+        <StatCard
+          label="Linhas"
+          value={linhas.data?.length ?? "—"}
+          icon={RouteIcon}
+          tone="info"
+          hint="interestaduais e intermunicipais"
+        />
+        <StatCard
+          label="Empresas interestaduais"
+          value={empresas.data?.length ?? "—"}
+          icon={Building2}
+          tone="neutral"
+          hint="autorizadas pela ANTT"
+        />
+        <StatCard
+          label="Passagens interestaduais"
+          value={passagensUltimoMes !== undefined ? num(passagensUltimoMes) : "—"}
+          icon={Ticket}
+          tone="primary"
+          hint={ultimoMes ? `emitidas em ${mesAno(ultimoMes)} (ANTT)` : undefined}
+        />
       </div>
 
-      {/* Operação em tempo real */}
       <div className="mt-6 grid gap-5 xl:grid-cols-[1.15fr_1fr]">
         <div className="overflow-hidden rounded-xl gradient-institutional p-6 text-primary-foreground shadow-[var(--shadow-raised)]">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold tracking-[0.2em] uppercase text-primary-foreground/70">
-              Operação em tempo real
+          <p className="text-xs font-bold tracking-[0.2em] uppercase text-primary-foreground/70">
+            Próxima partida programada
+          </p>
+          {proxima ? (
+            <>
+              <div className="mt-6 flex flex-wrap items-end gap-6">
+                <p className="tabular font-display text-6xl leading-none font-extrabold">
+                  {horaCurta(proxima.hora)}
+                </p>
+                <div>
+                  <p className="font-display text-2xl font-bold">{destinoDaPartida(proxima)}</p>
+                  <p className="text-primary-foreground/80">{nomeEmpresa(proxima.linha)}</p>
+                </div>
+              </div>
+              <p className="mt-6 text-sm text-primary-foreground/80">
+                {proximas.length - 1} outras partidas programadas até o fim do dia.
+              </p>
+            </>
+          ) : (
+            <p className="mt-6 text-primary-foreground/80">
+              {horarios.isLoading ? "Carregando…" : "Sem mais partidas programadas hoje."}
             </p>
-            <span className="flex items-center gap-2 rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-bold">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-success" /> EMBARQUE
-            </span>
-          </div>
-
-          <div className="mt-6 flex flex-wrap items-end gap-6">
-            <p className="tabular font-display text-6xl leading-none font-extrabold">{nextTrip.scheduled}</p>
-            <div>
-              <p className="font-display text-2xl font-bold">{nextTrip.destination}</p>
-              <p className="text-primary-foreground/80">{companyName(nextTrip.companyId)}</p>
-            </div>
-            <div className="rounded-lg border border-primary-foreground/25 px-4 py-2">
-              <p className="text-[10px] tracking-[0.2em] uppercase text-primary-foreground/70">Plataforma</p>
-              <p className="tabular font-display text-2xl font-bold">{nextTrip.platform}</p>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary-foreground/20">
-              <div className="h-full w-2/3 animate-pulse rounded-full bg-success" />
-            </div>
-            <p className="mt-2 text-sm font-semibold">Embarque em andamento</p>
-          </div>
-
+          )}
           <Button asChild variant="secondary" className="mt-6">
-            <Link to="/operacao/viagens/$tripId" params={{ tripId: nextTrip.id }}>
-              Ver viagem <ArrowRight className="ml-1 h-4 w-4" />
+            <Link to="/operacao/horarios">
+              Ver grade de horários <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
         </div>
@@ -168,24 +234,26 @@ function Dashboard() {
         <SectionCard
           title="Conciliação 360°"
           description="Cruzamento entre passagens, catracas e relatórios das empresas"
-          actions={
-            <Button asChild variant="outline" size="sm">
-              <Link to="/conciliacao">Abrir</Link>
-            </Button>
-          }
+          actions={<StatusBadge tone="warning">Dados de exemplo</StatusBadge>}
         >
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-lg border border-success/25 bg-success-soft p-3">
               <p className="text-xs font-semibold text-success">Conciliados</p>
-              <p className="tabular mt-1 font-display text-2xl font-bold text-success">{num(dashboardStats.reconciled)}</p>
+              <p className="tabular mt-1 font-display text-2xl font-bold text-success">
+                {num(dashboardStats.reconciled)}
+              </p>
             </div>
             <div className="rounded-lg border border-warning/30 bg-warning-soft p-3">
               <p className="text-xs font-semibold text-warning-foreground">Em análise</p>
-              <p className="tabular mt-1 font-display text-2xl font-bold text-warning-foreground">{dashboardStats.inAnalysis}</p>
+              <p className="tabular mt-1 font-display text-2xl font-bold text-warning-foreground">
+                {dashboardStats.inAnalysis}
+              </p>
             </div>
             <div className="rounded-lg border border-danger/25 bg-danger-soft p-3">
               <p className="text-xs font-semibold text-danger">Divergências</p>
-              <p className="tabular mt-1 font-display text-2xl font-bold text-danger">{dashboardStats.divergences}</p>
+              <p className="tabular mt-1 font-display text-2xl font-bold text-danger">
+                {dashboardStats.divergences}
+              </p>
             </div>
           </div>
 
@@ -194,44 +262,65 @@ function Dashboard() {
             <div className="bg-warning" style={{ width: `${pct(dashboardStats.inAnalysis)}%` }} />
             <div className="bg-danger" style={{ width: `${pct(dashboardStats.divergences)}%` }} />
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {((dashboardStats.reconciled / totalConc) * 100).toFixed(1)}% das viagens do período já conciliadas.
-          </p>
-          <DemoNote>As informações apresentadas nesta versão são demonstrativas.</DemoNote>
+          <DemoNote>Aguardando integração com empresas e catracas.</DemoNote>
         </SectionCard>
       </div>
 
-      {/* Próximas viagens */}
       <div className="mt-6">
         <SectionCard
-          title="Próximas viagens"
-          description="Partidas previstas para hoje"
+          title="Próximas partidas"
+          description="Programadas para hoje no terminal"
           bodyClassName="p-0"
           actions={
             <Button asChild variant="outline" size="sm">
-              <Link to="/operacao/viagens">Ver todas</Link>
+              <Link to="/operacao/horarios">Ver todas</Link>
             </Button>
           }
         >
-          <DataTable columns={columns} rows={upcomingTrips.slice(0, 6)} />
+          <QueryState isLoading={horarios.isLoading} error={horarios.error} />
+          {horarios.data && (
+            <DataTable
+              columns={columns}
+              rows={proximas.slice(0, 6)}
+              emptyMessage="Sem mais partidas hoje."
+            />
+          )}
         </SectionCard>
       </div>
 
-      {/* Gráficos */}
       <div className="mt-6 grid gap-5 lg:grid-cols-2">
-        <SectionCard title="Embarques nos últimos 7 dias" description="Evolução diária de acessos no terminal">
+        <SectionCard
+          title="Passagens interestaduais por mês"
+          description="Emitidas com origem ou destino em Manhuaçu"
+        >
+          <QueryState isLoading={passagens.isLoading} error={passagens.error} />
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={boardingsLast7Days} margin={{ left: -18, right: 8, top: 8 }}>
+              <AreaChart data={porMes} margin={{ left: -18, right: 8, top: 8 }}>
                 <defs>
                   <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.35} />
                     <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                <XAxis dataKey="day" tickLine={false} axisLine={false} fontSize={12} stroke="var(--color-muted-foreground)" />
-                <YAxis tickLine={false} axisLine={false} fontSize={12} stroke="var(--color-muted-foreground)" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--color-border)"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="mes"
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={12}
+                  stroke="var(--color-muted-foreground)"
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={12}
+                  stroke="var(--color-muted-foreground)"
+                />
                 <Tooltip
                   contentStyle={{
                     borderRadius: 12,
@@ -240,19 +329,49 @@ function Dashboard() {
                     fontSize: 13,
                   }}
                 />
-                <Area type="monotone" dataKey="embarques" stroke="var(--color-primary)" strokeWidth={2.5} fill="url(#grad)" />
+                <Area
+                  type="monotone"
+                  dataKey="passagens"
+                  stroke="var(--color-primary)"
+                  strokeWidth={2.5}
+                  fill="url(#grad)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
+          <SourceNote>Fonte: ANTT, MONITRIIP. Publicado todo dia 15 com o mês anterior.</SourceNote>
         </SectionCard>
 
-        <SectionCard title="Embarques por empresa" description="Distribuição das principais empresas hoje">
+        <SectionCard
+          title="Principais destinos"
+          description={
+            ultimoMes ? `Passagens saindo de Manhuaçu em ${mesAno(ultimoMes)}` : undefined
+          }
+        >
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={boardingsByCompany} margin={{ left: -18, right: 8, top: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                <XAxis dataKey="empresa" tickLine={false} axisLine={false} fontSize={11} stroke="var(--color-muted-foreground)" interval={0} angle={-12} dy={8} />
-                <YAxis tickLine={false} axisLine={false} fontSize={12} stroke="var(--color-muted-foreground)" />
+              <BarChart data={topDestinos} margin={{ left: -18, right: 8, top: 8 }}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--color-border)"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="destino"
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={11}
+                  stroke="var(--color-muted-foreground)"
+                  interval={0}
+                  angle={-12}
+                  dy={8}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={12}
+                  stroke="var(--color-muted-foreground)"
+                />
                 <Tooltip
                   cursor={{ fill: "var(--color-muted)" }}
                   contentStyle={{
@@ -262,16 +381,21 @@ function Dashboard() {
                     fontSize: 13,
                   }}
                 />
-                <Bar dataKey="embarques" radius={[6, 6, 0, 0]} fill="var(--color-primary)" />
+                <Bar dataKey="passagens" radius={[6, 6, 0, 0]} fill="var(--color-primary)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
+          <SourceNote>Fonte: ANTT, MONITRIIP. Só linhas interestaduais.</SourceNote>
         </SectionCard>
       </div>
 
       {/* Alertas */}
       <div className="mt-6">
-        <SectionCard title="Alertas e ocorrências" bodyClassName="p-0">
+        <SectionCard
+          title="Alertas e ocorrências"
+          bodyClassName="p-0"
+          actions={<StatusBadge tone="warning">Dados de exemplo</StatusBadge>}
+        >
           <ul>
             {alerts.map((a) => {
               const Icon = alertIcon[a.kind];
@@ -287,7 +411,9 @@ function Dashboard() {
                       <Icon className="h-4 w-4" />
                     </span>
                     <span className="flex-1 text-sm">{a.text}</span>
-                    <span className="text-xs whitespace-nowrap text-muted-foreground">{a.time}</span>
+                    <span className="text-xs whitespace-nowrap text-muted-foreground">
+                      {a.time}
+                    </span>
                     <ArrowRight className="h-4 w-4 text-muted-foreground" />
                   </Link>
                 </li>

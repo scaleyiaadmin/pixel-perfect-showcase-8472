@@ -1,0 +1,157 @@
+# InserirLogRegistroOcorrenciaSemiurbano
+
+O Log Registro de Ocorrência Semiurbano deve ser gerado, automaticamente, quando um passageiro registrar uma ocorrência em um Ponto de Registro de Ocorrências.
+
+A execução desse método deve ser realizada, ao menos uma vez ao dia, pelo subsistema não embarcado do transporte semiurbano regular.
+
+Os dados relativos ao Log Registro de Ocorrência Semiurbano devem ser enviados no prazo máximo de 24 (vinte e quatro) horas de seu registro.
+
+A contagem temporal do prazo limite de 24 (vinte e quatro) horas para envio do Log se inicia na Data/Hora do Registro da Ocorrência e se encerra na Data/Hora de Envio do Log.
+
+ | 
+
+ | Parâmetro
+ | Descrição do Campo
+ | Tamanho
+ | Domínio / Formato
+ | Tipo
+ | Obrigatório
+
+ | idLog
+ | Identificador de Log
+ |  
+ | Domínio: [3]
+ | tinyint
+ | Sim
+
+ | cnpjEmpresaTransporte
+ | CNPJ da empresa de transporte
+ | 14
+ | Tamanho fixo: 14 caracteres
+ | string
+ | Sim
+
+ | empresaResponsavel
+ | Nome da empresa de transporte
+ | 80
+ |  
+ | string
+ | Sim
+
+ | identificacaoLinha
+ | Identificação da linha:
+Número da Linha (Semiurbano Regular)
+ | 4
+ | Tamanho fixo: 4 caracteres
+ | string
+ | Sim
+
+ | nomeReclamante
+ | Nome completo do reclamante
+ | 50
+ |  
+ | string
+ | Sim
+
+ | documentoIdentificacaoReclamante
+ | Documento de identificação do reclamante
+ | 20
+ |  
+ | string
+ | Não
+
+ | enderecoReclamante
+ | Endereço do reclamante
+ | 180
+ |  
+ | string
+ | Não
+
+ | telefoneContatoReclamante
+ | Telefone de contato do reclamante
+ | 14
+ |  
+ | string
+ | Sim
+
+ | emailReclamante
+ | E-mail do reclamante
+ | 50
+ |  
+ | string
+ | Não
+
+ | codigoTipoOcorrencia
+ | Tipo de ocorrência
+ |  
+ | Domínio ver Item 8.1.4
+[0, 1, 2, 3, 4, 5, 6, 7, 8]
+ | tinyint
+ | Sim
+
+ | dataOcorrencia
+ | Data da ocorrência
+ |  
+ | Data Local
+Formato: AAAA-MM-DD
+ | date
+ | Sim
+
+ | horaOcorrencia
+ | Hora da ocorrência
+ |  
+ | Hora Local
+Formato: HH:MM:SS
+ | time
+ | Sim
+
+ | dataHoraRegistroOcorrencia
+ | Data e hora do registro da ocorrência
+ |  
+ | Formato: AAAA-MM-DDThh:mm:ssTZD
+Padrão UTC completo (com Time Zone Designator)
+
+TZD no Brasil:
+-02:00 (Fernando de Noronha)
+-03:00 (Brasília)
+-04:00 (Amazonas)
+-05:00 (Acre)
+
+Exemplo:
+2025-07-19T13:46:15-03:00
+ | datetime offset
+ | Sim
+
+ | descricaoOcorrencia
+ | Descrição da ocorrência
+ | 4000
+ |  
+ | string
+ | Sim
+
+ | numeroProtocolo
+ | Número do protocolo
+ | 21
+ |  
+ | string
+ | Sim
+
+ | sequenciamento
+ | Código sequencial de ordenação
+ |  
+ | Valores possíveis:
+Mín: 0;
+Máx: 999999;
+ | integer
+ | Sim
+
+ | idViagem
+ | Código Identificador da Viagem (Semiurbano Regular)
+ | 22
+ | Formato:
+AAAAMMDD-HHMMSS-N-NNNN
+
+Tamanho: 22 caracteres
+(incluindo os 3 hifens)
+ | string
+ | Não

@@ -1,0 +1,15 @@
+# Catálogo de API
+
+Conheça a lista de API's disponíveis e descubra o que elas podem fazer por seus sistemas.
+
+Rodovias - SIR
+
+Tráfego Pedágio  [../page/servico-trafego-pedagio]Tráfego SAT  [../page/servico-trafego-sat]Tráfego Radar  [../page/servico-trafego-radar]Tráfego Infratores  [../page/servico-trafego-infrator-radar]Acidentes  [../page/servico-acidentes]Atendimento  [../page/servico-atendimento]
+
+Passageiros - MONITRIIP
+
+InserirLogVendaPassagem  [../page/servico-InserirLogVendaPassagem]InserirLogRegistroOcorrenciaRodoviario  [../page/servico-InserirLogRegistroOcorrenciaRodoviario]InserirLogCartaoEmitidoRecargaEfetuada  [../page/servico-InserirLogCartaoEmitidoRecargaEfetuada]InserirLogRegistroOcorrenciaSemiurbano  [../page/servico-InserirLogRegistroOcorrenciaSemiUrbano]InserirLogVelocidadeTempoLocalizacao  [../page/servico-InserirLogVelocidadeTempoLocalizacao]InserirLogJornadaTrabalhoMotorista  [../page/servico-InserirLogJornadaTrabalhoMotorista]InserirLogDetectorParada  [../page/servico-LogDetectorParada]InserirLogInicioFimViagemRegular  [../page/servico-InserirLogInicioFimViagemRegular]InserirLogInicioFimViagemFretado  [../page/servico-InserirLogInicioFimViagemFretado]InserirLogBilheteEmbarque  [../page/servico-InserirLogBilheteEmbarque]InserirLogLeitorCartaoRFID  [../page/servico-InserirLogLeitorCartaoRFID]InserirLogCancelarPassagem  [../page/servico-InserirLogCancelarPassagem]InserirLogReembolsoCartao  [../page/servico-InserirLogReembolsoCartao]
+
+Cargas - RNTRC ON DEMAND
+
+Pesquisa Frota [../page/servico-pesquisaFrota] Pesquisa Transportador [../page/servico-pesquisaTransportador]

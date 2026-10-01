@@ -1,7 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { BarChart3, Building2, Bus, ClipboardList, MonitorPlay, Printer, Search, Wallet } from "lucide-react";
-import { DataTable, PageHeader, SectionCard, StatusBadge, type Column } from "@/components/common";
+import {
+  BarChart3,
+  Building2,
+  Bus,
+  ClipboardList,
+  MonitorPlay,
+  Printer,
+  Search,
+  Wallet,
+} from "lucide-react";
+import {
+  DataTable,
+  PageHeader,
+  SectionCard,
+  StatusBadge,
+  type Column,
+  DemoBanner,
+} from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { PrefeituraLogo, RodoviariaLogo } from "@/components/brand/Logos";
 import {
@@ -22,7 +38,8 @@ export const Route = createFileRoute("/_admin/relatorios")({
       { title: "Relatórios — SisRodov Manhuaçu" },
       {
         name: "description",
-        content: "Central de relatórios do Terminal Rodoviário de Manhuaçu: embarques, viagens, financeiro e divergências.",
+        content:
+          "Central de relatórios do Terminal Rodoviário de Manhuaçu: embarques, viagens, financeiro e divergências.",
       },
       { property: "og:title", content: "Relatórios — SisRodov Manhuaçu" },
       { property: "og:description", content: "Relatórios gerenciais e operacionais do terminal." },
@@ -51,6 +68,7 @@ function ReportsPage() {
   return (
     <>
       <PageHeader title="Relatórios" subtitle="Central de relatórios institucionais do terminal" />
+      <DemoBanner />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {reportDefinitions.map((r) => {
           const Icon = icons[r.icon as keyof typeof icons] ?? BarChart3;
@@ -77,13 +95,26 @@ function ReportPreview({ id, onBack }: { id: string; onBack: () => void }) {
 
   const tripColumns: Column<Trip>[] = [
     { key: "date", header: "Data", render: (t) => <span className="tabular">{t.date}</span> },
-    { key: "time", header: "Horário", render: (t) => <span className="tabular">{t.scheduled}</span> },
+    {
+      key: "time",
+      header: "Horário",
+      render: (t) => <span className="tabular">{t.scheduled}</span>,
+    },
     { key: "company", header: "Empresa", render: (t) => companyName(t.companyId) },
     { key: "dest", header: "Destino", render: (t) => t.destination },
     { key: "trip", header: "Viagem", render: (t) => <span className="tabular">{t.number}</span> },
-    { key: "boardings", header: "Embarques", align: "right", render: (t) => <span className="tabular">{t.boardings}</span> },
+    {
+      key: "boardings",
+      header: "Embarques",
+      align: "right",
+      render: (t) => <span className="tabular">{t.boardings}</span>,
+    },
     { key: "source", header: "Fonte", render: () => "Sistema da empresa" },
-    { key: "sit", header: "Situação", render: (t) => <span className="capitalize">{t.reconciliation}</span> },
+    {
+      key: "sit",
+      header: "Situação",
+      render: (t) => <span className="capitalize">{t.reconciliation}</span>,
+    },
   ];
 
   return (
@@ -101,7 +132,9 @@ function ReportPreview({ id, onBack }: { id: string; onBack: () => void }) {
         <header className="flex flex-wrap items-center justify-between gap-6 border-b border-border pb-6">
           <PrefeituraLogo />
           <div className="text-center">
-            <p className="font-display text-lg font-extrabold tracking-[0.12em] uppercase">SisRodov Manhuaçu</p>
+            <p className="font-display text-lg font-extrabold tracking-[0.12em] uppercase">
+              SisRodov Manhuaçu
+            </p>
             <p className="text-xs tracking-wide text-muted-foreground uppercase">
               Sistema Municipal de Gestão e Controle do Terminal Rodoviário
             </p>
@@ -131,14 +164,26 @@ function ReportPreview({ id, onBack }: { id: string; onBack: () => void }) {
           {id === "divergencias" ? (
             <DataTable
               columns={[
-                { key: "trip", header: "Viagem", render: (d) => <span className="tabular">{d.tripNumber}</span> },
+                {
+                  key: "trip",
+                  header: "Viagem",
+                  render: (d) => <span className="tabular">{d.tripNumber}</span>,
+                },
                 { key: "company", header: "Empresa", render: (d) => companyName(d.companyId) },
                 { key: "tickets", header: "Passagens", align: "right", render: (d) => d.tickets },
                 { key: "gate", header: "Catraca", align: "right", render: (d) => d.gate },
                 { key: "report", header: "Relatório", align: "right", render: (d) => d.report },
                 { key: "diff", header: "Diferença", align: "right", render: (d) => d.difference },
-                { key: "sit", header: "Situação", render: () => <StatusBadge tone="warning">Em análise</StatusBadge> },
-                { key: "note", header: "Observação", render: (d) => <span className="text-muted-foreground">{d.note}</span> },
+                {
+                  key: "sit",
+                  header: "Situação",
+                  render: () => <StatusBadge tone="warning">Em análise</StatusBadge>,
+                },
+                {
+                  key: "note",
+                  header: "Observação",
+                  render: (d) => <span className="text-muted-foreground">{d.note}</span>,
+                },
               ]}
               rows={discrepancies}
             />
@@ -161,7 +206,9 @@ function ReportPreview({ id, onBack }: { id: string; onBack: () => void }) {
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[11px] font-bold tracking-[0.12em] uppercase text-muted-foreground">{label}</p>
+      <p className="text-[11px] font-bold tracking-[0.12em] uppercase text-muted-foreground">
+        {label}
+      </p>
       <p className="tabular mt-0.5 font-display text-lg font-bold">{value}</p>
     </div>
   );

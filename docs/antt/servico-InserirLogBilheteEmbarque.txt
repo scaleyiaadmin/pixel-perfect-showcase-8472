@@ -1,0 +1,296 @@
+# InserirLogBilheteEmbarque
+
+O Log Bilhete de Embarque (check-in) deve ser gerado, automaticamente, no momento do embarque, quando da detecção de uma leitura válida.
+
+O Log Bilhete de Embarque (no-show) deve ser gerado, automaticamente, quando o motorista ou um funcionário da empresa de transporte encerrar o embarque, através de terminal integrado ao subsistema embarcado, na localidade em que o passageiro deveria ter embarcado, conforme local de embarque previsto no bilhete de passagem, ou, automaticamente, imediatamente após a saída do veículo da localidade em que o passageiro deveria ter embarcado, conforme local de embarque previsto no bilhete de passagem.
+
+No caso de erro de leitura do código de barras / QR Code do bilhete, a empresa de transporte de passageiros deverá disponibilizar meio de inserção de dados de contingência para o registro dos seguintes campos (parâmetros):
+
+chaveBPeEquipFiscal;
+
+numeroBilhete;
+
+sequenciamento;
+
+idViagem;
+
+Em contingência, para o campo (parâmetro) chaveBPeEquipFiscal, poderão ser utilizados os seguintes códigos:
+
+000013: Para Nota Fiscal Bilhete de Passagem Rodoviário - hipótese de emissão manual (com posterior lançamento no sistema fiscal utilizado, conforme a Resolução que dispõe sobre as condições gerais relativas à venda de bilhetes de passagem);
+
+000060: Para Cupom de Embarque Bilhete de Passagem;
+
+000063: Para Bilhete de Passagem Eletrônico; ou
+
+999999: Para Bilhete de Passagem Rodoviário emitido no exterior.
+
+A execução desse método deve ser realizada pelo subsistema embarcado do transporte rodoviário regular.
+
+Os dados relativos ao Log Bilhete de Embarque (check-in) e ao Log Bilhete de Embarque (noshow) devem ser enviados no prazo máximo de 10 (dez) horas de seu registro.
+
+A contagem temporal do prazo limite de 10 (dez) horas para envio do Log se inicia na Data/Hora do Evento e se encerra na Data/Hora de Envio do Log.
+
+Parâmetros (viagem):
+
+ | 
+
+ | Parâmetro
+ | Descrição do Campo
+ | Tamanho
+ | Domínio / Formato
+ | Tipo
+ | Obrigatório
+
+ | idLog
+ | Identificador de Log
+ |  
+ | Domínio: [9]
+ | tinyint
+ | Sim
+
+ | cnpjEmpresaTransporte
+ | CNPJ da empresa de transporte
+ | 14
+ | Tamanho fixo: 14 caracteres
+ | string
+ | Sim
+
+ | placaVeiculo
+ | Placa do veículo
+ | 7
+ | Tamanho fixo: 7 caracteres
+ | string
+ | Sim
+
+ | cpfMotorista
+ | CPF do motorista
+ | 11
+ | Tamanho fixo: 11 caracteres
+ | string
+ | Sim
+
+ | latitude
+ | Latitude
+ |  
+ | Valores possíveis:
+Mín: -90.000000;
+Máx: 90.000000;
+ | decimal
+ | Sim
+
+ | longitude
+ | Longitude
+ |  
+ | Valores possíveis:
+Mín: -180.000000;
+Máx: 180.000000;
+ | decimal
+ | Sim
+
+ | pdop
+ | PDOP
+(Position Dilution of Precision)
+ |  
+ | Valores possíveis:
+Mín: 0.000;
+Máx: 999.999;
+ | decimal
+ | Sim
+
+ | dataHoraEvento
+ | Data e hora do embarque / não embarque
+ |  
+ | Formato: AAAA-MM-DDThh:mm:ssTZD
+
+TZD no Brasil:
+-02:00 (Fernando de Noronha);
+-03:00 (Brasília);
+-04:00 (Amazonas);
+-05:00 (Acre);
+
+Exemplo:
+2025-07-19T13:46:15-03:00
+ | datetime offset
+ | Sim
+
+ | imei
+ | Número IMEI do equipamento de transmissão
+ | 18
+ | Tamanho:
+Mín: 15 caracteres;
+Máx: 18 caracteres
+ | string
+ | Sim
+
+ | idViagem
+ | Código Identificador da Viagem (Rodoviário Regular)
+Informações na sequência apresentada e separadas por hífen
+
+Data Programada da Viagem no ponto inicial da linha:
+AAAAMMDD
+
+Hora Programada da Viagem no ponto inicial da linha:
+HHMMSS
+
+Código Tipo de Viagem: NN
+00 = Não atende à Regularidade Mínima
+01 = Atende à Regularidade Mínima
+
+Código Sentido da Linha: N
+0 = Volta
+1 = Ida
+
+Prefixo da Linha SIGMA:
+11 caracteres
+ | 32
+ | Rodoviário Regular
+
+AAAAMMDD-HHMMSS-NN-N-PPPPPPPPPPP
+
+Tamanho: 32 caracteres
+(incluindo os 4 hífens)
+ | string
+ | Sim
+
+Parâmetros (bilhetes)
+
+ | 
+
+ | Parâmetro
+ | Descrição do Campo
+ | Tamanho
+ | Domínio / Formato
+ | Tipo
+ | Obrigatório
+
+ | chaveBPeEquipFiscal
+ | Em contingência (6 caracteres)
+
+Número de série do equipamento fiscal emissor (20 caracteres)
+
+Chave de acesso do BP-e (44 caracteres)
+ | 44
+ | Tamanhos possíveis:
+6 caracteres;
+20 caracteres;
+44 caracteres
+ | string
+ | Sim
+
+ | numeroBilhete
+ | Número do bilhete
+ |  
+ | Valores possíveis:
+Mín: 1;
+Máx: 999999999;
+ | integer
+ | Sim
+
+ | identificacaoLinha
+ | Identificação da linha:
+Prefixo da Linha (Rodoviário Regular)
+ | 11
+ | Tamanho fixo: 11 caracteres
+ | string
+ | Sim
+
+ | dataPrevistaViagemPassageiro
+ | Data prevista para o início da viagem do passageiro constante no bilhete
+ |  
+ | Formato:
+Data Local
+AAAA-MM-DD
+ | date
+ | Sim
+
+ | horaPrevistaViagemPassageiro
+ | Hora prevista para o início da viagem do passageiro constante no bilhete
+ |  
+ | Formato:
+Hora Local
+HH:MM:SS
+ | time
+ | Sim
+
+ | codigoMotivoDesconto
+ | Motivo do desconto
+ |  
+ | Domínio: [0,1,2,3,4,5,6,7,8,9]
+Ver Item 8.1.3
+ | tinyint
+ | Sim
+
+ | valorTarifa
+ | Valor da Tarifa / Preço do Serviço
+ |  
+ | Valores possíveis:
+Mín: 0.00;
+Máx: 99999999.99;
+ | decimal
+ | Sim
+
+ | percentualDesconto
+ | Percentual de desconto
+ |  
+ | Valores possíveis:
+Mín: 0.00;
+Máx: 100.00;
+ | decimal
+ | Sim
+
+ | celularPassageiro
+ | Número de celular do passageiro
+ | 14
+ |  
+ | string
+ | Não
+
+ | codigoMunicipioEmbarquePassageiro
+ | Código IBGE do Município de embarque do passageiro
+
+Informar 9999999 para localidade no exterior
+ | 7
+ | Tamanho fixo: 7 caracteres
+ | string
+ | Sim
+
+ | codigoLocalEmbarquePassageiro
+ | Código de instalação cadastrada e habilitada no sistema da ANTT, correspondente ao local de embarque do passageiro
+ | 7
+ | Tamanho fixo: 7 caracteres
+ | string
+ | Sim
+
+ | codigoMunicipioDesembarquePassageiro
+ | Código IBGE do Município de desembarque do passageiro
+
+Informar 9999999 para localidade no exterior
+ | 7
+ | Tamanho fixo: 7 caracteres
+ | string
+ | Sim
+
+ | codigoLocalDesembarquePassageiro
+ | Código de instalação cadastrada e habilitada no sistema da ANTT, correspondente ao local de desembarque do passageiro
+ | 7
+ | Tamanho fixo: 7 caracteres
+ | string
+ | Sim
+
+ | codigoEmbarque
+ | Código identificador de embarque ou de não embarque
+ |  
+ | Domínio: [0,1]
+0 = não embarque (no-show);
+1 = embarque (check-in);
+ | tinyint
+ | Sim
+
+ | sequenciamento
+ | Código sequencial de ordenação
+ |  
+ | Valores possíveis:
+Mín: 0;
+Máx: 999999;
+ | integer
+ | Sim

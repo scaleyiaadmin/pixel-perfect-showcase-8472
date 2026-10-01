@@ -1,6 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader, SectionCard, StatusBadge } from "@/components/common";
-import { companyName, schedules } from "@/data/mock";
+import { useMemo, useState } from "react";
+import {
+  EmptyState,
+  FilterBar,
+  PageHeader,
+  QueryState,
+  SectionCard,
+  SourceNote,
+  StatusBadge,
+} from "@/components/common";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  descreverDias,
+  destinoDaPartida,
+  horaCurta,
+  nomeEmpresa,
+  operaEm,
+  useHorarios,
+} from "@/services/dados-publicos";
 
 export const Route = createFileRoute("/_admin/operacao/horarios")({
   head: () => ({
@@ -8,51 +31,101 @@ export const Route = createFileRoute("/_admin/operacao/horarios")({
       { title: "Horários — SisRodov Manhuaçu" },
       {
         name: "description",
-        content: "Grade de horários do Terminal Rodoviário de Manhuaçu por empresa, destino e plataforma.",
+        content: "Grade de partidas do Terminal Rodoviário de Manhuaçu por empresa e destino.",
       },
       { property: "og:title", content: "Horários — SisRodov Manhuaçu" },
-      { property: "og:description", content: "Grade de horários do terminal por empresa, destino e plataforma." },
+      {
+        property: "og:description",
+        content: "Grade de partidas do terminal por empresa e destino.",
+      },
     ],
   }),
   component: SchedulesPage,
 });
 
-const situation = {
-  ativo: { tone: "success", label: "Ativo" },
-  suspenso: { tone: "danger", label: "Suspenso" },
-  sazonal: { tone: "warning", label: "Sazonal" },
-} as const;
-
 function SchedulesPage() {
+  const horarios = useHorarios();
+  const [search, setSearch] = useState("");
+  const [dia, setDia] = useState("todos");
+
+  const rows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const hoje = new Date();
+    return (horarios.data ?? []).filter(
+      (h) =>
+        h.parte_de_manhuacu &&
+        (dia === "todos" || operaEm(h, hoje)) &&
+        (!q ||
+          `${destinoDaPartida(h)} ${nomeEmpresa(h.linha)} ${h.linha.codigo}`
+            .toLowerCase()
+            .includes(q)),
+    );
+  }, [horarios.data, search, dia]);
+
   return (
     <>
-      <PageHeader title="Horários" subtitle="Grade operacional de partidas do terminal" />
+      <PageHeader title="Horários" subtitle="Grade oficial de partidas do terminal de Manhuaçu" />
+
+      <FilterBar search={search} onSearch={setSearch} placeholder="Pesquisar destino ou empresa...">
+        <Select value={dia} onValueChange={setDia}>
+          <SelectTrigger className="h-9 w-[12rem]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os dias</SelectItem>
+            <SelectItem value="hoje">Só hoje</SelectItem>
+          </SelectContent>
+        </Select>
+      </FilterBar>
 
       <SectionCard bodyClassName="p-0" title="Grade de partidas">
-        <div className="grid grid-cols-[6rem_1fr_1fr_7rem_10rem_8rem] gap-3 border-b border-border bg-muted/60 px-5 py-3 text-[11px] font-bold tracking-[0.12em] uppercase text-muted-foreground">
-          <span>Horário</span>
-          <span>Empresa</span>
-          <span>Destino</span>
-          <span className="text-center">Plataforma</span>
-          <span>Frequência</span>
-          <span>Situação</span>
-        </div>
-        <div className="divide-y divide-border/60">
-          {schedules.map((s) => (
-            <div
-              key={s.id}
-              className="grid grid-cols-[6rem_1fr_1fr_7rem_10rem_8rem] items-center gap-3 px-5 py-3.5 transition-colors hover:bg-muted/50"
-            >
-              <span className="tabular font-display text-xl font-bold">{s.time}</span>
-              <span className="truncate text-sm">{companyName(s.companyId)}</span>
-              <span className="truncate text-sm font-semibold">{s.destination}</span>
-              <span className="tabular text-center text-sm font-semibold">{s.platform}</span>
-              <span className="text-sm text-muted-foreground">{s.frequency}</span>
-              <StatusBadge tone={situation[s.situation].tone}>{situation[s.situation].label}</StatusBadge>
+        <QueryState isLoading={horarios.isLoading} error={horarios.error} />
+        {horarios.data && rows.length === 0 && <EmptyState message="Nenhuma partida encontrada." />}
+        {rows.length > 0 && (
+          <div className="overflow-x-auto">
+            <div className="min-w-[48rem]">
+              <div className="grid grid-cols-[6rem_1fr_1fr_9rem_10rem] gap-3 border-b border-border bg-muted/60 px-5 py-3 text-[11px] font-bold tracking-[0.12em] uppercase text-muted-foreground">
+                <span>Horário</span>
+                <span>Destino</span>
+                <span>Empresa</span>
+                <span>Dias</span>
+                <span>Linha</span>
+              </div>
+              <div className="divide-y divide-border/60">
+                {rows.map((h) => (
+                  <div
+                    key={h.id}
+                    className="grid grid-cols-[6rem_1fr_1fr_9rem_10rem] items-center gap-3 px-5 py-3.5 transition-colors hover:bg-muted/50"
+                  >
+                    <span className="tabular font-display text-xl font-bold">
+                      {horaCurta(h.hora)}
+                    </span>
+                    <span className="truncate text-sm font-semibold">
+                      {destinoDaPartida(h)}
+                      {h.tipo_servico && (
+                        <span className="ml-2 font-normal text-muted-foreground">
+                          {h.tipo_servico}
+                        </span>
+                      )}
+                    </span>
+                    <span className="truncate text-sm text-muted-foreground">
+                      {nomeEmpresa(h.linha)}
+                    </span>
+                    <span className="text-sm">{descreverDias(h.dias_semana)}</span>
+                    <StatusBadge tone={h.linha.fonte === "ANTT" ? "info" : "primary"} dot={false}>
+                      {h.linha.fonte} · {h.linha.codigo}
+                    </StatusBadge>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </SectionCard>
+      <SourceNote>
+        Fontes: ANTT (SIGMA) e DER-MG. Linhas que só passam por Manhuaçu não aparecem: os órgãos
+        publicam apenas a hora de saída no início da linha.
+      </SourceNote>
     </>
   );
 }

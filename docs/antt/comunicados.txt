@@ -1,0 +1,17 @@
+# Comunicados
+
+16 - Março 2026
+
+Atualização Orientação Técnica RNTRC
+
+Informamos que foi atualizada a documentação do serviço RNTRC, com revisão do WSDL referente ao exemplo sob demanda, incluindo definições atualizadas do contrato SOAP para apoio à integração dos serviços.
+
+📌 Consulte a documentação: https://portaldodesenvolvedor.antt.gov.br/page/documentacao-RNTRC [documentacao-monitriip]
+
+13 - Março 2026
+
+Atualização Orientação Técnica MONITRIIP
+
+Informamos que foram revisados e atualizados os exemplos de consumo das APIs do MONITRIIP disponíveis na seção Detalhamento de APIs e exemplos em cURL, com publicação de exemplos válidos para apoio à integração dos serviços.
+
+📌 Consulte a documentação: https://portaldodesenvolvedor.antt.gov.br/page/documentacao-monitriip [documentacao-monitriip]

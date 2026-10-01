@@ -1,0 +1,431 @@
+# Documentação - SIR
+
+Objetivo
+
+Apresentar e detalhar os padrões a serem utilizados pelas empresas concessionárias para disponibilizar as informações referentes aos assuntos operacionais, como: Tráfego Praça Pedágio, Tráfego SAT, Tráfego Radar, Tráfego Infrator Radar, Acidentes, Atendimento e Pavimento; à Agência Nacional de Transportes Terrestres (ANTT), bem como as validações em que os dados são submetidos pela Agência. As informações enviadas compõem o Sistema de Informações Rodoviárias administrado pela Superintendência de Infraestrutura Rodoviária (SUROD).
+
+Escopo de aplicação do Serviço; O presente documento abrange somente as informações sobre concessões rodoviárias federais que estejam sob administração da ANTT.
+
+Arquitetura do serviço
+
+Padrão de comunicação; O meio físico de comunicação utilizado será a Internet com o uso do protocolo HTTPS, com autenticação, que além de garantir um duto de comunicação seguro na Internet, permite a identificação do servidor e do cliente através de certificados digitais.
+
+Padrão de certificado digital; O certificado digital utilizado no estabelecimento da conexão segura com autenticação mútua será emitido por Autoridade Certificadora credenciada pela Infraestrutura de Chaves Públicas Brasileira – ICP-Brasil, tipo A1 ou A3, com a extensão Extended Key Usage permitindo "Autenticação Cliente", devendo conter: CN = “nome da concessionária”: “CNPJ”. A identificação e a liberação de conexão com a empresa concessionária serão realizadas por meio do CNPJ presente no certificado digital.
+
+Padrão técnicos; A tabela a seguir resume os principais padrões de tecnologia utilizados:
+
+ | CARACTERÍSTICA
+ | DESCRIÇÃO
+
+ | Meio físico de comunicação
+ | Internet
+
+ | Protocolo Internet
+ | TLS versão 1.2, com autenticação mútua através de certificados digitais
+
+ | Padrão de troca de mensagens
+ | REST
+
+ | Padrão da mensagem
+ | JSON
+
+ | Padrão de certificado digital
+ | X.509 versão 3, emitido por Autoridade Certificadora credenciada pela Infraestrutura de Chaves Públicas Brasileira – ICP-Brasil, do tipo A1 ou A3, devendo conter o CNPJ do proprietário do certificado digital.
+
+Identificador único do registro
+
+O identificador único global (GUID) será adotado como chave dos registros enviados nos arquivos pela concessionária, no formato canônico, representado por 32 dígitos hexadecimais em caixa baixa, exibidos em cinco grupos separados por hífens, totalizando 36 caracteres.
+
+ | Exemplo: 123e4567-e89b-12d3-a456-123467989009
+
+Cada um dos registros enviados pela concessionária deverá ter seu próprio GUID e, uma vez enviado, o mesmo número só poderá ser reenviado em casos específicos.
+
+Caso informado em formato diferente o registro é rejeitado e é retornada a mensagem de erro "O GUID informado está em um formato diferente do definido na documentação."
+
+Formas de integração
+
+A integração será realizada com a utilização do WebService seguindo as seguintes premissas:
+
+a) Serão disponibilizados WebServices síncronos para os serviços de integração;
+b) O processo ocorrerá em lotes, porém a validação será feita por registro;
+c) O processo de utilização dos WebServices sempre é iniciado pelo interessado com o envio de informações, através de um serviço RESTful, no modelo JSON, via HTTPS.
+
+Fluxo conceitual do recebimento e processamento de dados
+
+O fluxo inicia-se com as concessionárias, que encaminham os dados para a ANTT, passando por três fases de processamento.
+
+Fase 1 - Recebimento dos dados
+
+Nesta fase, os dados recebidos via Serviço de Barramento são testados quanto à estrutura, formato e preenchimento. Caso atendam a todas as regras, é devolvida uma mensagem de sucesso.
+
+ | “(MSG_S01) Registro recebido com sucesso.”
+
+Importante:
+
+As mensagens das regras verificadas no recebimento são devolvidas de forma síncrona.
+
+A chave de unicidade muda conforme o tipo do serviço:
+
+ | SERVIÇO
+ | CHAVE DE UNICIDADE
+
+ | Tráfego Pedágio
+ | GUID + Motivo + CnpjConcessionaria
+
+ | Tráfego SAT
+ | GUID + Motivo + CnpjConcessionaria
+
+ | Tráfego Radar
+ | GUID + Motivo + CnpjConcessionaria
+
+ | Tráfego Infratores
+ | GUID + Motivo + CnpjConcessionaria
+
+ | Acidentes
+ | GUID + Motivo + CnpjConcessionaria
+
+ | Atendimento
+ | GUID + Motivo + CnpjConcessionaria
+
+Detalhamento dos serviços:
+
+Tráfego Pedágio
+URL completa:
+HML: https://servicos-hml.bus.antt.gov.br/api/v1/ReceberLoteTrafegoPedagio
+PROD: https://servicos.bus.antt.gov.br/api/v1/ReceberLoteTrafegoPedagio
+
+Estrutura do serviço:
+{
+  "CnpjConcessionaria": "",
+  "DataReferencia": "",
+  "NumeroArquivo": "",
+  "Motivo": "",
+  "Registros": [
+    {
+      "GUID": "",
+      "CodigoPracaPedagio": "",
+      "CodigoCabine": "",
+      "Instante": "",
+      "Sentido": "",
+      "TipoVeiculo": "",
+      "EixoSuspenso": "",
+      "QuantidadeEixosVeiculo": "",
+      "QuantidadeEixosSuspensos": "",
+      "Rodagem": "",
+      "Isento": "",
+      "MotivoIsencao": "",
+      "Evasao": "",
+      "Placa": "",
+      "TipoCobrancaEfetuada": "",
+      "VeiculoCarregado": "",
+      "LiberacaoCancela": "",
+      "ValorDevido": "",
+      "ValorArrecadado": "",
+      "CnpjAmap": "",
+      "MultiplicadorTarifa": "",
+      "IDTAG": ""
+    }
+  ]
+}
+
+Tráfego Infrator Radar
+URL completa:
+HML: https://servicos-hml.bus.antt.gov.br/api/v1/ReceberRegistroTrafegoInfratorRadar
+PROD: https://servicos.bus.antt.gov.br/api/v1/ReceberRegistroTrafegoInfratorRadar
+
+Estrutura do serviço:
+{
+  "DataReferencia": "",
+  "Motivo": "",
+  "CnpjConcessionaria": "",
+  "NumeroArquivo": "",
+  "Registros": [
+    {
+      "GUID": "",
+      "CodigoEquipamento": "",
+      "Instante": "",
+      "Faixa": "",
+      "CodigoSentido": "",
+      "KmHora": "",
+      "TipoClassificacaoVeiculo": "",
+      "ComprimentoVeiculo": "",
+      "CodigoTipoVeiculo": "",
+      "CodigoTipoImagem": "",
+      "CodigoProblemaImagem": "",
+      "CodigoTipoVeiculoDenatran": "",
+      "CodigoVelocidadeClassificacaoVeiculo": ""
+    }
+  ]
+}
+
+Tráfego Radar
+URL completa:
+HML: https://servicos-hml.bus.antt.gov.br/api/v1/ReceberRegistroTrafegoRadar
+PROD: https://servicos.bus.antt.gov.br/api/v1/ReceberRegistroTrafegoRadar
+
+Estrutura do serviço:
+{
+  "DataReferencia": "",
+  "Motivo": "",
+  "CnpjConcessionaria": "",
+  "NumeroArquivo": "",
+  "Registros": [
+    {
+      "GUID": "",
+      "CodigoEquipamento": "",
+      "Instante": "",
+      "Faixa": "",
+      "SentidoFaixa": "",
+      "Velocidade": "",
+      "SentidoPassagem": "",
+      "Comprimento": "",
+      "TipoVeiculo": "",
+      "Placa": ""
+    }
+  ]
+}
+
+Tráfego SAT
+URL completa:
+HML: https://servicos-hml.bus.antt.gov.br/api/v1/ReceberRegistroTrafegoSAT
+PROD: https://servicos.bus.antt.gov.br/api/v1/ReceberRegistroTrafegoSAT
+
+Estrutura do serviço:
+{
+  "DataReferencia": "",
+  "Motivo": "",
+  "CnpjConcessionaria": "",
+  "NumeroArquivo": "",
+  "Registros": [
+    {
+      "GUID": "",
+      "CodigoEquipamento": "",
+      "Instante": "",
+      "Sentido": "",
+      "TipoVeiculo": "",
+      "QuantidadeEixos": "",
+      "ComprimentoTotal": "",
+      "PesoBruto": "",
+      "Velocidade": "",
+      "Faixa": "",
+      "SentidoFaixa": "",
+      "Eixos": [
+        {
+          "Tamanho": "",
+          "Tipo": "",
+          "Peso": ""
+        }
+      ]
+    }
+  ]
+}
+
+Acidentes
+URL completa:
+HML: https://servicos-hml.bus.antt.gov.br/api/v1/ReceberRegistroAcidentes
+PROD: https://servicos.bus.antt.gov.br/api/v1/ReceberRegistroAcidentes
+
+Estrutura do serviço:
+{
+  "DataReferencia": "",
+  "Motivo": "",
+  "CnpjConcessionaria": "",
+  "NumeroArquivo": "",
+  "Registros": [
+    {
+      "GUID": "",
+      "NumOcorrencia": "",
+      "CodigoEnvolvidos": [],
+      "TrechoPista": "",
+      "TipoOcorrencia": "",
+      "TipoAcidentePrimario": "",
+      "KmMetros": "",
+      "Latitude": "",
+      "Longitude": "",
+      "Instante": "",
+      "PresencaPRF": "",
+      "NumOcorrenciaPRF": "",
+      "AnimaisEnvolvidosAcidentes": [
+        {
+          "AnimalEvasor": "",
+          "TipoAnimal": "",
+          "Animal": "",
+          "GravidadeAnimal": ""
+        }
+      ],
+      "PedestresEnvolvidosAcidente": [
+        {
+          "SexoPedestre": "",
+          "IdadePedestre": "",
+          "GravidadePedestre": "",
+          "PedestreEvasor": ""
+        }
+      ],
+      "VeiculosEnvolvidosAcidentes": [
+        {
+          "TipoVeiculoEnvolvidoAcidente": "",
+          "PlacaVeiculo": "",
+          "VeiculoEvasor": "",
+          "MarcaModeloVeiculo": "",
+          "TipoCarga": "",
+          "OcupantesVeiculos": "",
+          "VitimasVeiculosEnvolvidosAcidentes": [
+            {
+              "Classe": "",
+              "Sexo": "",
+              "Idade": "",
+              "Gravidade": "",
+              "CPF": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+Atendimento
+URL completa:
+HML: https://servicos-hml.bus.antt.gov.br/api/v1/ReceberLoteAtendimento
+PROD: https://servicos.bus.antt.gov.br/api/v1/ReceberLoteAtendimento
+
+Estrutura do serviço:
+{
+  "CnpjConcessionaria": "",
+  "Motivo": "",
+  "DataReferencia": "",
+  "NumeroArquivo": "",
+  "Ocorrencia": [
+    {
+      "GUID": "",
+      "NumeroOcorrencia": "",
+      "NumeroOcorrenciaAcidente": "",
+      "Instante": "",
+      "TipoContato": "",
+      "OrigemContato": "",
+      "ConsideracaoGeral": "",
+      "TrechoOcorrencia": "",
+      "KmOcorrencia": "",
+      "LatitudeOcorrencia": "",
+      "LongitudeOcorrencia": "",
+      "CodigoEnvolvidos": [""],
+      "ListaRecursos": [
+        {
+          "RecursoOperacional": "",
+          "DataAcionamento": "",
+          "LatitudeAcionamento": "",
+          "LongitudeAcionamento": "",
+          "DataChegadaAtendimento": "",
+          "DataSaidaAtendimento": "",
+          "TipoServicoPrestado": ""
+        }
+      ],
+      "ListaVeiculo": [
+        {
+          "Placa": "",
+          "MarcaModelo": "",
+          "TipoVeiculo": "",
+          "TipoCarga": "",
+          "RecusouAtendimento": "",
+          "TermoRecusa": "",
+          "VitimaHospital": "",
+          "ListaHospitalVitima": [
+            {
+              "NomeHospitalVitima": "",
+              "LatitudeHospitalVitima": "",
+              "LongitudeHospitalVitima": "",
+              "DataEntradaHospitalVitima": "",
+              "DataSaidaHospitalVitima": "",
+              "TipoEnvolvidoVitima": "",
+              "CPFEnvolvidoVitima": ""
+            }
+          ]
+        }
+      ],
+      "ListaAnimal": [
+        {
+          "TipoAnimal": "",
+          "Animal": "",
+          "GravidadeAnimal": ""
+        }
+      ],
+      "ListaPedestre": [
+        {
+          "PedestreRecusouAtendimento": "",
+          "PedestreTermoRecusa": "",
+          "PedestreHospital": "",
+          "ListaHospitalPedestre": [
+            {
+              "NomeHospitalPedestre": "",
+              "LatitudeHospitalPedestre": "",
+              "LongitudeHospitalPedestre": "",
+              "DataEntradaHospitalPedestre": "",
+              "DataSaidaHospitalPedestre": "",
+              "TipoEnvolvidoPedestre": "",
+              "CPFEnvolvidoPedestre": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+Fase 2 - Processamento dos dados
+
+Os dados validados na fase de recebimento são submetidos às regras negociais para verificação cadastral junto ao Sistema de Informações Rodoviárias (SIR).
+
+Fase 3 - Divulgação
+
+Nessa fase, os registros que não atenderam alguma das regras anteriores são disponibilizados para correção e reenvio pelas concessionárias.
+
+Exemplos de saída
+
+A seguir, exemplos de mensagem de retorno para a Concessionária, padrão JSON para os serviços de Tráfego Pedágio, Tráfego SAT, Tráfego Radar, Tráfego Infratores, Acidentes.
+
+Com erro no cabeçalho:
+
+{ "CnpjConcessionaria":"00000000000000", "Motivo":"1", "DataReferencia":"30/07/2019", "NumeroArquivo":"01",
+  "Mensagem": [
+    { "ID_MENSAGEM": "MSG_E01",
+      "MENSAGEM": "O certificado usado com CNPJ (CNPJ do certificado formatado) não faz referência ao CNPJ (CNPJ enviado no JSON formatado) registrado no sistema."
+    }
+  ]
+}
+
+Com um registro:
+
+{ "CnpjConcessionaria":"00000000000000", "Motivo":"1", "DataReferencia":"30/07/2019", "NumeroArquivo":"01",
+  "Registros": [
+    { "GUID":"123e4567-e89b-12d3-a456-123467989000",
+      "Mensagem": [
+        { "ID_MENSAGEM": "MSG_S01",
+          "MENSAGEM": "Registro recebido com sucesso."
+        }
+      ]
+    }
+  ]
+}
+
+Com mais de um registro:
+
+{ "CnpjConcessionaria": "00000000000000", "Motivo": "1",
+  "DataReferencia": "30/07/2019", "NumeroArquivo": "01", "Registros": [
+    { "GUID":"123e4567-e89b-12d3-a456-426655440000",
+      "Mensagem": [
+        { "ID_MENSAGEM": "MSG_E02",
+          "MENSAGEM": "O campo <nome do campo> deve ser preenchido."
+        }
+      ]
+    },
+    { "GUID":"123e4567-e89b-12d3-a456-123467989009",
+      "Mensagem": [
+        { "ID_MENSAGEM": "MSG_S01",
+          "MENSAGEM": "Registro recebido com sucesso."
+        }
+      ]
+    }
+  ]
+}
+
+Data da última atualização: 20 de abril de 2026

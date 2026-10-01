@@ -1,0 +1,229 @@
+# InserirLogInicioFimViagemRegular
+
+O Log Início/Fim de Viagem Regular deve ser gerado, automaticamente, quando o motorista ou um funcionário da empresa de transporte iniciar/finalizar uma viagem através de terminal integrado ao subsistema embarcado.
+
+A execução desse método deve ser realizada pelo subsistema embarcado dos transportes rodoviário regular e semiurbano regular.
+
+Os dados relativos ao Log Início/Fim de Viagem Regular devem ser enviados no prazo máximo de 10 (dez) horas de seu registro.
+
+A contagem temporal do prazo limite de 10 (dez) horas para envio do Log se inicia na Data/Hora do Evento e se encerra na Data/Hora de Envio do Log.
+
+ | 
+
+ | Parâmetro
+ | Descrição do Campo
+ | Tamanho
+ | Domínio / Formato
+ | Tipo
+ | Obrigatório
+
+ | idLog
+ | Identificador de Log
+ |  
+ | Domínio: [7]
+ | tinyint
+ | Sim
+
+ | cnpjEmpresaTransporte
+ | CNPJ da empresa de transporte
+ | 14
+ | Tamanho fixo: 14 caracteres
+ | string
+ | Sim
+
+ | placaVeiculo
+ | Placa do veículo
+ | 7
+ | Tamanho fixo: 7 caracteres
+ | string
+ | Sim
+
+ | cpfMotorista
+ | CPF do motorista
+ | 11
+ | Tamanho fixo: 11 caracteres
+ | string
+ | Sim
+
+ | identificacaoLinha
+ | Identificação da linha:
+
+Número da Linha (Semiurbano Regular): [4]
+
+Prefixo da Linha (Rodoviário Regular): [11]
+ | 11
+ | Tamanhos possíveis:
+4 caracteres
+11 caracteres
+ | string
+ | Sim
+
+ | codigoTipoViagem
+ | Tipo de viagem
+ |  
+ | Domínio: [0, 1]
+Ver Item 8.1.2
+ | tinyint
+ | Sim
+
+ | dataProgramadaViagem
+ | Data programada da viagem no ponto inicial da linha
+ |  
+ | Formato:
+Data Local (Quadro de Viagens)
+AAAA-MM-DD
+ | date
+ | Sim
+
+ | horaProgramadaViagem
+ | Hora programada da viagem no ponto inicial da linha
+ |  
+ | Formato:
+Hora Local (Quadro de Viagens)
+HH:MM:SS
+ | time
+ | Sim
+
+ | tipoRegistroViagem
+ | Tipo de Registro de Viagem:
+
+1 = Iniciar viagem;
+2 = Finalizar viagem para troca de veículo;
+3 = Iniciar viagem após troca de veículo;
+0 = Finalizar viagem;
+
+Pares possíveis:
+[1,0]; [1,2]; [3,0]; [3,2]
+ |  
+ | Domínio: [0, 1, 2, 3]
+Ver Item 8.1.7
+ | tinyint
+ | Sim
+
+ | codigoSentidoLinha
+ | Sentido da linha
+ |  
+ | Domínio: [0, 1]
+0 = Volta
+1 = Ida
+ | tinyint
+ | Sim
+
+ | latitude
+ | Latitude
+ |  
+ | Valores possíveis:
+Mín: -90.000000
+Máx: 90.000000
+ | decimal
+ | Sim
+
+ | longitude
+ | Longitude
+ |  
+ | Valores possíveis:
+Mín: -180.000000
+Máx: 180.000000
+ | decimal
+ | Sim
+
+ | pdop
+ | PDOP (Position Dilution of Precision)
+ |  
+ | Valores possíveis:
+Mín: 0.000
+Máx: 999.999
+ | decimal
+ | Sim
+
+ | dataHoraEvento
+ | Data e hora do evento
+ |  
+ | Formato:
+AAAA-MM-DDThh:mm:ssTZD
+
+TZD no Brasil:
+-02:00 (Fernando de Noronha)
+-03:00 (Brasília)
+-04:00 (Amazonas)
+-05:00 (Acre)
+
+Padrão UTC completo (com TZD)
+
+Exemplo:
+2025-07-19T13:46:15-03:00
+ | datetime offset
+ | Sim
+
+ | imei
+ | Número IMEI do equipamento de transmissão
+ | 18
+ | Tamanho:
+Mín: 15 caracteres
+Máx: 18 caracteres
+ | string
+ | Sim
+
+ | sequenciamento
+ | Código sequencial de ordenação
+ |  
+ | Valores possíveis:
+Mín: 0
+Máx: 999999
+ | integer
+ | Sim
+
+ | idViagem
+ | 
+Código Identificador da Viagem (Rodoviário Regular) Informações na sequência apresentada e separadas por hífen
+
+Data Programada da Viagem no ponto inicial da linha: 
+AAAAMMDD
+
+Hora Programada da Viagem no ponto inicial da linha: 
+HHMMSS
+
+Código Tipo de Viagem: NN 00 = Não atende à Regularidade Mínima
+01 = Atende à Regularidade Mínima
+
+Código Sentido da Linha: N 
+0 = Volta 
+1 = Ida
+
+Prefixo da Linha SIGMA: 
+11 caracteres 
+
+Código Identificador da Viagem (Semiurbano Regular) Informações na sequência apresentada e separadas por hífen
+
+Data Programada da Viagem no ponto inicial da linha:
+AAAAMMDD
+
+Hora Programada da Viagem no ponto inicial da linha: 
+HHMMSS
+
+Código Sentido da Linha: N 
+0 = Volta 
+1 = Ida
+
+Número da Linha: 4 caracteres
+
+ | 32
+ | 
+Rodoviário Regular 
+
+AAAAMMDD-HHMMSS-NN N-PPPPPPPPPPP
+
+Tamanho: 
+32 caracteres 
+(incluindo os 4 hifens)
+
+Semiurbano Regular
+
+AAAAMMDD-HHMMSS-N NNNN
+
+Tamanho: 
+22 caracteres 
+(incluindo os 3 hifens) 
+
+ | string
+ | Sim

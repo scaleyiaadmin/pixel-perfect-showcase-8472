@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import prefeituraLogo from "@/assets/prefeitura-logo.png.asset.json";
+import prefeituraLogo from "@/assets/prefeitura-logo.png";
 
 /**
  * Marcas institucionais.
@@ -8,11 +8,17 @@ import prefeituraLogo from "@/assets/prefeitura-logo.png.asset.json";
  * a troca pelos arquivos reais seja pontual.
  */
 
-export function PrefeituraLogo({ className, inverted }: { className?: string; inverted?: boolean }) {
+export function PrefeituraLogo({
+  className,
+  inverted,
+}: {
+  className?: string;
+  inverted?: boolean;
+}) {
   return (
     <div className={cn("flex items-center", inverted && "rounded-md bg-card px-2 py-1", className)}>
       <img
-        src={prefeituraLogo.url}
+        src={prefeituraLogo}
         alt="Prefeitura de Manhuaçu"
         className="h-10 w-auto object-contain"
       />
@@ -32,12 +38,52 @@ export function RodoviariaLogo({
   const large = size === "lg";
   return (
     <div className={cn("flex items-center gap-3", className)}>
-      <svg viewBox="0 0 56 44" className={cn("shrink-0", large ? "h-14 w-[4.5rem]" : "h-9 w-12")} aria-hidden="true">
-        <rect x="2" y="6" width="52" height="26" rx="6" fill="currentColor" className={inverted ? "text-sidebar-primary" : "text-primary"} />
-        <rect x="8" y="12" width="16" height="10" rx="2" className={inverted ? "text-board" : "text-card"} fill="currentColor" />
-        <rect x="32" y="12" width="16" height="10" rx="2" className={inverted ? "text-board" : "text-card"} fill="currentColor" />
-        <circle cx="15" cy="35" r="5" fill="currentColor" className={inverted ? "text-sidebar-foreground" : "text-foreground"} />
-        <circle cx="41" cy="35" r="5" fill="currentColor" className={inverted ? "text-sidebar-foreground" : "text-foreground"} />
+      <svg
+        viewBox="0 0 56 44"
+        className={cn("shrink-0", large ? "h-14 w-[4.5rem]" : "h-9 w-12")}
+        aria-hidden="true"
+      >
+        <rect
+          x="2"
+          y="6"
+          width="52"
+          height="26"
+          rx="6"
+          fill="currentColor"
+          className={inverted ? "text-sidebar-primary" : "text-primary"}
+        />
+        <rect
+          x="8"
+          y="12"
+          width="16"
+          height="10"
+          rx="2"
+          className={inverted ? "text-board" : "text-card"}
+          fill="currentColor"
+        />
+        <rect
+          x="32"
+          y="12"
+          width="16"
+          height="10"
+          rx="2"
+          className={inverted ? "text-board" : "text-card"}
+          fill="currentColor"
+        />
+        <circle
+          cx="15"
+          cy="35"
+          r="5"
+          fill="currentColor"
+          className={inverted ? "text-sidebar-foreground" : "text-foreground"}
+        />
+        <circle
+          cx="41"
+          cy="35"
+          r="5"
+          fill="currentColor"
+          className={inverted ? "text-sidebar-foreground" : "text-foreground"}
+        />
       </svg>
       <div className="leading-tight">
         <p
@@ -77,7 +123,9 @@ export function SisRodovLogo({
       <div
         className={cn(
           "grid h-10 w-10 place-items-center rounded-lg font-display text-sm font-extrabold tracking-tight",
-          inverted ? "bg-sidebar-primary text-sidebar-primary-foreground" : "gradient-institutional text-primary-foreground",
+          inverted
+            ? "bg-sidebar-primary text-sidebar-primary-foreground"
+            : "gradient-institutional text-primary-foreground",
         )}
       >
         SR

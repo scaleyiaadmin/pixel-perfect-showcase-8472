@@ -1,0 +1,345 @@
+# Tráfego SAT
+
+São informações dos atendimentos realizados nas rodovias federais concedidas.
+
+ | 
+
+ | AP
+ | CAMPO
+ | PAI
+ | TIPO
+ | OBRIGATÓRIO
+ | TAM.
+ | DESCRIÇÃO/OBSERVAÇÃO
+
+ | 1
+ | DataReferencia
+ | -
+ | D
+ | S
+ | 10
+ | Data referente as informações encaminhadas. (Formato: DD/MM/AAAA)
+
+ | 2
+ | Motivo
+ | -
+ | N
+ | S
+ | 1
+ | Motivo pelo qual está sendo enviado.
+1 = Primeiro envio
+2 = Reenvio por ter sido detectado erro no recebimento dos dados.
+3 = Correção por ter sido detectado erro no processamento dos dados.
+4 = Atualização de algum dado do registro.
+
+ | 3
+ | CnpjConcessionaria
+ | -
+ | C
+ | S
+ | 14
+ | CNPJ da concessionária, somente números.
+
+ | 4
+ | NumeroArquivo
+ | -
+ | N
+ | S
+ | 10
+ | Sequencial numérico do arquivo. (Para cada data de referência o número do arquivo deve ser de 1 até n, onde n é a quantidade total de arquivos enviados na data.)
+
+ | 5
+ | Registros
+ | -
+ | -
+ | S
+ | -
+ | Registros de tráfego nos equipamentos de SAT.
+
+ | 6
+ | GUID
+ | AP5
+ | C
+ | S
+ | 36
+ | Identificador único do registro.
+
+ | 7
+ | CodigoEquipamento
+ | AP5
+ | D
+ | S
+ | 9
+ | Identificador do equipamento.
+
+ | 8
+ | Instante
+ | AP5
+ | N
+ | S
+ | 26
+ | Data/hora que o veículo passou pelo equipamento.
+(Formato: DD/MM/AAAA HH:MM:SS -00:00)
+
+ | 9
+ | Sentido
+ | AP5
+ | N
+ | S
+ | 1
+ | Sentido que o veículo passou pelo SAT:
+1 = Crescente
+2 = Decrescente
+
+ | 10
+ | TipoVeiculo
+ | AP5
+ | N
+ | S
+ | 1
+ | Tipo de veículo:
+1 = Moto
+2 = Veículo leve
+3 = Veículo pesado
+4 = Não Identificado
+
+ | 11
+ | QuantidadeEixos
+ | AP5
+ | N
+ | N
+ | 5
+ | Número de eixos identificados no veículo.
+
+ATENÇÃO:
+• Não é permitido veículo com menos de 2 eixos.
+• Não é permitido Veículo Leve com mais de4 eixos.
+• Não é permitido Veículo Pesado com mais de 20 eixos.
+• Não é permitido Moto diferente de 2 eixos.
+• Se o equipamento não contabilizar a quantidade de eixos o campo deve ser enviado vazio.
+
+ | 12
+ | ComprimentoTotal
+ | AP5
+ | N
+ | S
+ | 4
+ | Comprimento total do veículo em metros.
+(Formato: 99,9)
+
+ | 13
+ | PesoBruto
+ | AP5
+ | N
+ | N
+ | 9
+ | Peso Bruto Total do Veículo em quilos.
+(Formato: 999999,99)
+
+ | 14
+ | Velocidade
+ | AP5
+ | N
+ | S
+ | 3
+ | Velocidade do veículo em km/h.
+
+ | 15
+ | Faixa
+ | AP5
+ | N
+ | S
+ | 1
+ | Número da faixa em que foi detectada a passagem.
+
+ | 16
+ | SentidoFaixa
+ | AP5
+ | N
+ | S
+ | 1
+ | Sentido de monitoração da faixa:
+1 = Crescente
+2 = Decrescente
+
+ | 17
+ | Eixos
+ | AP5
+ | -
+ | N
+ | -
+ | Lista de eixos
+
+ | 18
+ | Tamanho
+ | AP17
+ | N
+ | N
+ | 4
+ | Tamanho total do eixo em metros, ou seja, distância entre eixos.
+
+ | 19
+ | Tipo
+ | AP17
+ | N
+ | N
+ | 1
+ | Tipo do eixo:
+1 = Simples (S)
+2 = Duplo (D)
+3 = Triplo (T)
+
+ | 20
+ | Peso
+ | AP17
+ | N
+ | N
+ | 9
+ | Peso por eixo do veículo em quilos.
+(Formato: 999999,99)
+
+ | 
+
+ | Nº
+ | DESCRIÇÃO DA REGRA
+ | CÓDIGO ERRO
+ | MENSAGEM DE ERRO
+ | VALIDAÇÃO
+
+ | 01
+ | O serviço deverá validar se o Certificado usado pertence ao CNPJ da concessionária que está cadastrado no sistema do SIR e informado no JSON.
+ | MSG_E01
+ | O certificado usado com CNPJ (CNPJ do certificado formatado) não faz referência ao CNPJ (CNPJ enviado no JSON formatado) registrado no sistema
+ | Recebimento
+
+ | 02
+ | O serviço deverá validar se os campos obrigatórios foram preenchidos (cabeçalho e registros).
+ | MSG_E02
+ | O campo (nome do campo) deve ser preenchido.
+ | Recebimento
+
+ | 03
+ | O serviço deverá validar se o tipo do dado está correto (cabeçalho e registros).
+ | MSG_E03
+ | O campo (nome do campo) está com formato errado.
+ | Recebimento
+
+ | 04
+ | O serviço deverá validar se o tamanho dos atributos está correto (cabeçalho e registros).
+ | MSG_E04
+ | O campo (nome do campo) está com tamanho errado.
+ | Recebimento
+
+ | 05
+ | O serviço deverá verificar se existe campo que não foi estabelecido para o recebimento.
+ | MSG_E05
+ | Estrutura inválida. O campo (nome do campo) não está especificado no contrato.
+ | Recebimento
+
+ | 06
+ | O serviço deverá verificar a ausência de campo que foi estabelecido como obrigatório para o recebimento.
+ | MSG_E06
+ | O campo (nome do campo) não foi informado.
+ | Recebimento
+
+ | 07
+ | O serviço deverá verificar se foi declarado algum registro no arquivo.
+ | MSG_E07
+ | Registro não informado.
+ | Recebimento
+
+ | 08
+ | O serviço deverá verificar se o registro já foi cadastrado na base de dados da ANTT.
+ | MSG_E08
+ | Registro já recebido anteriormente.
+ | Processamento
+
+ | 09
+ | O serviço verifica se o registro possui evento posterior a 2020.
+ | MSG_E09
+ | Registro recebido com data do evento anterior a 2020.
+ | Recebimento
+
+ | 10
+ | O serviço deverá verificar se o registro já foi recebido, validado e armazenado.
+ | MSG_E10
+ | Não foi possível validar o recebimento. Por favor, enviar novamente.
+ | Recebimento
+
+ | 14
+ | O serviço deverá verificar se a quantidade de eixo de um veículo não é inferior a 2.
+ | MSG_E14
+ | Não é permitido veículo com menos de 2 eixos.
+ | Recebimento
+
+ | 15
+ | O serviço deverá verificar se o veículo do tipo leve não possui mais de 4 eixos.
+ | MSG_E15
+ | Não é permitido veículo do tipo leve com mais de 4 eixos.
+ | Recebimento
+
+ | 16
+ | O serviço deverá verificar se o veículo do tipo moto não possui mais de 2 eixos.
+ | MSG_E16
+ | Só é permitido veículo do tipo moto com 2 eixos
+ | Recebimento
+
+ | 17
+ | O serviço deverá verificar se o veículo do tipo pesado não possui mais de 20 eixos.
+ | MSG_E17
+ | Não é permitido veículo do tipo pesado com mais de 20 eixos.
+ | Recebimento
+
+ | 37
+ | O serviço deverá verificar se o código enviado é uma opção válida para o campo.
+ | MSG_E37
+ | O código (descreve o código enviado) não é valido para o campo (descreve o nome docampo). Por favor, consultar documentação.
+ | Recebimento
+
+ | 88
+ | O serviço deverá verificar se o campo Peso bruto foi informando quando o equipamento possuir a funcionalidade de pesagem.
+ | MSG_E88
+ | É obrigatório informar o peso bruto do veículo quando o equipamento possuir a funcionalidade.
+ | Recebimento
+
+ | 89
+ | Se qualquer um dos campos Tamanho, ou Tipo, ou Peso do Array Eixo for informado, todos os outros se tornam obrigatórios.
+ | MSG_E89
+ | É obrigatório informar todos os campos do Array Eixo quando informado algum dos campos Tamanho, ou Tipo, ou Peso.
+ | Recebimento
+
+ | 90
+ | O serviço deverá verificar se a data/hora informada no campo “Instante” é menor ou igual à data/hora atual.
+ | MSG_E90
+ | A data/hora informada no campo “Instante” deve ser menor ou igual à data/hora atual.
+ | Recebimento
+
+ | 91
+ | O serviço deverá verificar se o veículo passou em uma faixa em que o SAT está monitorando.
+ | MSG_E91
+ | Faixa não monitorada pelo SAT informado.
+ | Processamento
+
+ | 92
+ | O serviço deverá verificar se o sentido em que o veículo passou é monitorado pelo SAT.
+ | MSG_E92
+ | Sentido informado não está monitorado pelo SAT informado.
+ | Processamento
+
+ | 93
+ | O serviço deverá verificar se o SAT está ativo ou não na hora da passagem do veículo.
+ | MSG_E93
+ | SAT informado não estava ativo na hora da passagem do veículo.
+ | Processamento
+
+ | 94
+ | O serviço deverá verificar se o SAT informado no arquivo pertence aquela concessioária.
+ | MSG_E94
+ | O SAT informado não está vinculado à concessionária informada no arquivo.
+ | Processamento
+
+ | 95
+ | O serviço deverá verificar se o registro com Motivo igual a 4 já foi cadastrado na base de dados da ANTT.
+ | MSG_E95
+ | O registro enviado não está cadastrado na base da ANTT.
+ | Processamento
