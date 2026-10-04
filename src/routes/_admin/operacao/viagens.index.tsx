@@ -18,10 +18,12 @@ import {
   DataTable,
   EmptyState,
   FilterBar,
+  FilterSelect,
   PageHeader,
   QueryState,
   SectionCard,
   StatusBadge,
+  Vazio,
   tripStatusTone,
   type Column,
 } from "@/components/common";
@@ -53,7 +55,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { num } from "@/lib/format";
+import { num, tituloNome } from "@/lib/format";
 import { usePermissao } from "@/services/acesso";
 import { useEmpresas } from "@/services/dados-publicos";
 import type { Plataforma, TipoViagem } from "@/services/gestao-tipos";
@@ -76,6 +78,23 @@ import {
   type AcaoViagem,
   type ViagemDetalhada,
 } from "@/services/operacao";
+
+/** Nome da empresa para exibição; sem empresa real mostra o traço (não o tipo da linha). */
+export function EmpresaViagem({ v }: { v: ViagemDetalhada }) {
+  const nome = v.empresa?.nome_fantasia || v.empresa?.razao_social;
+  if (!nome) {
+    return (
+      <Vazio
+        title={
+          v.linha?.fonte === "DER-MG"
+            ? "Linha intermunicipal sem empresa informada"
+            : "Empresa não informada"
+        }
+      />
+    );
+  }
+  return <>{tituloNome(nome)}</>;
+}
 
 export const Route = createFileRoute("/_admin/operacao/viagens/")({
   head: () => ({
@@ -117,7 +136,8 @@ function TripsPage() {
 
   const empresasDoDia = useMemo(() => {
     const m = new Map<string, string>();
-    for (const v of viagens.data ?? []) if (v.empresa) m.set(v.empresa.id, nomeEmpresaViagem(v));
+    for (const v of viagens.data ?? [])
+      if (v.empresa) m.set(v.empresa.id, tituloNome(nomeEmpresaViagem(v)));
     return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1], "pt-BR"));
   }, [viagens.data]);
 
@@ -155,39 +175,85 @@ function TripsPage() {
     });
   };
 
-  const columns: Column<ViagemDetalhada>[] = [
+  // Com horário no terminal primeiro (já vem ordenado pelo banco); chegadas e
+  // passagens sem horário ficam num bloco separado, com rótulo próprio.
+  const comHorario = rows.filter((v) => v.previsto_em !== null);
+  const semHorario = rows.filter((v) => v.previsto_em === null);
+
+  const colunas = (comHora: boolean): Column<ViagemDetalhada>[] => [
+    ...(comHora
+      ? [
+          {
+            key: "time",
+            header: "Previsto",
+            nowrap: true,
+            mobile: "meta",
+            render: (v) => <span className="tabular font-semibold">{horaPrevista(v)}</span>,
+          } satisfies Column<ViagemDetalhada>,
+        ]
+      : []),
     {
-      key: "time",
-      header: "Previsto",
-      render: (v) => <span className="tabular font-semibold">{horaPrevista(v)}</span>,
+      key: "dest",
+      header: "Destino",
+      mobile: "title",
+      cellClassName: "min-w-[9rem] font-medium",
+      render: (v) => tituloNome(v.destino),
+    },
+    {
+      key: "company",
+      header: "Empresa",
+      mobile: "subtitle",
+      cellClassName: "min-w-[8rem]",
+      render: (v) => <EmpresaViagem v={v} />,
     },
     {
       key: "tipo",
       header: "Tipo",
+      nowrap: true,
+      mobile: comHora ? "hidden" : "meta",
+      // Tablet: só as colunas essenciais, para Status e Ações caberem sem rolagem.
+      className: comHora ? "hidden xl:table-cell" : undefined,
+      cellClassName: comHora ? "hidden xl:table-cell" : undefined,
       render: (v) => <span className="text-muted-foreground">{tipoViagemLabel[v.tipo]}</span>,
     },
-    { key: "company", header: "Empresa", render: (v) => nomeEmpresaViagem(v) },
     {
       key: "origin",
       header: "Origem",
-      render: (v) => <span className="text-muted-foreground">{v.origem}</span>,
+      hideOnMobile: true,
+      className: "hidden xl:table-cell",
+      cellClassName: "hidden min-w-[9rem] text-muted-foreground xl:table-cell",
+      render: (v) => tituloNome(v.origem),
     },
-    { key: "dest", header: "Destino", render: (v) => v.destino },
     {
       key: "platform",
       header: "Plataforma",
-      align: "center",
-      render: (v) => <span className="tabular">{v.plataforma?.numero ?? "—"}</span>,
+      nowrap: true,
+      mobile: "meta",
+      render: (v) =>
+        v.plataforma ? (
+          <span className="tabular">{v.plataforma.numero}</span>
+        ) : (
+          <Vazio title="Plataforma a definir" />
+        ),
     },
     {
       key: "vehicle",
       header: "Veículo",
-      render: (v) => <span className="tabular text-muted-foreground">{v.veiculo || "—"}</span>,
+      nowrap: true,
+      hideOnMobile: true,
+      className: "hidden xl:table-cell",
+      cellClassName: "hidden xl:table-cell",
+      render: (v) =>
+        v.veiculo ? <span className="tabular text-muted-foreground">{v.veiculo}</span> : <Vazio />,
     },
     {
       key: "boardings",
       header: "Embarques",
       align: "right",
+      nowrap: true,
+      hideOnMobile: true,
+      className: "hidden xl:table-cell",
+      cellClassName: "hidden xl:table-cell",
       render: (v) => (
         <span className="tabular">{num(embarques.data?.get(v.id)?.acessos ?? 0)}</span>
       ),
@@ -195,8 +261,10 @@ function TripsPage() {
     {
       key: "status",
       header: "Status",
+      nowrap: true,
+      mobile: "badge",
       render: (v) => (
-        <StatusBadge tone={tripStatusTone[v.status].tone}>
+        <StatusBadge size="sm" tone={tripStatusTone[v.status].tone}>
           {tripStatusTone[v.status].label}
         </StatusBadge>
       ),
@@ -205,9 +273,14 @@ function TripsPage() {
       key: "acoes",
       header: "",
       align: "right",
+      mobile: "action",
+      mobileLabel: "Ações",
       render: (v) => <AcoesViagem viagem={v} plataformas={plataformas.data ?? []} />,
     },
   ];
+
+  const abrir = (v: ViagemDetalhada) =>
+    navigate({ to: "/operacao/viagens/$tripId", params: { tripId: v.id } });
 
   return (
     <>
@@ -219,7 +292,7 @@ function TripsPage() {
             <>
               <Button variant="outline" onClick={gerarDoDia} disabled={!data || gerar.isPending}>
                 <CalendarPlus className="h-4 w-4" />
-                {gerar.isPending ? "Gerando..." : "Gerar viagens do dia"}
+                {gerar.isPending ? "Gerando..." : "Gerar do dia"}
               </Button>
               <NewTripDialog data={data ?? hoje ?? ""} plataformas={plataformas.data ?? []} />
             </>
@@ -227,81 +300,102 @@ function TripsPage() {
         }
       />
 
-      <FilterBar
-        search={search}
-        onSearch={setSearch}
-        placeholder="Pesquisar viagem, empresa, origem, destino ou veículo..."
-      >
-        <Input
-          type="date"
-          value={data ?? ""}
-          onChange={(e) => e.target.value && setData(e.target.value)}
-          className="h-9 w-[10.5rem]"
-          aria-label="Data"
+      <FilterBar search={search} onSearch={setSearch} placeholder="Buscar viagem ou destino">
+        <label className="flex items-center gap-2 text-sm">
+          <span className="shrink-0 font-medium text-muted-foreground">Data</span>
+          <Input
+            type="date"
+            value={data ?? ""}
+            onChange={(e) => e.target.value && setData(e.target.value)}
+            className="tabular h-11 w-full bg-card sm:h-9 sm:w-[10.5rem]"
+          />
+        </label>
+        <FilterSelect
+          value={company}
+          onValueChange={setCompany}
+          placeholder="Empresa"
+          allLabel="Todas as empresas"
+          allValue="todas"
+          options={empresasDoDia.map(([id, nome]) => ({ value: id, label: nome }))}
         />
-        <Select value={company} onValueChange={setCompany}>
-          <SelectTrigger className="h-9 w-[13rem]">
-            <SelectValue placeholder="Empresa" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todas">Todas as empresas</SelectItem>
-            {empresasDoDia.map(([id, nome]) => (
-              <SelectItem key={id} value={id}>
-                {nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={tipo} onValueChange={setTipo}>
-          <SelectTrigger className="h-9 w-[10rem]">
-            <SelectValue placeholder="Tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os tipos</SelectItem>
-            <SelectItem value="partida">Partidas</SelectItem>
-            <SelectItem value="chegada">Chegadas</SelectItem>
-            <SelectItem value="passagem">Passagens</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="h-9 w-[10rem]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os status</SelectItem>
-            {Object.entries(tripStatusTone).map(([k, s]) => (
-              <SelectItem key={k} value={k}>
-                {s.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <FilterSelect
+          value={tipo}
+          onValueChange={setTipo}
+          placeholder="Tipo"
+          allLabel="Todos os tipos"
+          options={[
+            { value: "partida", label: "Partidas" },
+            { value: "chegada", label: "Chegadas" },
+            { value: "passagem", label: "Passagens" },
+          ]}
+        />
+        <FilterSelect
+          value={status}
+          onValueChange={setStatus}
+          placeholder="Status"
+          allLabel="Todos os status"
+          options={Object.entries(tripStatusTone).map(([k, s]) => ({ value: k, label: s.label }))}
+        />
       </FilterBar>
 
-      <SectionCard bodyClassName="p-0">
-        <QueryState isLoading={!data || viagens.isLoading} error={viagens.error} />
-        {viagens.data && viagens.data.length === 0 && (
+      {(!data || viagens.isLoading || viagens.error) && (
+        <SectionCard bodyClassName="p-0">
+          <QueryState isLoading={!data || viagens.isLoading} error={viagens.error} />
+        </SectionCard>
+      )}
+      {viagens.data && viagens.data.length === 0 && (
+        <SectionCard bodyClassName="p-0">
           <EmptyState
-            message={`Nenhuma viagem registrada para ${data ? dataBR(data) : "a data"}. As viagens são geradas automaticamente da grade pública (ANTT e DER-MG) todo dia às 00:05 — use "Gerar viagens do dia" para criar agora ou lance uma viagem manualmente.`}
-          />
-        )}
-        {viagens.data && viagens.data.length > 0 && (
-          <DataTable
-            columns={columns}
-            rows={rows}
-            emptyMessage="Nenhuma viagem com esses filtros."
-            onRowClick={(v) =>
-              navigate({ to: "/operacao/viagens/$tripId", params: { tripId: v.id } })
+            icon={BusFront}
+            title={`Nenhuma viagem em ${data ? dataBR(data) : "esta data"}`}
+            message="As viagens são geradas da grade pública (ANTT e DER-MG) todo dia às 00:05. Gere agora ou lance uma viagem manualmente."
+            action={
+              editar ? (
+                <Button variant="outline" onClick={gerarDoDia} disabled={!data || gerar.isPending}>
+                  <CalendarPlus className="h-4 w-4" />
+                  {gerar.isPending ? "Gerando..." : "Gerar viagens do dia"}
+                </Button>
+              ) : undefined
             }
           />
-        )}
-      </SectionCard>
+        </SectionCard>
+      )}
       {viagens.data && viagens.data.length > 0 && (
-        <p className="mt-3 text-xs text-muted-foreground">
-          {rows.length} de {viagens.data.length} viagens · horários de chegadas e passagens chegam
-          pela integração das empresas ou são lançados pela equipe · atualização automática a cada
-          30 s.
-        </p>
+        <div className="space-y-5">
+          {(comHorario.length > 0 || semHorario.length === 0) && (
+            <SectionCard
+              title="Com horário no terminal"
+              description={`${num(comHorario.length)} ${comHorario.length === 1 ? "viagem" : "viagens"}, em ordem de horário`}
+              bodyClassName="p-0"
+            >
+              <DataTable
+                minWidth="40rem"
+                columns={colunas(true)}
+                rows={comHorario}
+                emptyMessage="Nenhuma viagem com esses filtros."
+                onRowClick={abrir}
+              />
+            </SectionCard>
+          )}
+          {semHorario.length > 0 && (
+            <SectionCard
+              title="Sem horário no terminal"
+              description="Chegadas e passagens cujo horário em Manhuaçu chega pela integração das empresas ou é lançado pela equipe."
+              bodyClassName="p-0"
+            >
+              <DataTable
+                minWidth="40rem"
+                columns={colunas(false)}
+                rows={semHorario}
+                onRowClick={abrir}
+              />
+            </SectionCard>
+          )}
+          <p className="text-xs text-muted-foreground">
+            {num(rows.length)} de {num(viagens.data.length)} viagens · atualização automática a cada
+            30 s.
+          </p>
+        </div>
       )}
     </>
   );

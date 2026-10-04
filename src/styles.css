@@ -5,9 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * SisRodov Manhuaçu — design system institucional.
- * Paleta: azul institucional profundo, verde operação, âmbar atenção, vermelho divergência.
- * Todas as cores em oklch e expostas como tokens semânticos.
+ * SisRodov Manhuaçu — design system.
+ * Inspirado no ERP da A&M: fundo cinza-azulado claro, cartões brancos sem borda,
+ * azul primário vibrante, sidebar clara, Inter. Modo escuro pela classe `.dark`.
+ * O painel de TV usa os tokens --board* (sempre escuro, independe do tema).
  */
 
 @theme inline {
@@ -67,114 +68,155 @@
   --color-board: var(--board);
   --color-board-foreground: var(--board-foreground);
   --color-board-row: var(--board-row);
-  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --color-board-accent: var(--board-accent);
+  --color-board-accent-foreground: var(--board-accent-foreground);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* Mantido para compatibilidade: títulos também usam Inter. */
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-board: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
 :root {
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 
-  /* Superfícies: fundo levemente frio, cartões brancos. */
-  --background: oklch(0.975 0.004 245);
-  --foreground: oklch(0.2 0.03 255);
+  /* Superfícies: fundo cinza-azulado, cartões brancos. */
+  --background: hsl(220 27% 93%);
+  --foreground: hsl(224 33% 14%);
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.03 255);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.03 255);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(224 33% 14%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(224 33% 14%);
 
-  /* Azul institucional da prefeitura. */
-  --primary: oklch(0.43 0.13 252);
-  --primary-foreground: oklch(0.985 0.005 240);
-  --primary-soft: oklch(0.945 0.025 250);
+  /* Azul vibrante (5,2:1 com texto branco). */
+  --primary: hsl(228 82% 58%);
+  --primary-foreground: hsl(0 0% 100%);
+  --primary-soft: hsl(228 90% 95%);
 
-  --secondary: oklch(0.955 0.008 245);
-  --secondary-foreground: oklch(0.28 0.04 252);
+  --secondary: hsl(220 20% 91%);
+  --secondary-foreground: hsl(224 33% 18%);
 
-  --muted: oklch(0.955 0.008 245);
-  /* 0.49 = contraste ≥ 5:1 sobre background, card e muted (AA). */
-  --muted-foreground: oklch(0.49 0.025 252);
+  --muted: hsl(220 20% 91%);
+  /* ≥ 4,5:1 sobre card, muted e background. */
+  --muted-foreground: hsl(220 13% 40%);
 
-  --accent: oklch(0.945 0.02 245);
-  --accent-foreground: oklch(0.3 0.07 252);
+  /* Hover de itens de menu/ghost: tom claro do azul. */
+  --accent: hsl(225 70% 95%);
+  --accent-foreground: hsl(228 65% 38%);
 
-  --destructive: oklch(0.52 0.19 27);
-  --destructive-foreground: oklch(0.985 0.005 240);
+  --destructive: hsl(0 72% 50%);
+  --destructive-foreground: hsl(0 0% 100%);
 
-  --border: oklch(0.905 0.01 245);
-  --input: oklch(0.87 0.012 245);
-  --ring: oklch(0.52 0.14 250);
+  --border: hsl(220 17% 87%);
+  --input: hsl(220 17% 84%);
+  --ring: hsl(228 82% 58%);
 
-  /* Estados: tons escurecidos para texto em pílula "soft" passar AA (≥ 4.5:1). */
-  --success: oklch(0.48 0.12 152);
-  --success-foreground: oklch(0.99 0.005 150);
-  --success-soft: oklch(0.95 0.04 155);
+  /* Estados: cor forte (texto/ícone, AA sobre branco e sobre o "soft") + fundo suave. */
+  --success: hsl(142 72% 29%);
+  --success-foreground: hsl(0 0% 100%);
+  --success-soft: hsl(141 70% 92%);
 
-  --warning: oklch(0.72 0.14 75);
-  --warning-foreground: oklch(0.3 0.07 60);
-  --warning-soft: oklch(0.96 0.05 88);
+  --warning: hsl(38 92% 50%);
+  /* Texto sobre warning e warning-soft. */
+  --warning-foreground: hsl(26 85% 28%);
+  --warning-soft: hsl(46 96% 89%);
 
-  --info: oklch(0.48 0.13 250);
-  --info-foreground: oklch(0.99 0.005 240);
-  --info-soft: oklch(0.95 0.03 248);
+  --info: hsl(201 96% 32%);
+  --info-foreground: hsl(0 0% 100%);
+  --info-soft: hsl(199 92% 92%);
 
-  --danger: oklch(0.5 0.19 27);
-  --danger-foreground: oklch(0.99 0.005 30);
-  --danger-soft: oklch(0.955 0.035 25);
+  --danger: hsl(0 72% 45%);
+  --danger-foreground: hsl(0 0% 100%);
+  --danger-soft: hsl(0 90% 95%);
 
-  --neutral-soft: oklch(0.945 0.008 245);
+  --neutral-soft: hsl(220 20% 92%);
 
-  --chart-1: oklch(0.43 0.13 252);
-  --chart-2: oklch(0.6 0.11 220);
-  --chart-3: oklch(0.55 0.12 152);
-  --chart-4: oklch(0.72 0.14 75);
-  --chart-5: oklch(0.55 0.06 260);
+  --chart-1: hsl(228 82% 58%);
+  --chart-2: hsl(199 89% 48%);
+  --chart-3: hsl(142 71% 40%);
+  --chart-4: hsl(38 92% 50%);
+  --chart-5: hsl(262 83% 58%);
 
-  /* Sidebar azul-marinho. */
-  --sidebar: oklch(0.225 0.045 258);
-  --sidebar-foreground: oklch(0.86 0.018 250);
-  --sidebar-primary: oklch(0.72 0.11 230);
-  --sidebar-primary-foreground: oklch(0.18 0.04 258);
-  --sidebar-accent: oklch(0.3 0.05 258);
-  --sidebar-accent-foreground: oklch(0.98 0.008 250);
-  --sidebar-border: oklch(0.31 0.04 258);
-  --sidebar-ring: oklch(0.72 0.11 230);
+  /* Sidebar clara (um tom abaixo do fundo). */
+  --sidebar: hsl(221 24% 88%);
+  --sidebar-foreground: hsl(224 30% 22%);
+  --sidebar-primary: hsl(228 82% 58%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(221 20% 82%);
+  --sidebar-accent-foreground: hsl(224 30% 14%);
+  --sidebar-border: hsl(221 18% 81%);
+  --sidebar-ring: hsl(228 82% 58%);
 
+  /* Painel de TV: sempre escuro. Acento = azul vibrante claro (AA sobre --board). */
   --board: oklch(0.19 0.04 258);
   --board-foreground: oklch(0.96 0.01 250);
   --board-row: oklch(0.24 0.045 258);
+  --board-accent: hsl(226 95% 72%);
+  --board-accent-foreground: oklch(0.19 0.04 258);
 
-  /* Mantidos por compatibilidade; o visual institucional usa cores sólidas. */
-  --gradient-institutional: linear-gradient(135deg, oklch(0.3 0.07 255), oklch(0.43 0.13 252));
+  /* Mantidos por compatibilidade. */
+  --gradient-institutional: linear-gradient(135deg, hsl(228 70% 45%), hsl(228 82% 58%));
   --gradient-board: linear-gradient(180deg, oklch(0.19 0.04 258), oklch(0.16 0.035 258));
 
-  /* Escala de sombras discreta: xs (controles) < card (superfícies) < raised (popovers/hover). */
-  --shadow-xs: 0 1px 2px oklch(0.225 0.045 258 / 0.06);
-  --shadow-card: 0 1px 2px oklch(0.225 0.045 258 / 0.05), 0 1px 3px oklch(0.225 0.045 258 / 0.05);
-  --shadow-raised: 0 4px 8px -2px oklch(0.225 0.045 258 / 0.08), 0 12px 28px -8px oklch(0.225 0.045 258 / 0.18);
+  /* Sombras do ERP: card = shadow-sm; raised = shadow-md/lg. */
+  --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.05), 0 1px 3px 0 rgb(15 23 42 / 0.04);
+  --shadow-card-hover: 0 4px 6px -1px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.06);
+  --shadow-raised: 0 10px 15px -3px rgb(15 23 42 / 0.1), 0 4px 6px -4px rgb(15 23 42 / 0.08);
 }
 
 .dark {
-  --background: oklch(0.18 0.03 255);
-  --foreground: oklch(0.96 0.01 250);
-  --card: oklch(0.23 0.035 255);
-  --card-foreground: oklch(0.96 0.01 250);
-  --popover: oklch(0.23 0.035 255);
-  --popover-foreground: oklch(0.96 0.01 250);
-  --primary: oklch(0.65 0.13 235);
-  --primary-foreground: oklch(0.16 0.03 255);
-  --primary-soft: oklch(0.3 0.06 250);
-  --secondary: oklch(0.28 0.04 255);
-  --secondary-foreground: oklch(0.96 0.01 250);
-  --muted: oklch(0.28 0.04 255);
-  --muted-foreground: oklch(0.72 0.02 250);
-  --accent: oklch(0.32 0.05 245);
-  --accent-foreground: oklch(0.96 0.01 250);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --neutral-soft: oklch(0.3 0.03 250);
+  color-scheme: dark;
+  --background: hsl(229 27% 8%);
+  --foreground: hsl(220 20% 92%);
+  --card: hsl(229 27% 11%);
+  --card-foreground: hsl(220 20% 92%);
+  --popover: hsl(229 27% 12%);
+  --popover-foreground: hsl(220 20% 92%);
+  --primary: hsl(228 82% 60%);
+  --primary-foreground: hsl(0 0% 100%);
+  --primary-soft: hsl(228 50% 20%);
+  --secondary: hsl(229 27% 18%);
+  --secondary-foreground: hsl(220 20% 92%);
+  --muted: hsl(229 27% 16%);
+  --muted-foreground: hsl(220 12% 64%);
+  --accent: hsl(229 30% 19%);
+  --accent-foreground: hsl(220 30% 96%);
+  --destructive: hsl(0 70% 50%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(229 27% 18%);
+  --input: hsl(229 22% 24%);
+  --ring: hsl(228 82% 64%);
+
+  /* No escuro a cor do tom é clara (texto sobre o soft escuro). */
+  --success: hsl(142 60% 52%);
+  --success-foreground: hsl(142 80% 10%);
+  --success-soft: hsl(142 45% 15%);
+  --warning: hsl(40 92% 56%);
+  --warning-foreground: hsl(43 96% 68%);
+  --warning-soft: hsl(38 55% 16%);
+  --info: hsl(199 85% 62%);
+  --info-foreground: hsl(200 80% 10%);
+  --info-soft: hsl(200 55% 16%);
+  --danger: hsl(0 85% 68%);
+  --danger-foreground: hsl(0 70% 12%);
+  --danger-soft: hsl(0 50% 18%);
+  --neutral-soft: hsl(229 22% 19%);
+
+  --sidebar: hsl(229 27% 7%);
+  --sidebar-foreground: hsl(220 20% 88%);
+  --sidebar-primary: hsl(228 82% 60%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(229 27% 15%);
+  --sidebar-accent-foreground: hsl(0 0% 100%);
+  --sidebar-border: hsl(229 27% 14%);
+  --sidebar-ring: hsl(228 82% 60%);
+
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.35);
+  --shadow-card-hover: 0 4px 10px -2px rgb(0 0 0 / 0.5);
+  --shadow-raised: 0 12px 28px -6px rgb(0 0 0 / 0.6);
 }
 
 @layer base {
@@ -200,7 +242,7 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.015em;
+    letter-spacing: -0.02em;
     text-wrap: balance;
   }
 
@@ -242,11 +284,20 @@ button:disabled:not(.bg-primary):not(.bg-destructive) {
   opacity: 0.6;
 }
 
+/* Cartão padrão (ERP): branco, sem borda, rounded-2xl, sombra leve. */
 @utility surface-card {
   background-color: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  border: 0;
+  border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-card);
+}
+
+/* Cartão com sombra que cresce no hover (KPIs, cartões clicáveis). */
+@utility card-hover {
+  transition: box-shadow 200ms ease;
+  &:hover {
+    box-shadow: var(--shadow-card-hover);
+  }
 }
 
 @utility gradient-institutional {
@@ -293,6 +344,26 @@ button:disabled:not(.bg-primary):not(.bg-destructive) {
   }
 }
 
+/* Barra mínima que só aparece com o mouse sobre o elemento (sidebar). */
+@utility scrollbar-hover {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  &:hover,
+  &:focus-within {
+    scrollbar-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent) transparent;
+  }
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 9999px;
+  }
+  &:hover::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent);
+  }
+}
+
 /* Barra fina neutra para áreas claras (tabelas largas). */
 @utility scrollbar-thin {
   scrollbar-width: thin;
@@ -310,6 +381,17 @@ button:disabled:not(.bg-primary):not(.bg-destructive) {
 
 @utility board-highlight {
   animation: board-flip 2.4s ease-out;
+}
+
+/*
+ * Escala do sistema administrativo no desktop (como o ERP da A&M): 80% da fonte
+ * base, então todo o layout em rem fica mais denso. Só quando o AdminShell está
+ * na tela — login, "minha viagem" e o painel de TV continuam em 100%.
+ */
+@media (min-width: 1024px) {
+  html:has([data-admin-shell]) {
+    font-size: 80%;
+  }
 }
 
 /* Acessibilidade: sem animações para quem pede menos movimento. */

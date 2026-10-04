@@ -1,8 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { hora } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { hora, tituloNome } from "@/lib/format";
 import { horaPrevista, useHoje, useViagensDoDia, type ViagemDetalhada } from "@/services/operacao";
-import { BoardShell, empresaPainel, useAgora } from "./index";
+import {
+  BoardShell,
+  BoardTable,
+  empresaPainel,
+  useAgora,
+  type LinhaPainel,
+  type StatusPainel,
+} from "@/components/painel/PainelPublico";
 
 export const Route = createFileRoute("/painel/chegadas")({
   head: () => ({
@@ -23,28 +29,19 @@ export const Route = createFileRoute("/painel/chegadas")({
   component: BoardArrivals,
 });
 
-const status: Record<string, { label: string; className: string }> = {
-  previsto: { label: "PREVISTO", className: "bg-info text-info-foreground" },
-  atrasado: { label: "ATRASADO", className: "bg-danger text-danger-foreground" },
-  cancelado: { label: "CANCELADO", className: "bg-danger text-danger-foreground" },
-  chegou: {
-    label: "CHEGOU",
-    className: "bg-board-row text-board-foreground/70 border border-board-foreground/25",
-  },
-};
-
 const MIN = 60_000;
 
-function situacao(v: ViagemDetalhada) {
-  if (v.status === "cancelada") return status.cancelado;
-  if (v.chegou_em) return status.chegou;
-  if (v.status === "atrasada") return status.atrasado;
-  return status.previsto;
+function situacao(v: ViagemDetalhada): StatusPainel {
+  if (v.status === "cancelada") return "cancelada";
+  if (v.chegou_em) return "chegou";
+  if (v.status === "atrasada") return "atrasada";
+  return "prevista";
 }
 
 /**
  * Chegadas e passagens com horário no terminal conhecido (lançado pela equipe ou recebido
  * da empresa). Quem já chegou fica 15 minutos na tela; canceladas, 30 minutos.
+ * Previstas sem atualização somem 30 minutos depois do horário (atraso marcado: 2 h).
  */
 function noPainelDeChegadas(v: ViagemDetalhada, agora: number) {
   if (v.tipo === "partida") return false;
@@ -54,7 +51,8 @@ function noPainelDeChegadas(v: ViagemDetalhada, agora: number) {
   const previsto = new Date(ref).getTime();
   if (v.status === "cancelada") return previsto > agora - 30 * MIN;
   if (v.status === "partiu" || v.status === "realizada") return false;
-  return previsto > agora - 120 * MIN;
+  if (v.status === "atrasada") return previsto > agora - 120 * MIN;
+  return previsto > agora - 30 * MIN;
 }
 
 function BoardArrivals() {
@@ -69,78 +67,35 @@ function BoardArrivals() {
           .sort((a, b) =>
             (a.previsto_em ?? a.chegou_em!).localeCompare(b.previsto_em ?? b.chegou_em!),
           )
-          .slice(0, 9)
       : [];
+  const idDestaque = chegadas.find((v) => !v.chegou_em && v.status !== "cancelada")?.id;
+
+  const linhas: LinhaPainel[] = chegadas.map((v) => ({
+    id: v.id,
+    hora: v.previsto_em ? horaPrevista(v) : hora(v.chegou_em!),
+    local: tituloNome(v.origem),
+    empresa: empresaPainel(v),
+    plataforma: v.plataforma ? String(v.plataforma.numero) : null,
+    status: situacao(v),
+    destaque: v.id === idDestaque,
+  }));
 
   return (
-    <BoardShell title="Chegadas">
-      <div className="px-8 py-6">
-        <div className="grid grid-cols-[7rem_1fr_1fr_8rem_14rem] gap-4 border-b border-board-foreground/20 pb-3 font-board text-xl tracking-[0.25em] uppercase text-board-foreground/60 md:text-2xl">
-          <span>Horário</span>
-          <span>Origem</span>
-          <span>Empresa</span>
-          <span className="text-center">Plataforma</span>
-          <span className="text-center">Status</span>
-        </div>
-
-        {(!hoje || viagens.isLoading) && (
-          <p className="py-10 text-center font-board text-2xl text-board-foreground/60">
-            Carregando…
-          </p>
-        )}
-        {viagens.error && !viagens.data && (
-          <p className="py-10 text-center font-board text-2xl text-board-foreground/60">
-            Painel temporariamente indisponível.
-          </p>
-        )}
-        {viagens.data && chegadas.length === 0 && (
-          <p className="py-10 text-center font-board text-2xl text-board-foreground/60">
-            Nenhuma chegada com horário informado no momento.
-          </p>
-        )}
-
-        {chegadas.map((v) => {
-          const s = situacao(v);
-          return (
-            <div
-              key={v.id}
-              className="grid grid-cols-[7rem_1fr_1fr_8rem_14rem] items-center gap-4 border-b border-board-foreground/10 py-4"
-            >
-              <span className="tabular font-board text-4xl font-bold md:text-5xl">
-                {v.previsto_em ? horaPrevista(v) : hora(v.chegou_em!)}
-              </span>
-              <span className="font-board text-3xl font-semibold tracking-wide uppercase md:text-4xl">
-                {v.origem}
-              </span>
-              <span className="font-board text-2xl tracking-wide text-board-foreground/75 uppercase md:text-3xl">
-                {empresaPainel(v)}
-              </span>
-              <span
-                className={cn(
-                  "text-center font-board text-4xl font-bold md:text-5xl",
-                  !v.plataforma && "text-board-foreground/50",
-                )}
-              >
-                {v.plataforma?.numero ?? "—"}
-              </span>
-              <span className="flex justify-center">
-                <span
-                  className={cn(
-                    "inline-flex min-w-[11rem] items-center justify-center rounded-md px-4 py-2 font-board text-xl font-bold tracking-[0.15em] uppercase md:text-2xl",
-                    s.className,
-                  )}
-                >
-                  {s.label}
-                </span>
-              </span>
-            </div>
-          );
-        })}
-
-        <p className="mt-6 text-center text-sm tracking-wide text-board-foreground/50 uppercase">
-          Horários de chegada informados pelas empresas e pela equipe do terminal
-        </p>
-      </div>
+    <BoardShell
+      tela="chegadas"
+      nota="Horários de chegada informados pelas empresas e pela equipe do terminal."
+    >
+      <BoardTable
+        linhas={linhas}
+        colunaLocal="Origem"
+        carregando={!hoje || !agora || viagens.isLoading}
+        erro={Boolean(viagens.error && !viagens.data)}
+        vazio={{
+          titulo: "Nenhuma chegada prevista no momento",
+          detalhe:
+            "Os horários aparecem aqui assim que as empresas ou a equipe do terminal os informam.",
+        }}
+      />
     </BoardShell>
   );
 }

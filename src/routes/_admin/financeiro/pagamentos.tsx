@@ -1,16 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, HandCoins, Loader2, Undo2 } from "lucide-react";
+import { CheckCircle2, Clock, HandCoins, Loader2, Receipt, Undo2 } from "lucide-react";
 import {
   DataTable,
+  EmptyState,
   FilterBar,
+  FilterSelect,
   PageHeader,
   QueryState,
   SectionCard,
   SourceNote,
   StatCard,
+  StatGrid,
   StatusBadge,
+  toneText,
+  Vazio,
   type Column,
   type Tone,
 } from "@/components/common";
@@ -23,14 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { brl, dataCurta } from "@/lib/format";
+import { brl, dataCurta, num, tituloNome } from "@/lib/format";
 import { usePermissao } from "@/services/acesso";
 import { useEmpresas } from "@/services/dados-publicos";
 import {
@@ -96,10 +94,18 @@ function PaymentsPage() {
     return (empresas.data ?? []).filter((e) => ids.has(e.id));
   }, [pagamentos.data, empresas.data]);
 
-  const confirmado = rows.filter((p) => p.status === "confirmado").reduce((s, p) => s + p.valor, 0);
-  const processando = rows
-    .filter((p) => p.status === "processando")
-    .reduce((s, p) => s + p.valor, 0);
+  const somar = (st: PagamentoComTaxa["status"]) => {
+    const lista = rows.filter((p) => p.status === st);
+    return { valor: lista.reduce((s, p) => s + p.valor, 0), qtd: lista.length };
+  };
+  const confirmado = somar("confirmado");
+  const processando = somar("processando");
+  const estornado = somar("estornado");
+  const abertas = (taxasAbertas.data ?? []).filter(
+    (t) => empresaId === TODOS || t.empresa_id === empresaId,
+  );
+  const emAberto = abertas.reduce((s, t) => s + t.saldo, 0);
+  const qtdLabel = (n: number, um: string, varios: string) => `${num(n)} ${n === 1 ? um : varios}`;
 
   async function confirmarEstorno() {
     if (!estornar) return;
@@ -115,13 +121,22 @@ function PaymentsPage() {
   const columns: Column<PagamentoComTaxa>[] = [
     {
       key: "paid",
-      header: "Data pagamento",
+      header: "Pago em",
+      nowrap: true,
+      mobile: "meta",
       render: (p) => <span className="tabular">{dataCurta(p.pago_em)}</span>,
     },
-    { key: "company", header: "Empresa", render: (p) => empresa(p.empresa_id) },
+    {
+      key: "company",
+      header: "Empresa",
+      mobile: "title",
+      cellClassName: "min-w-[12rem]",
+      render: (p) => tituloNome(empresa(p.empresa_id)),
+    },
     {
       key: "fee",
       header: "Taxa",
+      mobile: "subtitle",
       render: (p) =>
         p.taxa ? (
           <span className="tabular">
@@ -138,14 +153,17 @@ function PaymentsPage() {
       key: "amount",
       header: "Valor",
       align: "right",
-      render: (p) => <span className="tabular">{brl(p.valor)}</span>,
+      nowrap: true,
+      mobile: "meta",
+      render: (p) => <span className="tabular font-semibold">{brl(p.valor)}</span>,
     },
     {
       key: "method",
       header: "Meio",
+      mobile: "meta",
       render: (p) => (
         <span>
-          {p.meio || "—"}
+          {p.meio || <Vazio />}
           {p.referencia_externa && (
             <span className="block text-xs text-muted-foreground">{p.referencia_externa}</span>
           )}
@@ -155,15 +173,16 @@ function PaymentsPage() {
     {
       key: "origin",
       header: "Origem",
+      nowrap: true,
+      hideOnMobile: true,
       render: (p) => (
-        <span className="text-muted-foreground">
-          {p.integracao_id ? "Integração" : "Lançamento manual"}
-        </span>
+        <span className="text-muted-foreground">{p.integracao_id ? "Integração" : "Manual"}</span>
       ),
     },
     {
       key: "status",
       header: "Status",
+      mobile: "badge",
       render: (p) => (
         <StatusBadge tone={statusMap[p.status].tone}>{statusMap[p.status].label}</StatusBadge>
       ),
@@ -172,6 +191,7 @@ function PaymentsPage() {
       key: "actions",
       header: "",
       align: "right",
+      mobile: "action",
       render: (p) =>
         editar && p.status === "confirmado" ? (
           <Button variant="ghost" size="sm" onClick={() => setEstornar(p)}>
@@ -184,8 +204,9 @@ function PaymentsPage() {
   return (
     <>
       <PageHeader
-        title="Financeiro · Pagamentos"
-        subtitle="Pagamentos recebidos pela integração de pagamento ou lançados pela equipe"
+        eyebrow="Financeiro"
+        title="Pagamentos"
+        subtitle="Pagamentos recebidos pela integração de pagamento ou lançados pela equipe."
         actions={
           editar ? (
             <Button onClick={() => setNovo(true)}>
@@ -195,51 +216,90 @@ function PaymentsPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <StatCard label="Confirmados" value={brl(confirmado)} icon={CheckCircle2} tone="success" />
-        <StatCard label="Em processamento" value={brl(processando)} icon={Loader2} tone="info" />
-      </div>
+      <StatGrid>
+        <StatCard
+          label="Confirmados"
+          value={<span className={toneText.success}>{brl(confirmado.valor)}</span>}
+          icon={CheckCircle2}
+          tone="success"
+          hint={qtdLabel(confirmado.qtd, "pagamento", "pagamentos")}
+        />
+        <StatCard
+          label="Em processamento"
+          value={brl(processando.valor)}
+          icon={Loader2}
+          tone="info"
+          hint={qtdLabel(processando.qtd, "pagamento", "pagamentos")}
+        />
+        <StatCard
+          label="Estornados"
+          value={brl(estornado.valor)}
+          icon={Undo2}
+          tone="neutral"
+          hint={qtdLabel(estornado.qtd, "estorno", "estornos")}
+        />
+        <StatCard
+          label="Ainda em aberto"
+          value={<span className={toneText.warning}>{brl(emAberto)}</span>}
+          icon={Clock}
+          tone="warning"
+          hint={qtdLabel(abertas.length, "taxa pendente", "taxas pendentes")}
+        />
+      </StatGrid>
 
       <div className="mt-6">
         <FilterBar>
-          <Select value={empresaId} onValueChange={setEmpresaId}>
-            <SelectTrigger className="h-9 w-[16rem]">
-              <SelectValue placeholder="Empresa" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={TODOS}>Todas as empresas</SelectItem>
-              {empresasComPagamento.map((e) => (
-                <SelectItem key={e.id} value={e.id}>
-                  {nomeDaEmpresa(e)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="h-9 w-[11rem]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={TODOS}>Todos os status</SelectItem>
-              {Object.entries(statusMap).map(([k, v]) => (
-                <SelectItem key={k} value={k}>
-                  {v.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            value={empresaId}
+            onValueChange={setEmpresaId}
+            placeholder="Empresa"
+            allLabel="Todas as empresas"
+            allValue={TODOS}
+            options={empresasComPagamento.map((e) => ({
+              value: e.id,
+              label: tituloNome(nomeDaEmpresa(e)),
+            }))}
+          />
+          <FilterSelect
+            value={status}
+            onValueChange={setStatus}
+            placeholder="Status"
+            allLabel="Todos os status"
+            allValue={TODOS}
+            options={Object.entries(statusMap).map(([k, v]) => ({ value: k, label: v.label }))}
+          />
         </FilterBar>
 
-        <SectionCard bodyClassName="p-0">
+        <SectionCard title="Pagamentos" bodyClassName="p-0">
           <QueryState isLoading={pagamentos.isLoading} error={pagamentos.error} />
           {pagamentos.data && (
             <DataTable
               columns={columns}
               rows={rows}
-              emptyMessage={
-                pagamentos.data.length === 0
-                  ? "Nenhum pagamento registrado. Os pagamentos chegam pela integração com o sistema de pagamento ou são lançados manualmente pela equipe financeira."
-                  : "Nenhum pagamento com esses filtros."
+              empty={
+                pagamentos.data.length === 0 ? (
+                  <EmptyState
+                    icon={Receipt}
+                    title="Nenhum pagamento registrado"
+                    message="Os pagamentos chegam pela integração com o sistema de pagamento ou são lançados manualmente pela equipe financeira."
+                  />
+                ) : (
+                  <EmptyState
+                    message="Nenhum pagamento com esses filtros."
+                    action={
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEmpresaId(TODOS);
+                          setStatus(TODOS);
+                        }}
+                      >
+                        Limpar filtros
+                      </Button>
+                    }
+                  />
+                )
               }
             />
           )}
@@ -258,7 +318,7 @@ function PaymentsPage() {
             <DialogTitle>Estornar pagamento</DialogTitle>
             <DialogDescription>
               {estornar &&
-                `${brl(estornar.valor)} de ${empresa(estornar.empresa_id)}${
+                `${brl(estornar.valor)} de ${tituloNome(empresa(estornar.empresa_id))}${
                   estornar.taxa ? ` na taxa ${estornar.taxa.numero}` : ""
                 }, pago em ${dataCurta(estornar.pago_em)}. A ação fica registrada na auditoria.`}
             </DialogDescription>

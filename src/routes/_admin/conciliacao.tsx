@@ -1,31 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Bus, DoorOpen, FileText, Landmark, Ticket } from "lucide-react";
+import { Bus, DoorOpen, FileText, Landmark, Scale, Ticket } from "lucide-react";
 import {
   DataTable,
+  DateRangeFilter,
   DemoNote,
   EmptyState,
   FilterBar,
+  FilterSelect,
   PageHeader,
   QueryState,
   SectionCard,
+  StatCard,
+  StatGrid,
   StatusBadge,
+  Vazio,
   reconciliationTone,
   type Column,
   type Tone,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -33,7 +30,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { brl, dataHora, hojeISO, hora, num } from "@/lib/format";
+import { brl, dataHora, hojeISO, hora, num, tituloNome } from "@/lib/format";
 import { usePermissao } from "@/services/acesso";
 import { useEmpresas } from "@/services/dados-publicos";
 import {
@@ -84,6 +81,12 @@ const situationMap: Record<SituacaoConferencia, { tone: Tone; label: string }> =
 
 type Linha = ConciliacaoViagem & { id: string };
 
+/** Cidade em title-case mantendo a UF em maiúsculas ("CARATINGA/MG" → "Caratinga/MG"). */
+function cidadeNome(c: string) {
+  const m = c.match(/^(.*?)(\s*[/-]\s*)([A-Za-z]{2})$/);
+  return m ? `${tituloNome(m[1])}${m[2]}${m[3].toUpperCase()}` : tituloNome(c);
+}
+
 const TODOS = "todos";
 
 function ReconciliationPage() {
@@ -93,7 +96,8 @@ function ReconciliationPage() {
   const [selected, setSelected] = useState<Linha | null>(null);
 
   const empresas = useEmpresas();
-  const empresa = mapaEmpresas(empresas.data);
+  const nomeEmpresa = mapaEmpresas(empresas.data);
+  const empresa = (id: string | null | undefined) => tituloNome(nomeEmpresa(id));
   const config = useConfigFinanceiro();
   const conciliacao = useConciliacao({ periodo: { de, ate } });
 
@@ -112,6 +116,7 @@ function ReconciliationPage() {
     return c;
   }, [todas]);
   const total = Math.max(1, todas.length);
+  const pct = (n: number) => Math.round((n / total) * 100);
 
   const ultimaConciliada = todas.find((c) => c.status === "conciliado");
   const ultimaDivergente = todas.find((c) => c.status === "divergencia");
@@ -120,48 +125,73 @@ function ReconciliationPage() {
     {
       key: "date",
       header: "Data",
+      nowrap: true,
+      hideOnMobile: true,
       render: (d) => <span className="tabular">{dataISO(d.data)}</span>,
     },
     {
       key: "trip",
       header: "Viagem",
+      mobile: "title",
+      cellClassName: "min-w-[11rem]",
       render: (d) => (
         <span>
-          <span className="tabular font-semibold">{d.numero || "—"}</span>
-          <span className="block text-xs text-muted-foreground">
-            {d.origem} → {d.destino}
+          <span className="tabular font-semibold">{d.numero || <Vazio />}</span>
+          <span className="block text-xs font-normal text-muted-foreground">
+            {cidadeNome(d.origem)} → {cidadeNome(d.destino)}
           </span>
         </span>
       ),
     },
-    { key: "company", header: "Empresa", render: (d) => empresa(d.empresa_id) },
+    {
+      key: "company",
+      header: "Empresa",
+      mobile: "subtitle",
+      cellClassName: "min-w-[10rem]",
+      render: (d) => (
+        <>
+          {empresa(d.empresa_id)}
+          <span className="tabular md:hidden"> · {dataISO(d.data)}</span>
+        </>
+      ),
+    },
     {
       key: "tickets",
       header: "Passagens",
       align: "right",
+      mobile: "meta",
       render: (d) => <span className="tabular">{num(d.bilhetes)}</span>,
     },
     {
       key: "gate",
       header: "Catraca",
       align: "right",
+      mobile: "meta",
       render: (d) => <span className="tabular">{num(d.acessos)}</span>,
     },
     {
       key: "report",
       header: "Relato",
       align: "right",
-      render: (d) => <span className="tabular">{d.relato === null ? "—" : num(d.relato)}</span>,
+      mobile: "meta",
+      render: (d) =>
+        d.relato === null ? (
+          <Vazio title="Relato não enviado" />
+        ) : (
+          <span className="tabular">{num(d.relato)}</span>
+        ),
     },
     {
       key: "diff",
       header: "Diferença",
       align: "right",
+      mobile: "meta",
       render: (d) => <span className="tabular font-semibold">{num(d.diferenca)}</span>,
     },
     {
       key: "result",
       header: "Resultado",
+      mobile: "badge",
       render: (d) => (
         <StatusBadge tone={reconciliationTone[d.status].tone}>
           {reconciliationTone[d.status].label}
@@ -171,8 +201,9 @@ function ReconciliationPage() {
     {
       key: "situation",
       header: "Conferência",
+      mobile: "badge",
       render: (d) => (
-        <StatusBadge tone={situationMap[d.situacao_conferencia].tone}>
+        <StatusBadge size="sm" tone={situationMap[d.situacao_conferencia].tone}>
           {situationMap[d.situacao_conferencia].label}
         </StatusBadge>
       ),
@@ -181,6 +212,7 @@ function ReconciliationPage() {
       key: "action",
       header: "",
       align: "right",
+      mobile: "action",
       render: (d) => (
         <Button variant="outline" size="sm" onClick={() => setSelected(d)}>
           Analisar
@@ -196,44 +228,114 @@ function ReconciliationPage() {
         subtitle="Cruze passagens, acessos na catraca e relatos das empresas para identificar divergências."
       />
 
-      <SectionCard title="Fluxo da informação">
-        <div className="flex flex-wrap items-center gap-2">
-          {flow.map((f, i) => (
-            <div key={f.label} className="flex items-center gap-2">
-              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2.5">
-                <f.icon className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold">{f.label}</span>
-              </div>
-              {i < flow.length - 1 && <ArrowRight className="h-4 w-4 text-muted-foreground" />}
-            </div>
-          ))}
+      <FilterBar>
+        <DateRangeFilter
+          label="Período"
+          from={de}
+          to={ate}
+          onFromChange={(v) => v && setDe(v)}
+          onToChange={(v) => v && setAte(v)}
+        />
+        <FilterSelect
+          value={status}
+          onValueChange={setStatus}
+          placeholder="Resultado"
+          allLabel="Todos os resultados"
+          allValue={TODOS}
+          options={(Object.keys(reconciliationTone) as StatusConciliacao[]).map((k) => ({
+            value: k,
+            label: reconciliationTone[k].label,
+          }))}
+        />
+      </FilterBar>
+
+      <SectionCard
+        title="Resumo do período"
+        description={`${num(todas.length)} ${todas.length === 1 ? "viagem partida" : "viagens partidas"} de ${dataISO(de)} a ${dataISO(ate)}`}
+      >
+        <StatGrid cols={3}>
+          <StatCard
+            variant="soft"
+            tone="success"
+            label="Conciliados"
+            value={num(contagem.conciliado)}
+            hint={todas.length ? `${pct(contagem.conciliado)}% das viagens` : undefined}
+          />
+          <StatCard
+            variant="soft"
+            tone="warning"
+            label="Em análise"
+            value={num(contagem.analise)}
+            hint={todas.length ? `${pct(contagem.analise)}% das viagens` : undefined}
+          />
+          <StatCard
+            variant="soft"
+            tone="danger"
+            label="Divergências"
+            value={num(contagem.divergencia)}
+            hint={todas.length ? `${pct(contagem.divergencia)}% das viagens` : undefined}
+          />
+        </StatGrid>
+
+        <div className="mt-5">
+          <div
+            role="img"
+            aria-label={
+              todas.length
+                ? `${pct(contagem.conciliado)}% conciliadas, ${pct(contagem.analise)}% em análise, ${pct(contagem.divergencia)}% com divergência`
+                : "Sem viagens no período"
+            }
+            className="flex h-2 overflow-hidden rounded-full bg-muted"
+          >
+            <div className="bg-success" style={{ width: `${pct(contagem.conciliado)}%` }} />
+            <div className="bg-warning" style={{ width: `${pct(contagem.analise)}%` }} />
+            <div className="bg-danger" style={{ width: `${pct(contagem.divergencia)}%` }} />
+          </div>
+          <p className="mt-2 text-xs text-pretty text-muted-foreground">
+            {todas.length === 0
+              ? "Sem viagens partidas no período. A barra se preenche conforme as fontes chegam."
+              : `Conciliado = diferença entre as fontes até ${config.data?.toleranciaConciliacao ?? 0} passageiro(s) (tolerância configurável); em análise = falta o relato da empresa.`}
+          </p>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-3">
-          <Indicator label="Conciliados" value={num(contagem.conciliado)} tone="success" />
-          <Indicator label="Em análise" value={num(contagem.analise)} tone="warning" />
-          <Indicator label="Divergências" value={num(contagem.divergencia)} tone="danger" />
+        <div className="mt-5 border-t border-border pt-4">
+          <p className="mb-3 text-[11px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
+            Fontes cruzadas, nesta ordem
+          </p>
+          <ol className="grid gap-2.5 sm:grid-cols-5 sm:gap-2">
+            {flow.map((f, i) => (
+              <li
+                key={f.label}
+                className="relative flex items-center gap-3 sm:flex-col sm:gap-2 sm:text-center"
+              >
+                {i < flow.length - 1 && (
+                  <>
+                    {/* Conector vertical (celular) e horizontal (sm+), só decorativos. */}
+                    <span
+                      aria-hidden="true"
+                      className="absolute top-8 bottom-[-0.625rem] left-4 w-px bg-border sm:hidden"
+                    />
+                    <span
+                      aria-hidden="true"
+                      className="absolute top-4 right-[calc(-50%+1.25rem)] left-[calc(50%+1.25rem)] hidden h-px bg-border sm:block"
+                    />
+                  </>
+                )}
+                <span className="relative grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                  <f.icon className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="text-sm leading-tight text-foreground">
+                  <span className="tabular mr-1 text-xs text-muted-foreground">{i + 1}.</span>
+                  {f.label}
+                </span>
+              </li>
+            ))}
+          </ol>
         </div>
-        <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-muted">
-          <div
-            className="bg-success"
-            style={{ width: `${(contagem.conciliado / total) * 100}%` }}
-          />
-          <div className="bg-warning" style={{ width: `${(contagem.analise / total) * 100}%` }} />
-          <div
-            className="bg-danger"
-            style={{ width: `${(contagem.divergencia / total) * 100}%` }}
-          />
-        </div>
-        <p className="mt-3 text-xs text-muted-foreground">
-          Viagens que já partiram no período. Conciliado = diferença entre as fontes até{" "}
-          {config.data?.toleranciaConciliacao ?? 0} passageiro(s) (tolerância configurável); em
-          análise = falta o relato da empresa.
-        </p>
       </SectionCard>
 
       {(ultimaConciliada || ultimaDivergente) && (
-        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+        <div className="mt-6 grid items-start gap-5 lg:grid-cols-2">
           {ultimaConciliada && (
             <TripReconciliationCard
               trip={ultimaConciliada}
@@ -253,45 +355,6 @@ function ReconciliationPage() {
       )}
 
       <div className="mt-6">
-        <FilterBar>
-          <div className="flex items-center gap-2 text-sm">
-            <Label htmlFor="conc-de" className="text-muted-foreground">
-              De
-            </Label>
-            <Input
-              id="conc-de"
-              type="date"
-              className="h-9 w-[10rem]"
-              value={de}
-              max={ate}
-              onChange={(e) => e.target.value && setDe(e.target.value)}
-            />
-            <Label htmlFor="conc-ate" className="text-muted-foreground">
-              até
-            </Label>
-            <Input
-              id="conc-ate"
-              type="date"
-              className="h-9 w-[10rem]"
-              value={ate}
-              min={de}
-              onChange={(e) => e.target.value && setAte(e.target.value)}
-            />
-          </div>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="h-9 w-[12rem]">
-              <SelectValue placeholder="Resultado" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={TODOS}>Todos os resultados</SelectItem>
-              {(Object.keys(reconciliationTone) as StatusConciliacao[]).map((k) => (
-                <SelectItem key={k} value={k}>
-                  {reconciliationTone[k].label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </FilterBar>
         <SectionCard
           title="Viagens conciliadas"
           description="Linguagem neutra: o sistema apenas apresenta as diferenças entre as fontes."
@@ -300,12 +363,25 @@ function ReconciliationPage() {
           <QueryState isLoading={conciliacao.isLoading} error={conciliacao.error} />
           {conciliacao.data &&
             (todas.length === 0 ? (
-              <EmptyState message="Nenhuma viagem partida no período. A conciliação é montada quando as viagens são registradas como partidas e chegam bilhetes e relatos (integração das empresas) e acessos (catracas)." />
+              <EmptyState
+                icon={Scale}
+                title="Nenhuma viagem partida no período"
+                message="A conciliação é montada quando as viagens são registradas como partidas e chegam bilhetes e relatos (integração das empresas) e acessos (catracas)."
+              />
             ) : (
               <DataTable
                 columns={columns}
                 rows={rows}
-                emptyMessage="Nenhuma viagem com esse resultado no período."
+                empty={
+                  <EmptyState
+                    message="Nenhuma viagem com esse resultado no período."
+                    action={
+                      <Button variant="outline" size="sm" onClick={() => setStatus(TODOS)}>
+                        Ver todos os resultados
+                      </Button>
+                    }
+                  />
+                }
               />
             ))}
         </SectionCard>
@@ -377,7 +453,7 @@ function AnaliseSheet({
         {selected && (
           <div className="space-y-4 px-4 pb-6">
             <p className="text-sm text-muted-foreground">
-              {selected.origem} → {selected.destino}
+              {cidadeNome(selected.origem)} → {cidadeNome(selected.destino)}
             </p>
             <Line label="Passagens válidas (emitidas/utilizadas)" value={selected.bilhetes} />
             <Line label="Passagens canceladas" value={selected.bilhetes_cancelados} />
@@ -399,28 +475,28 @@ function AnaliseSheet({
             )}
             {editar && (
               <>
-            <div className="space-y-1.5">
-              <Label htmlFor="conc-obs">Observação</Label>
-              <Textarea
-                id="conc-obs"
-                value={observacao}
-                onChange={(e) => setObservacao(e.target.value)}
-                placeholder="Ex.: empresa confirmou 2 passageiros embarcados fora da catraca (gratuidade)."
-              />
-            </div>
-            {erro && <p className="text-sm text-danger">{erro}</p>}
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={() => salvar("conferido")} disabled={conferir.isPending}>
-                Marcar como conferida
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => salvar("necessita-conferencia")}
-                disabled={conferir.isPending}
-              >
-                Necessita conferência
-              </Button>
-            </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="conc-obs">Observação</Label>
+                  <Textarea
+                    id="conc-obs"
+                    value={observacao}
+                    onChange={(e) => setObservacao(e.target.value)}
+                    placeholder="Ex.: empresa confirmou 2 passageiros embarcados fora da catraca (gratuidade)."
+                  />
+                </div>
+                {erro && <p className="text-sm text-danger">{erro}</p>}
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={() => salvar("conferido")} disabled={conferir.isPending}>
+                    Marcar como conferida
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => salvar("necessita-conferencia")}
+                    disabled={conferir.isPending}
+                  >
+                    Necessita conferência
+                  </Button>
+                </div>
               </>
             )}
             <DemoNote>
@@ -431,28 +507,6 @@ function AnaliseSheet({
         )}
       </SheetContent>
     </Sheet>
-  );
-}
-
-function Indicator({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone: "success" | "warning" | "danger";
-}) {
-  const classes = {
-    success: "border-success/25 bg-success-soft text-success",
-    warning: "border-warning/30 bg-warning-soft text-warning-foreground",
-    danger: "border-danger/25 bg-danger-soft text-danger",
-  }[tone];
-  return (
-    <div className={`rounded-lg border p-3 ${classes}`}>
-      <p className="text-xs font-semibold">{label}</p>
-      <p className="tabular mt-1 font-display text-2xl font-bold">{value}</p>
-    </div>
   );
 }
 
@@ -470,7 +524,7 @@ function TripReconciliationCard({
   return (
     <SectionCard
       title={`Viagem ${trip.numero || "sem número"}`}
-      description={`${trip.origem} → ${trip.destino} · ${dataISO(trip.data)}${
+      description={`${cidadeNome(trip.origem)} → ${cidadeNome(trip.destino)} · ${dataISO(trip.data)}${
         trip.previsto_em ? ` ${hora(trip.previsto_em)}` : ""
       } · ${empresa}`}
     >
@@ -490,15 +544,15 @@ function TripReconciliationCard({
         {trip.status === "conciliado" ? (
           <StatusBadge tone="success">Conciliado</StatusBadge>
         ) : (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
             <StatusBadge tone="warning">Divergência identificada</StatusBadge>
-            <span className="text-sm text-muted-foreground">
-              Diferença: {trip.diferenca} passageiros
+            <span className="tabular text-sm text-muted-foreground">
+              Diferença: {num(trip.diferenca)} passageiro(s)
             </span>
           </div>
         )}
         {onAnalyze && (
-          <Button variant="outline" size="sm" onClick={onAnalyze}>
+          <Button variant="outline" size="sm" onClick={onAnalyze} className="max-sm:w-full">
             Analisar divergência
           </Button>
         )}
@@ -509,7 +563,7 @@ function TripReconciliationCard({
 
 function Metric({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-lg border border-border bg-muted/40 px-3 py-2.5">
+    <div className="rounded-xl bg-muted/60 px-3 py-2.5">
       <dt className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground">
         {label}
       </dt>

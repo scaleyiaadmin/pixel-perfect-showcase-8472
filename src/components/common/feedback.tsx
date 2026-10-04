@@ -38,10 +38,10 @@ export function EmptyState({
         className,
       )}
     >
-      <span className="grid h-11 w-11 place-items-center rounded-full bg-muted text-muted-foreground">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-muted text-muted-foreground">
         <Icon className="h-5 w-5" aria-hidden="true" />
       </span>
-      {title && <p className="font-display text-base font-semibold text-foreground">{title}</p>}
+      {title && <p className="text-base font-semibold text-foreground">{title}</p>}
       {message && <p className="max-w-md text-sm text-pretty text-muted-foreground">{message}</p>}
       {action && <div className="mt-1 flex flex-wrap justify-center gap-2">{action}</div>}
     </div>
@@ -70,6 +70,7 @@ export function LoadingState({ label = "Carregando..." }: { label?: string }) {
 export function Vazio({ title, className }: { title?: string; className?: string }) {
   return (
     <span
+      data-vazio=""
       className={cn("text-muted-foreground", title && "cursor-help", className)}
       title={title}
       aria-label={title ?? "Não informado"}
@@ -98,7 +99,7 @@ export function DemoBanner({
   reason?: string;
 }) {
   return (
-    <div className="mb-5 flex items-start gap-3 rounded-xl border border-warning/40 bg-warning-soft px-4 py-3 text-sm text-warning-foreground">
+    <div className="mb-5 flex items-start gap-3 rounded-xl bg-warning-soft px-4 py-3 text-sm text-warning-foreground">
       <FlaskConical className="mt-0.5 h-4 w-4 shrink-0" />
       <p>
         <span className="font-semibold">Dados de exemplo.</span> Esta tela ainda não tem fonte real
@@ -122,7 +123,7 @@ export function QueryState({ isLoading, error }: { isLoading: boolean; error: un
     const message = error instanceof Error ? error.message : "Falha ao consultar o banco de dados.";
     return (
       <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
-        <span className="grid h-11 w-11 place-items-center rounded-full bg-danger-soft text-danger">
+        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-danger-soft text-danger">
           <DatabaseZap className="h-5 w-5" aria-hidden="true" />
         </span>
         <p className="max-w-md text-sm text-pretty text-muted-foreground">{message}</p>

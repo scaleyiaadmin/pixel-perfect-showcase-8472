@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Bus, Clock, MapPin, Ticket } from "lucide-react";
 import {
@@ -7,24 +8,25 @@ import {
   QueryState,
   SectionCard,
   StatCard,
+  StatGrid,
   StatusBadge,
+  Vazio,
   tripStatusTone,
   type Column,
   type Tone,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { brl, dataHora, hora, num } from "@/lib/format";
+import { brl, dataHora, hora, num, tituloNome } from "@/lib/format";
 import type { Bilhete, EventoEmbarque } from "@/services/gestao-tipos";
 import {
   dataBR,
   horaPrevista,
-  nomeEmpresaViagem,
   tipoViagemLabel,
   usePlataformas,
   useViagem,
   type ViagemCompleta,
 } from "@/services/operacao";
-import { AcoesViagem } from "./viagens.index";
+import { AcoesViagem, EmpresaViagem } from "./viagens.index";
 
 export const Route = createFileRoute("/_admin/operacao/viagens/$tripId")({
   head: () => ({
@@ -84,7 +86,17 @@ function TripDetail() {
       </Button>
 
       <QueryState isLoading={viagem.isLoading} error={viagem.error} />
-      {viagem.data === null && <EmptyState message="Viagem não encontrada." />}
+      {viagem.data === null && (
+        <EmptyState
+          title="Viagem não encontrada"
+          message="Ela pode ter sido removida ou o link está incorreto."
+          action={
+            <Button asChild variant="outline">
+              <Link to="/operacao/viagens">Ver viagens do dia</Link>
+            </Button>
+          }
+        />
+      )}
       {viagem.data && <Detalhe trip={viagem.data} plataformas={plataformas.data ?? []} />}
     </>
   );
@@ -105,6 +117,7 @@ function Detalhe({
   const emitidos = trip.bilhetes.filter((b) => b.status !== "cancelada").length;
   const cancelados = trip.bilhetes.length - emitidos;
   const diferenca = trip.relato ? trip.relato.passageiros - acessos : null;
+  const realizado = trip.tipo === "chegada" ? trip.chegou_em : trip.partiu_em;
 
   const linhaDoTempo = [
     { em: trip.previsto_em, texto: "Horário previsto no terminal", previsto: true },
@@ -137,23 +150,43 @@ function Detalhe({
     {
       key: "codigo",
       header: "Bilhete",
+      nowrap: true,
+      mobile: "title",
       render: (b) => <span className="tabular">{b.codigo}</span>,
     },
-    { key: "trecho", header: "Trecho", render: (b) => `${b.origem || "—"} → ${b.destino || "—"}` },
+    {
+      key: "trecho",
+      header: "Trecho",
+      mobile: "subtitle",
+      cellClassName: "min-w-[12rem]",
+      render: (b) => (
+        <>
+          {b.origem ? tituloNome(b.origem) : <Vazio />} →{" "}
+          {b.destino ? tituloNome(b.destino) : <Vazio />}
+        </>
+      ),
+    },
     {
       key: "valor",
       header: "Valor",
       align: "right",
-      render: (b) => <span className="tabular">{b.valor !== null ? brl(b.valor) : "—"}</span>,
+      nowrap: true,
+      mobile: "meta",
+      render: (b) =>
+        b.valor !== null ? <span className="tabular">{brl(b.valor)}</span> : <Vazio />,
     },
     {
       key: "grat",
       header: "Gratuidade",
-      render: (b) => <span className="text-muted-foreground">{b.gratuidade || "—"}</span>,
+      mobile: "meta",
+      render: (b) =>
+        b.gratuidade ? <span className="text-muted-foreground">{b.gratuidade}</span> : <Vazio />,
     },
     {
       key: "emitido",
       header: "Emitido em",
+      nowrap: true,
+      hideOnMobile: true,
       render: (b) => (
         <span className="tabular text-muted-foreground">{dataHora(b.emitido_em)}</span>
       ),
@@ -161,8 +194,11 @@ function Detalhe({
     {
       key: "status",
       header: "Status",
+      mobile: "badge",
       render: (b) => (
-        <StatusBadge tone={bilheteTone[b.status].tone}>{bilheteTone[b.status].label}</StatusBadge>
+        <StatusBadge size="sm" tone={bilheteTone[b.status].tone}>
+          {bilheteTone[b.status].label}
+        </StatusBadge>
       ),
     },
   ];
@@ -171,22 +207,40 @@ function Detalhe({
     {
       key: "hora",
       header: "Horário",
+      nowrap: true,
+      mobile: "meta",
       render: (e) => <span className="tabular font-semibold">{hora(e.ocorrido_em)}</span>,
     },
-    { key: "disp", header: "Equipamento", render: (e) => e.dispositivo || "—" },
+    {
+      key: "evento",
+      header: "Evento",
+      mobile: "title",
+      render: (e) => eventoLabel[e.evento],
+    },
+    {
+      key: "disp",
+      header: "Equipamento",
+      mobile: "subtitle",
+      render: (e) => e.dispositivo || <Vazio />,
+    },
     {
       key: "bilhete",
       header: "Passagem",
-      render: (e) => (
-        <span className="tabular text-muted-foreground">{e.bilhete_codigo || "—"}</span>
-      ),
+      nowrap: true,
+      mobile: "meta",
+      render: (e) =>
+        e.bilhete_codigo ? (
+          <span className="tabular text-muted-foreground">{e.bilhete_codigo}</span>
+        ) : (
+          <Vazio />
+        ),
     },
-    { key: "evento", header: "Evento", render: (e) => eventoLabel[e.evento] },
     {
       key: "status",
       header: "Status",
+      mobile: "badge",
       render: (e) => (
-        <StatusBadge tone={eventoStatusTone[e.status].tone}>
+        <StatusBadge size="sm" tone={eventoStatusTone[e.status].tone}>
           {eventoStatusTone[e.status].label}
         </StatusBadge>
       ),
@@ -197,45 +251,95 @@ function Detalhe({
     <>
       <PageHeader
         title={`Viagem ${trip.numero || tipoViagemLabel[trip.tipo]}`}
-        subtitle={`${trip.origem} → ${trip.destino} · ${dataBR(trip.data)}`}
-        actions={
-          <>
-            <StatusBadge tone={tripStatusTone[trip.status].tone}>
-              {tripStatusTone[trip.status].label}
+        subtitle={`${tituloNome(trip.origem)} → ${tituloNome(trip.destino)} · ${dataBR(trip.data)}`}
+        actions={<AcoesViagem viagem={trip} plataformas={plataformas} variant="botao" />}
+      >
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <StatusBadge tone={tripStatusTone[trip.status].tone}>
+            {tripStatusTone[trip.status].label}
+          </StatusBadge>
+          {trip.conciliacao && (
+            <StatusBadge tone={conciliacaoTone[trip.conciliacao.situacao].tone} dot={false}>
+              {conciliacaoTone[trip.conciliacao.situacao].label}
             </StatusBadge>
-            {trip.conciliacao && (
-              <StatusBadge tone={conciliacaoTone[trip.conciliacao.situacao].tone} dot={false}>
-                {conciliacaoTone[trip.conciliacao.situacao].label}
-              </StatusBadge>
-            )}
-            <AcoesViagem viagem={trip} plataformas={plataformas} variant="botao" />
-          </>
-        }
-      />
+          )}
+        </div>
+      </PageHeader>
 
-      <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+      <StatGrid className="mb-5">
+        <StatCard
+          label={trip.tipo === "chegada" ? "Chegada" : "Partida"}
+          value={realizado ? hora(realizado) : horaPrevista(trip)}
+          icon={Clock}
+          tone={realizado ? "success" : "info"}
+          hint={
+            realizado
+              ? `Previsto ${horaPrevista(trip)}`
+              : trip.previsto_em
+                ? "Previsto no terminal"
+                : "Horário no terminal a informar"
+          }
+        />
+        <StatCard
+          label="Plataforma"
+          value={trip.plataforma?.numero ?? "—"}
+          icon={MapPin}
+          tone="neutral"
+          hint={trip.plataforma ? undefined : "A definir"}
+        />
+        <StatCard
+          label="Passagens"
+          value={num(emitidos)}
+          icon={Ticket}
+          hint={cancelados > 0 ? `${num(cancelados)} canceladas` : "emitidas pela empresa"}
+        />
+        <StatCard
+          label="Embarques"
+          value={num(acessos)}
+          icon={Bus}
+          tone="info"
+          hint="acessos na catraca"
+        />
+      </StatGrid>
+
+      <div className="grid items-start gap-5 xl:grid-cols-[1.4fr_1fr]">
         <SectionCard title="Dados da viagem" bodyClassName="p-0">
           <dl className="grid grid-cols-2 gap-px bg-border md:grid-cols-3">
-            <Item label="Empresa" value={nomeEmpresaViagem(trip)} />
+            <Item label="Empresa" value={<EmpresaViagem v={trip} />} />
             <Item label="Tipo" value={tipoViagemLabel[trip.tipo]} />
-            <Item label="Linha" value={trip.linha ? trip.linha.descricao : "Lançada manualmente"} />
-            <Item label="Origem" value={trip.origem} />
-            <Item label="Destino" value={trip.destino} />
+            <Item
+              label="Linha"
+              value={trip.linha ? tituloNome(trip.linha.descricao) : "Lançada manualmente"}
+            />
+            <Item label="Origem" value={tituloNome(trip.origem)} />
+            <Item label="Destino" value={tituloNome(trip.destino)} />
             <Item label="Data" value={dataBR(trip.data)} />
-            <Item label="Previsto no terminal" value={horaPrevista(trip)} />
-            <Item label="Chegada" value={trip.chegou_em ? hora(trip.chegou_em) : "—"} />
-            <Item label="Partida" value={trip.partiu_em ? hora(trip.partiu_em) : "—"} />
-            <Item label="Plataforma" value={trip.plataforma?.numero ?? "—"} />
-            <Item label="Veículo" value={trip.veiculo || "—"} />
+            <Item
+              label="Previsto no terminal"
+              value={
+                trip.previsto_em ? (
+                  horaPrevista(trip)
+                ) : (
+                  <Vazio title="Horário no terminal a informar" />
+                )
+              }
+            />
+            <Item label="Chegada" value={trip.chegou_em ? hora(trip.chegou_em) : <Vazio />} />
+            <Item label="Partida" value={trip.partiu_em ? hora(trip.partiu_em) : <Vazio />} />
+            <Item
+              label="Plataforma"
+              value={trip.plataforma?.numero ?? <Vazio title="A definir" />}
+            />
+            <Item label="Veículo" value={trip.veiculo || <Vazio />} />
             <Item label="Atualizada em" value={dataHora(trip.atualizado_em)} />
           </dl>
           {trip.observacao && (
-            <p className="border-t border-border px-5 py-3 text-sm text-muted-foreground">
+            <p className="border-t border-border px-4 py-3 text-sm text-muted-foreground sm:px-5">
               <span className="font-semibold text-foreground">Observação:</span> {trip.observacao}
             </p>
           )}
           {!trip.previsto_em && trip.tipo !== "partida" && (
-            <p className="border-t border-border px-5 py-3 text-xs text-muted-foreground">
+            <p className="border-t border-border px-4 py-3 text-xs text-muted-foreground sm:px-5">
               A grade pública só informa o horário na cidade de origem. O horário no terminal chega
               pela integração da empresa ou pode ser lançado em Ações → Editar horário.
             </p>
@@ -249,9 +353,12 @@ function Detalhe({
             <Row label="Acessos na catraca" value={acessos} />
             <Row label="Reentradas" value={reentradas} />
             <Row label="Acessos negados" value={negados} />
-            <Row label="Relato da empresa" value={trip.relato ? trip.relato.passageiros : "—"} />
+            <Row
+              label="Relato da empresa"
+              value={trip.relato ? trip.relato.passageiros : <Vazio title="Ainda não enviado" />}
+            />
           </ul>
-          <div className="mt-5 rounded-lg border border-border bg-muted/60 p-4">
+          <div className="mt-5 rounded-xl bg-muted/60 p-4">
             <p className="text-xs font-bold tracking-[0.12em] uppercase text-muted-foreground">
               Situação
             </p>
@@ -281,36 +388,14 @@ function Detalhe({
         </SectionCard>
       </div>
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Passagens" value={num(emitidos)} icon={Ticket} />
-        <StatCard label="Embarques (catraca)" value={num(acessos)} icon={Bus} tone="info" />
-        <StatCard
-          label="Plataforma"
-          value={trip.plataforma?.numero ?? "—"}
-          icon={MapPin}
-          tone="neutral"
-        />
-        <StatCard
-          label={trip.tipo === "chegada" ? "Chegada" : "Partida"}
-          value={
-            trip.tipo === "chegada"
-              ? trip.chegou_em
-                ? hora(trip.chegou_em)
-                : "—"
-              : trip.partiu_em
-                ? hora(trip.partiu_em)
-                : "—"
-          }
-          icon={Clock}
-          tone="success"
-          hint={`Previsto ${horaPrevista(trip)}`}
-        />
-      </div>
-
-      <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_1.4fr]">
+      <div className="mt-5 grid items-start gap-5 xl:grid-cols-[1fr_1.4fr]">
         <SectionCard title="Linha do tempo">
           {linhaDoTempo.length === 0 ? (
-            <EmptyState message="Nenhum registro de horário para esta viagem ainda." />
+            <EmptyState
+              compact
+              icon={Clock}
+              message="Nenhum registro de horário para esta viagem ainda."
+            />
           ) : (
             <ol className="relative space-y-4 border-l border-border pl-5">
               {linhaDoTempo.map((p, i) => (
@@ -334,7 +419,9 @@ function Detalhe({
           <DataTable
             columns={colEventos}
             rows={trip.eventos}
-            emptyMessage="Nenhuma leitura de catraca vinculada a esta viagem."
+            empty={
+              <EmptyState compact message="Nenhuma leitura de catraca vinculada a esta viagem." />
+            }
           />
         </SectionCard>
       </div>
@@ -348,7 +435,9 @@ function Detalhe({
           <DataTable
             columns={colBilhetes}
             rows={trip.bilhetes}
-            emptyMessage="Nenhum bilhete recebido da empresa para esta viagem."
+            empty={
+              <EmptyState compact message="Nenhum bilhete recebido da empresa para esta viagem." />
+            }
           />
         </SectionCard>
       </div>
@@ -356,20 +445,20 @@ function Detalhe({
   );
 }
 
-function Item({ label, value }: { label: string; value: string }) {
+function Item({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="bg-card px-5 py-4">
+    <div className="min-w-0 bg-card px-4 py-3.5 sm:px-5 sm:py-4">
       <dt className="text-[11px] font-bold tracking-[0.12em] uppercase text-muted-foreground">
         {label}
       </dt>
-      <dd className="mt-1 font-semibold">{value}</dd>
+      <dd className="mt-1 font-semibold break-words">{value}</dd>
     </div>
   );
 }
 
-function Row({ label, value }: { label: string; value: number | string }) {
+function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <li className="flex items-center justify-between border-b border-border/60 pb-2 last:border-0">
+    <li className="flex items-center justify-between gap-3 border-b border-border/60 pb-2 last:border-0">
       <span className="text-muted-foreground">{label}</span>
       <span className="tabular font-display text-lg font-bold">{value}</span>
     </li>

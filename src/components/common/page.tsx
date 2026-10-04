@@ -37,28 +37,26 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        "mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-start md:justify-between md:gap-6",
+        "mb-5 flex flex-col gap-3 md:mb-6 md:flex-row md:items-center md:justify-between md:gap-6",
         className,
       )}
     >
       <div className="min-w-0 flex-1">
         {eyebrow && (
-          <div className="mb-1.5 flex flex-wrap items-center gap-1.5 text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase [&_a]:transition-colors [&_a:hover]:text-primary">
+          <div className="mb-1 flex flex-wrap items-center gap-1.5 text-xs font-medium text-muted-foreground [&_a]:transition-colors [&_a:hover]:text-primary">
             {eyebrow}
           </div>
         )}
-        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-[1.75rem] md:leading-tight">
+        <h1 className="text-xl leading-tight font-bold tracking-tight text-foreground md:text-2xl">
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-1.5 max-w-2xl text-sm text-pretty text-muted-foreground md:text-[0.9375rem]">
-            {subtitle}
-          </p>
+          <p className="mt-1 max-w-2xl text-sm text-pretty text-muted-foreground">{subtitle}</p>
         )}
         {children}
       </div>
       {actions && (
-        <div className="flex flex-wrap items-center gap-2 max-sm:[&>*]:flex-1 md:shrink-0 md:justify-end md:pt-1">
+        <div className="flex flex-wrap items-center gap-2 max-sm:[&>*]:flex-1 md:shrink-0 md:justify-end">
           {actions}
         </div>
       )}
@@ -72,7 +70,7 @@ const temPadding = (classes?: string) => /(^|\s)p[xytrbl]?-/.test(classes ?? "")
 
 /**
  * Cartão de seção com cabeçalho opcional (título, descrição, ações).
- * Padding padrão p-4 (celular) / p-5; passe `bodyClassName="p-0"` para tabelas.
+ * Padding padrão p-4 (celular) / p-6; passe `bodyClassName="p-0"` para tabelas.
  *
  * <SectionCard title="Partidas de hoje" description="Fonte: DER-MG" actions={<Button size="sm">Ver todas</Button>} bodyClassName="p-0">
  *   <DataTable ... />
@@ -97,15 +95,15 @@ export function SectionCard({
     // overflow-clip (e não hidden) para não quebrar o thead sticky das tabelas.
     <Card className={cn("surface-card gap-0 overflow-clip p-0", className)}>
       {(title || actions) && (
-        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 border-b border-border px-4 py-3.5 sm:px-5 sm:py-4">
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 border-b border-border/70 px-4 py-4 sm:px-6">
           <div className="min-w-0 flex-1 basis-[14rem]">
             {title && (
-              <h2 className="font-display text-base leading-snug font-bold text-foreground">
+              <h2 className="text-base leading-snug font-semibold tracking-tight text-foreground">
                 {title}
               </h2>
             )}
             {description && (
-              <p className="mt-0.5 text-xs text-pretty text-muted-foreground sm:text-[0.8125rem]">
+              <p className="mt-0.5 text-[0.8125rem] text-pretty text-muted-foreground">
                 {description}
               </p>
             )}
@@ -113,7 +111,7 @@ export function SectionCard({
           {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
         </div>
       )}
-      <div className={cn(!temPadding(bodyClassName) && "p-4 sm:p-5", bodyClassName)}>
+      <div className={cn(!temPadding(bodyClassName) && "p-4 sm:p-6", bodyClassName)}>
         {children}
       </div>
     </Card>

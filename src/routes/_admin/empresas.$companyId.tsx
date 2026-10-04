@@ -1,6 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
-import { ArrowLeft, Building2, Loader2, Pencil, ShieldAlert } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarCheck,
+  CalendarDays,
+  Clock,
+  Loader2,
+  Pencil,
+  Route as RouteIcon,
+  ShieldAlert,
+} from "lucide-react";
 import {
   DataTable,
   EmptyState,
@@ -9,8 +18,11 @@ import {
   SectionCard,
   SourceNote,
   StatCard,
+  StatGrid,
   StatusBadge,
+  Vazio,
   feeTone,
+  ouVazio,
   tripStatusTone,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
@@ -49,7 +61,7 @@ import {
   type EmpresaCadastro,
 } from "@/services/acesso";
 import type { Viagem } from "@/services/gestao-tipos";
-import { brl, dataCurta, hojeISO, hora, num } from "@/lib/format";
+import { brl, dataCurta, hojeISO, hora, num, tituloNome } from "@/lib/format";
 
 export const Route = createFileRoute("/_admin/empresas/$companyId")({
   head: () => ({
@@ -166,69 +178,95 @@ function CompanyDetail() {
     );
   }
 
-  const contato = [company.contato, company.email, company.telefone].filter(Boolean).join(" · ");
+  const nome = tituloNome(nomeExibicao(company));
+  const temFantasia = Boolean(company.nome_fantasia?.trim());
+  const contato = [company.contato, company.email, company.telefone].filter(Boolean);
 
   return (
     <>
-      {back}
-
-      <div className="mb-6 flex flex-wrap items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
-        <div
-          className="grid h-16 w-16 place-items-center rounded-xl gradient-institutional text-primary-foreground"
-          style={company.cor ? { background: company.cor } : undefined}
-        >
-          <Building2 className="h-7 w-7" />
-        </div>
-        <div className="flex-1">
-          <h1 className="font-display text-2xl font-bold">{nomeExibicao(company)}</h1>
-          <p className="text-sm text-muted-foreground">
-            {company.nome_fantasia?.trim() && `${company.razao_social} · `}
-            CNPJ {formatCnpj(company.cnpj)} · Fonte {company.fonte}
-            {company.codigo_antt && ` · Código ANTT ${company.codigo_antt}`}
-          </p>
-          {contato && <p className="mt-0.5 text-sm text-muted-foreground">{contato}</p>}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+      <PageHeader
+        eyebrow={
+          empresaUsuario ? (
+            <span>Minha empresa</span>
+          ) : (
+            <Link to="/empresas" className="inline-flex items-center gap-1">
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> Empresas
+            </Link>
+          )
+        }
+        title={
+          <span className="flex items-start gap-3">
+            <span
+              aria-hidden="true"
+              className="mt-2 h-3 w-3 shrink-0 rounded-full bg-primary md:mt-2.5"
+              style={company.cor ? { backgroundColor: company.cor } : undefined}
+            />
+            <span className="min-w-0 text-balance">{nome}</span>
+          </span>
+        }
+        subtitle={temFantasia ? tituloNome(company.razao_social) : undefined}
+        actions={
+          podeEditarCadastro && (
+            <Button variant="outline" onClick={() => setEditando(true)}>
+              <Pencil className="h-4 w-4" /> Editar cadastro
+            </Button>
+          )
+        }
+      >
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <StatusBadge tone={company.ativa ? "success" : "neutral"}>
             {company.ativa ? "Ativa" : "Inativa"}
           </StatusBadge>
           <StatusBadge tone={company.opera_no_terminal ? "info" : "neutral"}>
             {company.opera_no_terminal ? "Opera no terminal" : "Não opera no terminal"}
           </StatusBadge>
-          {podeEditarCadastro && (
-            <Button size="sm" variant="outline" onClick={() => setEditando(true)}>
-              <Pencil className="h-4 w-4" /> Editar cadastro
-            </Button>
-          )}
         </div>
-      </div>
+        <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:flex sm:flex-wrap sm:gap-x-8">
+          <Dado rotulo="CNPJ">
+            <span className="tabular whitespace-nowrap">{formatCnpj(company.cnpj)}</span>
+          </Dado>
+          {company.codigo_antt && (
+            <Dado rotulo="Código ANTT">
+              <span className="tabular">{company.codigo_antt}</span>
+            </Dado>
+          )}
+          <Dado rotulo="Fonte">{ouVazio(company.fonte)}</Dado>
+          {contato.length > 0 && (
+            <Dado rotulo="Contato" className="col-span-2 sm:col-span-1">
+              <span className="break-words">{contato.join(" · ")}</span>
+            </Dado>
+          )}
+        </dl>
+      </PageHeader>
 
-      <PageHeader title="Painel da empresa" subtitle="Linhas autorizadas que atendem Manhuaçu" />
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Linhas" value={companyLines.length} />
+      <StatGrid>
+        <StatCard label="Linhas" value={num(companyLines.length)} icon={RouteIcon} />
         <StatCard
-          label="Partidas de Manhuaçu por semana"
-          value={companySchedules.reduce((s, h) => s + h.dias_semana.length, 0)}
+          label="Partidas por semana"
+          value={num(companySchedules.reduce((s, h) => s + h.dias_semana.length, 0))}
+          hint="Saindo de Manhuaçu"
+          icon={CalendarDays}
           tone="info"
         />
         <StatCard
           label="Partidas hoje"
-          value={today.length}
+          value={num(today.length)}
           hint="Pelos horários publicados"
+          icon={Clock}
           tone="success"
         />
         <StatCard
-          label="Viagens registradas hoje"
+          label="Viagens hoje"
           value={viagens.data ? num(viagens.data.length) : "—"}
           hint={viagens.data?.length ? `${num(embarquesHoje)} embarques na catraca` : undefined}
+          icon={CalendarCheck}
           tone="warning"
         />
-      </div>
+      </StatGrid>
 
       <div className="mt-6">
         <Tabs defaultValue="linhas">
-          <TabsList className="flex-wrap">
+          <TabsList>
             <TabsTrigger value="linhas">Linhas</TabsTrigger>
             <TabsTrigger value="horarios">Horários</TabsTrigger>
             <TabsTrigger value="viagens">Viagens de hoje</TabsTrigger>
@@ -244,25 +282,45 @@ function CompanyDetail() {
                     {
                       key: "code",
                       header: "Prefixo",
+                      nowrap: true,
+                      mobile: "subtitle",
                       render: (l) => <span className="tabular font-semibold">{l.codigo}</span>,
                     },
-                    { key: "desc", header: "Linha", render: (l) => l.descricao },
+                    {
+                      key: "desc",
+                      header: "Linha",
+                      mobile: "title",
+                      cellClassName: "min-w-[14rem]",
+                      render: (l) => tituloNome(l.descricao),
+                    },
                     {
                       key: "rel",
                       header: "Em Manhuaçu",
-                      render: (l) => <span className="capitalize">{l.relacao_manhuacu}</span>,
+                      nowrap: true,
+                      mobile: "badge",
+                      render: (l) => (
+                        <StatusBadge size="sm" tone="neutral" dot={false}>
+                          <span className="first-letter:uppercase">{l.relacao_manhuacu}</span>
+                        </StatusBadge>
+                      ),
                     },
                     {
                       key: "cities",
-                      header: "Cidades atendidas a partir de Manhuaçu",
-                      render: (l) => (
-                        <span className="text-muted-foreground">
-                          {l.cidades_atendidas.join(", ")}
-                        </span>
-                      ),
+                      header: "Cidades atendidas",
+                      mobile: "meta",
+                      cellClassName: "min-w-[14rem]",
+                      render: (l) =>
+                        l.cidades_atendidas.length ? (
+                          <span className="text-muted-foreground">
+                            {l.cidades_atendidas.map((c) => tituloNome(c)).join(", ")}
+                          </span>
+                        ) : (
+                          <Vazio />
+                        ),
                     },
                   ]}
                   rows={companyLines}
+                  emptyMessage="Nenhuma linha desta empresa nos dados públicos."
                 />
               )}
             </SectionCard>
@@ -277,16 +335,35 @@ function CompanyDetail() {
                     {
                       key: "time",
                       header: "Horário",
+                      nowrap: true,
+                      mobile: "badge",
                       render: (h) => (
                         <span className="tabular font-semibold">{horaCurta(h.hora)}</span>
                       ),
                     },
-                    { key: "dest", header: "Destino", render: (h) => destinoDaPartida(h) },
-                    { key: "type", header: "Serviço", render: (h) => h.tipo_servico || "—" },
-                    { key: "days", header: "Dias", render: (h) => descreverDias(h.dias_semana) },
+                    {
+                      key: "dest",
+                      header: "Destino",
+                      mobile: "title",
+                      render: (h) => tituloNome(destinoDaPartida(h)),
+                    },
+                    {
+                      key: "type",
+                      header: "Serviço",
+                      mobile: "meta",
+                      render: (h) => ouVazio(h.tipo_servico || null),
+                    },
+                    {
+                      key: "days",
+                      header: "Dias",
+                      mobile: "meta",
+                      render: (h) => descreverDias(h.dias_semana),
+                    },
                     {
                       key: "line",
                       header: "Linha",
+                      nowrap: true,
+                      mobile: "subtitle",
                       render: (h) => (
                         <span className="tabular text-muted-foreground">{h.linha.codigo}</span>
                       ),
@@ -317,19 +394,29 @@ function CompanyDetail() {
                     {
                       key: "prev",
                       header: "Previsto",
-                      render: (v) => (
-                        <span className="tabular font-semibold">
-                          {v.previsto_em ? hora(v.previsto_em) : "—"}
-                        </span>
-                      ),
+                      nowrap: true,
+                      mobile: "meta",
+                      render: (v) =>
+                        v.previsto_em ? (
+                          <span className="tabular font-semibold">{hora(v.previsto_em)}</span>
+                        ) : (
+                          <Vazio />
+                        ),
                     },
-                    { key: "tipo", header: "Tipo", render: (v) => TIPO_VIAGEM[v.tipo] },
+                    {
+                      key: "tipo",
+                      header: "Tipo",
+                      mobile: "meta",
+                      render: (v) => TIPO_VIAGEM[v.tipo],
+                    },
                     {
                       key: "trecho",
                       header: "Trecho",
+                      mobile: "title",
+                      cellClassName: "min-w-[12rem]",
                       render: (v) => (
                         <span>
-                          {v.origem} → {v.destino}
+                          {tituloNome(v.origem)} → {tituloNome(v.destino)}
                           {v.numero && (
                             <span className="ml-1.5 text-xs text-muted-foreground">
                               #{v.numero}
@@ -342,6 +429,7 @@ function CompanyDetail() {
                       key: "catraca",
                       header: "Catraca",
                       align: "right",
+                      mobile: "meta",
                       render: (v) => (
                         <span className="tabular">
                           {embarques.data ? num(porViagem.get(v.id)?.catraca ?? 0) : "—"}
@@ -352,6 +440,7 @@ function CompanyDetail() {
                       key: "bilhetes",
                       header: "Bilhetes",
                       align: "right",
+                      mobile: "meta",
                       render: (v) => (
                         <span className="tabular">
                           {embarques.data ? num(porViagem.get(v.id)?.bilhetes ?? 0) : "—"}
@@ -361,10 +450,11 @@ function CompanyDetail() {
                     {
                       key: "status",
                       header: "Status",
+                      mobile: "badge",
                       render: (v) => {
                         const s = tripStatusTone[v.status];
                         return (
-                          <StatusBadge tone={s?.tone ?? "neutral"}>
+                          <StatusBadge size="sm" tone={s?.tone ?? "neutral"}>
                             {s?.label ?? v.status}
                           </StatusBadge>
                         );
@@ -398,11 +488,15 @@ function CompanyDetail() {
                       {
                         key: "num",
                         header: "Número",
+                        nowrap: true,
+                        mobile: "subtitle",
                         render: (t) => <span className="tabular font-semibold">{t.numero}</span>,
                       },
                       {
                         key: "comp",
                         header: "Competência",
+                        nowrap: true,
+                        mobile: "title",
                         render: (t) => (
                           <span className="tabular">{competenciaLegivel(t.competencia)}</span>
                         ),
@@ -411,17 +505,22 @@ function CompanyDetail() {
                         key: "emb",
                         header: "Embarques",
                         align: "right",
+                        mobile: "meta",
                         render: (t) => <span className="tabular">{num(t.embarques)}</span>,
                       },
                       {
                         key: "valor",
                         header: "Valor",
                         align: "right",
+                        nowrap: true,
+                        mobile: "meta",
                         render: (t) => <span className="tabular">{brl(Number(t.valor))}</span>,
                       },
                       {
                         key: "venc",
                         header: "Vencimento",
+                        nowrap: true,
+                        mobile: "meta",
                         render: (t) => (
                           <span className="tabular">{dataCurta(`${t.vencimento}T12:00:00`)}</span>
                         ),
@@ -429,10 +528,11 @@ function CompanyDetail() {
                       {
                         key: "status",
                         header: "Status",
+                        mobile: "badge",
                         render: (t) => {
                           const s = feeTone[t.status];
                           return (
-                            <StatusBadge tone={s?.tone ?? "neutral"}>
+                            <StatusBadge size="sm" tone={s?.tone ?? "neutral"}>
                               {s?.label ?? "Cancelada"}
                             </StatusBadge>
                           );
@@ -506,8 +606,8 @@ function EditarCadastro({ empresa, onFechar }: { empresa: EmpresaCadastro; onFec
         <DialogHeader>
           <DialogTitle>Editar cadastro</DialogTitle>
           <DialogDescription>
-            {empresa.razao_social} · CNPJ {formatCnpj(empresa.cnpj)}. Razão social e CNPJ vêm dos
-            dados públicos e não são editados aqui.
+            {tituloNome(empresa.razao_social)} · CNPJ {formatCnpj(empresa.cnpj)}. Razão social e
+            CNPJ vêm dos dados públicos e não são editados aqui.
           </DialogDescription>
         </DialogHeader>
 
@@ -543,7 +643,7 @@ function EditarCadastro({ empresa, onFechar }: { empresa: EmpresaCadastro; onFec
               <Input id="cor" value={form.cor} onChange={set("cor")} placeholder="#1E3A8A" />
             </div>
           </Campo>
-          <div className="flex items-center justify-between gap-4 rounded-lg border border-border p-3 sm:col-span-2">
+          <div className="flex items-center justify-between gap-4 rounded-xl bg-muted/60 p-3 sm:col-span-2">
             <div>
               <Label htmlFor="opera">Opera no terminal</Label>
               <p className="text-xs text-muted-foreground">
@@ -571,6 +671,25 @@ function EditarCadastro({ empresa, onFechar }: { empresa: EmpresaCadastro; onFec
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function Dado({
+  rotulo,
+  className,
+  children,
+}: {
+  rotulo: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className={`min-w-0 ${className ?? ""}`}>
+      <dt className="text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase">
+        {rotulo}
+      </dt>
+      <dd className="mt-0.5 font-medium text-foreground">{children}</dd>
+    </div>
   );
 }
 

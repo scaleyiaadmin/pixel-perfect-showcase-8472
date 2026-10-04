@@ -6,13 +6,28 @@ import { toneClass, toneText, type Tone } from "./status";
 
 /* -------------------------------- StatCard ------------------------------- */
 
+/** Selo do ícone por tom: quadradinho com fundo suave do tom (ERP). */
+const seloIcone: Record<Tone, string> = {
+  primary: "bg-primary/10 text-primary",
+  info: "bg-info-soft text-info",
+  success: "bg-success-soft text-success",
+  warning: "bg-warning-soft text-warning-foreground",
+  danger: "bg-danger-soft text-danger",
+  neutral: "bg-neutral-soft text-muted-foreground",
+};
+
 /**
- * Indicador (KPI). Um só estilo para o sistema todo; compacto no celular.
- * - `variant="card"` (padrão): cartão branco, ícone opcional em selo do tom.
+ * Indicador (KPI) no padrão do ERP: cartão branco, rótulo pequeno em cima,
+ * valor grande em negrito, dica embaixo e ícone num quadradinho do tom no
+ * canto superior direito. Compacto no celular (ícone menor, no canto).
+ * - `variant="card"` (padrão): cartão branco.
  * - `variant="soft"`: fundo suave do tom, sem sombra — substitui os antigos
  *   "mini-cards coloridos" (situação das viagens, divergências etc.).
+ * - `valueTone`: pinta o valor com a cor do tom (`true` = o próprio `tone`).
+ *   Na variante soft o valor já sai colorido.
  *
  * <StatCard label="Partidas hoje" value={42} icon={Bus} tone="info" hint="12 já saíram" />
+ * <StatCard label="Vencidas" value={brl(1900)} icon={AlertTriangle} tone="danger" valueTone />
  * <StatCard variant="soft" tone="danger" label="Atrasadas/canceladas" value={3} />
  */
 export function StatCard({
@@ -21,6 +36,7 @@ export function StatCard({
   hint,
   icon: Icon,
   tone = "primary",
+  valueTone,
   trend,
   variant = "card",
   className,
@@ -30,52 +46,60 @@ export function StatCard({
   hint?: ReactNode;
   icon?: LucideIcon;
   tone?: Tone;
+  /** Colore o valor: `true` usa o `tone`; ou passe outro tom. */
+  valueTone?: boolean | Tone;
   /** Texto curto de variação, exibido em verde antes do `hint` (ex.: "+12%"). */
   trend?: string;
   variant?: "card" | "soft";
   className?: string;
 }) {
   const soft = variant === "soft";
+  const tomValor: Tone | null =
+    typeof valueTone === "string" ? valueTone : valueTone || soft ? tone : null;
   return (
     <Card
       className={cn(
-        "flex min-w-0 flex-col gap-0 p-4 sm:p-5",
-        soft ? cn("border shadow-none", toneClass[tone]) : "surface-card",
+        "relative flex min-w-0 flex-col gap-0 p-4 sm:p-5 xl:p-6",
+        soft ? cn("border-0 shadow-none", toneClass[tone]) : "surface-card card-hover",
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <p
-          className={cn(
-            "line-clamp-2 min-w-0 text-[11px] leading-snug font-semibold tracking-[0.08em] uppercase sm:text-xs",
-            soft ? "opacity-90" : "text-muted-foreground",
-          )}
-        >
-          {label}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div className={cn("min-w-0 flex-1", Icon && "max-sm:pr-8")}>
+          <p
+            className={cn(
+              "text-[0.8125rem] leading-snug font-medium text-pretty break-words sm:text-sm",
+              soft ? "opacity-90" : "text-muted-foreground",
+            )}
+          >
+            {label}
+          </p>
+          <p
+            className={cn(
+              "tabular mt-1.5 text-2xl leading-none font-bold tracking-tight break-words sm:mt-2 sm:text-[1.75rem]",
+              tomValor ? toneText[tomValor] : "text-foreground",
+            )}
+          >
+            {value}
+          </p>
+        </div>
         {Icon && (
           <span
             className={cn(
-              "grid h-8 w-8 shrink-0 place-items-center rounded-lg sm:h-9 sm:w-9",
-              soft ? "bg-card/70" : cn("border", toneClass[tone]),
+              "grid shrink-0 place-items-center rounded-xl",
+              // Celular: menor e no canto, para o rótulo ter espaço.
+              "absolute top-3 right-3 h-7 w-7 sm:static sm:h-11 sm:w-11",
+              soft ? "bg-card/70" : seloIcone[tone],
             )}
           >
-            <Icon className="h-4 w-4 sm:h-[1.125rem] sm:w-[1.125rem]" aria-hidden="true" />
+            <Icon className="h-4 w-4 sm:h-[1.3rem] sm:w-[1.3rem]" aria-hidden="true" />
           </span>
         )}
       </div>
-      <p
-        className={cn(
-          "tabular mt-2 font-display text-2xl leading-none font-bold tracking-tight break-words sm:mt-3 sm:text-3xl",
-          soft ? toneText[tone] : "text-foreground",
-        )}
-      >
-        {value}
-      </p>
       {(hint || trend) && (
         <p
           className={cn(
-            "mt-1.5 text-xs text-pretty sm:mt-2",
+            "mt-2 text-xs text-pretty sm:text-[0.8125rem]",
             soft ? "opacity-90" : "text-muted-foreground",
           )}
         >

@@ -30,14 +30,15 @@ import {
   SectionCard,
   SourceNote,
   StatCard,
+  StatGrid,
   StatusBadge,
   DataTable,
+  Vazio,
   tripStatusTone,
   type Column,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { PrefeituraLogo, RodoviariaLogo } from "@/components/brand/Logos";
-import { num } from "@/lib/format";
+import { num, tituloNome } from "@/lib/format";
 import { mesAno, useEmpresas, useLinhas, usePassagensMensais } from "@/services/dados-publicos";
 import {
   dataBR,
@@ -99,6 +100,26 @@ const tooltipStyle = {
   background: "var(--color-card)",
   fontSize: 13,
 };
+
+/** Nome da empresa para exibição; sem empresa real mostra o traço (não o tipo da linha). */
+function EmpresaViagem({ v }: { v: ViagemDetalhada }) {
+  const nome = v.empresa?.nome_fantasia || v.empresa?.razao_social;
+  if (!nome) {
+    return (
+      <Vazio
+        title={
+          v.linha?.fonte === "DER-MG"
+            ? "Linha intermunicipal sem empresa informada"
+            : "Empresa não informada"
+        }
+      />
+    );
+  }
+  return <>{tituloNome(nome)}</>;
+}
+
+/** Corta nomes longos no eixo do gráfico de barras horizontais. */
+const rotuloEixo = (t: string) => (t.length > 18 ? `${t.slice(0, 17)}…` : t);
 
 function Dashboard() {
   const hoje = useHoje();
@@ -253,25 +274,42 @@ function Dashboard() {
     {
       key: "time",
       header: "Horário",
+      nowrap: true,
+      mobile: "meta",
       render: (v) => <span className="tabular font-semibold">{horaPrevista(v)}</span>,
     },
-    { key: "dest", header: "Destino", render: (v) => v.destino },
+    {
+      key: "dest",
+      header: "Destino",
+      mobile: "title",
+      cellClassName: "min-w-[10rem] font-medium",
+      render: (v) => tituloNome(v.destino),
+    },
     {
       key: "company",
       header: "Empresa",
-      render: (v) => <span className="text-muted-foreground">{nomeEmpresaViagem(v)}</span>,
+      mobile: "subtitle",
+      cellClassName: "text-muted-foreground",
+      render: (v) => <EmpresaViagem v={v} />,
     },
     {
       key: "platform",
       header: "Plataforma",
-      align: "center",
-      render: (v) => <span className="tabular">{v.plataforma?.numero ?? "—"}</span>,
+      nowrap: true,
+      mobile: "meta",
+      render: (v) =>
+        v.plataforma ? (
+          <span className="tabular">{v.plataforma.numero}</span>
+        ) : (
+          <Vazio title="Plataforma a definir" />
+        ),
     },
     {
       key: "status",
       header: "Status",
+      mobile: "badge",
       render: (v) => (
-        <StatusBadge tone={tripStatusTone[v.status].tone}>
+        <StatusBadge size="sm" tone={tripStatusTone[v.status].tone}>
           {tripStatusTone[v.status].label}
         </StatusBadge>
       ),
@@ -284,16 +322,11 @@ function Dashboard() {
 
   return (
     <>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-card px-5 py-4 shadow-[var(--shadow-card)]">
-        <PrefeituraLogo />
-        <RodoviariaLogo />
-      </div>
-
       <PageHeader
         title="Dashboard"
         subtitle="Visão geral do Terminal Rodoviário de Manhuaçu"
         actions={
-          <span className="text-sm font-medium text-muted-foreground">
+          <span className="text-sm font-medium text-muted-foreground first-letter:uppercase">
             {now?.toLocaleDateString("pt-BR", {
               timeZone: "America/Sao_Paulo",
               weekday: "long",
@@ -307,7 +340,7 @@ function Dashboard() {
 
       <QueryState isLoading={false} error={viagens.error} />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <StatGrid>
         <StatCard
           label="Viagens hoje"
           value={carregandoViagens ? "—" : num(contagem.total - contagem.canceladas)}
@@ -333,9 +366,9 @@ function Dashboard() {
           icon={Ban}
           tone="danger"
         />
-      </div>
+      </StatGrid>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <StatGrid className="mt-3 sm:mt-4">
         <StatCard
           label="Embarques hoje"
           value={embarquesDia.data ? num(embarquesHoje) : "—"}
@@ -362,39 +395,56 @@ function Dashboard() {
           }
         />
         <StatCard
-          label="Passagens interestaduais"
+          label="Passagens ANTT"
           value={passagensUltimoMes !== undefined ? num(passagensUltimoMes) : "—"}
           icon={Ticket}
           tone="primary"
-          hint={ultimoMes ? `emitidas em ${mesAno(ultimoMes)} (ANTT)` : undefined}
+          hint={ultimoMes ? `interestaduais emitidas em ${mesAno(ultimoMes)}` : undefined}
         />
-      </div>
+      </StatGrid>
 
       <div className="mt-6 grid gap-5 xl:grid-cols-[1.15fr_1fr]">
-        <div className="overflow-hidden rounded-xl gradient-institutional p-6 text-primary-foreground shadow-[var(--shadow-raised)]">
-          <p className="text-xs font-bold tracking-[0.2em] uppercase text-primary-foreground/70">
-            Próxima partida
-          </p>
+        <SectionCard
+          title="Próxima partida"
+          className="flex flex-col"
+          bodyClassName="flex flex-1 flex-col"
+          actions={
+            proxima ? (
+              <StatusBadge size="sm" tone={tripStatusTone[proxima.status].tone}>
+                {tripStatusTone[proxima.status].label}
+              </StatusBadge>
+            ) : undefined
+          }
+        >
           {proxima ? (
             <>
-              <div className="mt-6 flex flex-wrap items-end gap-6">
-                <p className="tabular font-display text-6xl leading-none font-extrabold">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+                <p className="tabular rounded-xl bg-primary-soft px-4 py-2.5 font-display text-4xl leading-none font-bold text-primary sm:text-5xl">
                   {horaPrevista(proxima)}
                 </p>
-                <div>
-                  <p className="font-display text-2xl font-bold">{proxima.destino}</p>
-                  <p className="text-primary-foreground/80">
-                    {nomeEmpresaViagem(proxima)}
-                    {proxima.plataforma ? ` · Plataforma ${proxima.plataforma.numero}` : ""}
+                <div className="min-w-0">
+                  <p className="font-display text-lg font-bold break-words text-foreground sm:text-xl">
+                    {tituloNome(proxima.destino)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {proxima.empresa
+                      ? tituloNome(nomeEmpresaViagem(proxima))
+                      : "Empresa não informada"}
+                    {" · "}
+                    {proxima.plataforma
+                      ? `Plataforma ${proxima.plataforma.numero}`
+                      : "Plataforma a definir"}
                   </p>
                 </div>
               </div>
-              <p className="mt-6 text-sm text-primary-foreground/80">
-                {proximas.length - 1} outras partidas previstas até o fim do dia.
+              <p className="mt-4 text-sm text-muted-foreground">
+                {proximas.length - 1 === 0
+                  ? "É a última partida prevista para hoje."
+                  : `Mais ${num(proximas.length - 1)} ${proximas.length - 1 === 1 ? "partida prevista" : "partidas previstas"} até o fim do dia.`}
               </p>
             </>
           ) : (
-            <p className="mt-6 text-primary-foreground/80">
+            <p className="text-sm text-muted-foreground">
               {carregandoViagens
                 ? "Carregando…"
                 : lista.length === 0
@@ -402,12 +452,13 @@ function Dashboard() {
                   : "Sem mais partidas previstas hoje."}
             </p>
           )}
-          <Button asChild variant="secondary" className="mt-6">
+          <div className="h-5 shrink-0" aria-hidden="true" />
+          <Button asChild variant="outline" className="mt-auto w-fit max-sm:w-full">
             <Link to="/operacao/viagens">
               Ver viagens do dia <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
-        </div>
+        </SectionCard>
 
         <SectionCard
           title="Situação das viagens de hoje"
@@ -416,31 +467,38 @@ function Dashboard() {
           {carregandoViagens ? (
             <QueryState isLoading error={null} />
           ) : contagem.total === 0 ? (
-            <EmptyState message="Nenhuma viagem registrada para hoje." />
+            <EmptyState compact message="Nenhuma viagem registrada para hoje." />
           ) : (
             <>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-lg border border-success/25 bg-success-soft p-3">
-                  <p className="text-xs font-semibold text-success">Realizadas</p>
-                  <p className="tabular mt-1 font-display text-2xl font-bold text-success">
-                    {num(contagem.realizadas + contagem.andamento)}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-info/25 bg-info-soft p-3">
-                  <p className="text-xs font-semibold text-info">Previstas</p>
-                  <p className="tabular mt-1 font-display text-2xl font-bold text-info">
-                    {num(contagem.previstas)}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-danger/25 bg-danger-soft p-3">
-                  <p className="text-xs font-semibold text-danger">Atrasadas/canceladas</p>
-                  <p className="tabular mt-1 font-display text-2xl font-bold text-danger">
-                    {num(contagem.atrasadas + contagem.canceladas)}
-                  </p>
-                </div>
-              </div>
+              <StatGrid cols={3}>
+                <StatCard
+                  variant="soft"
+                  tone="success"
+                  label="Realizadas"
+                  value={num(contagem.realizadas + contagem.andamento)}
+                  hint="inclui em embarque"
+                />
+                <StatCard
+                  variant="soft"
+                  tone="info"
+                  label="Previstas"
+                  value={num(contagem.previstas)}
+                  hint="ainda não saíram"
+                />
+                <StatCard
+                  variant="soft"
+                  tone="danger"
+                  label="Ocorrências"
+                  hint="atrasadas ou canceladas"
+                  value={num(contagem.atrasadas + contagem.canceladas)}
+                />
+              </StatGrid>
 
-              <div className="mt-5 flex h-3 overflow-hidden rounded-full bg-muted">
+              <div
+                className="mt-5 flex h-3 overflow-hidden rounded-full bg-muted"
+                role="img"
+                aria-label="Distribuição das viagens de hoje por situação"
+              >
                 <div
                   className="bg-success"
                   style={{ width: `${pct(contagem.realizadas + contagem.andamento)}%` }}
@@ -472,6 +530,7 @@ function Dashboard() {
           <QueryState isLoading={carregandoViagens} error={viagens.error} />
           {viagens.data && (
             <DataTable
+              minWidth="40rem"
               columns={columns}
               rows={proximas.slice(0, 6)}
               emptyMessage={
@@ -484,14 +543,18 @@ function Dashboard() {
         </SectionCard>
       </div>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
+      <div className="mt-6 grid items-start gap-5 xl:grid-cols-2">
         <SectionCard
           title="Embarques nos últimos 7 dias"
           description="Acessos registrados pelas catracas do terminal"
         >
           <QueryState isLoading={!seteDias || embarquesDia.isLoading} error={embarquesDia.error} />
           {embarquesDia.data && semEmbarques7 ? (
-            <EmptyState message="Nenhum embarque registrado nos últimos 7 dias. Os acessos chegam pela integração das catracas do terminal." />
+            <EmptyState
+              compact
+              title="Sem embarques na semana"
+              message="Os acessos aparecem aqui quando a integração das catracas enviar dados."
+            />
           ) : (
             embarquesDia.data && (
               <div className="h-64">
@@ -573,48 +636,94 @@ function Dashboard() {
         </SectionCard>
       </div>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
+      <div className="mt-6 grid items-start gap-5 xl:grid-cols-2">
         <SectionCard
           title="Principais destinos"
           description={
             ultimoMes ? `Passagens saindo de Manhuaçu em ${mesAno(ultimoMes)}` : undefined
           }
         >
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={topDestinos} margin={{ left: -18, right: 8, top: 8 }}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="var(--color-border)"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="destino"
-                  tickLine={false}
-                  axisLine={false}
-                  fontSize={11}
-                  stroke="var(--color-muted-foreground)"
-                  interval={0}
-                  angle={-12}
-                  dy={8}
-                />
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  fontSize={12}
-                  stroke="var(--color-muted-foreground)"
-                />
-                <Tooltip cursor={{ fill: "var(--color-muted)" }} contentStyle={tooltipStyle} />
-                <Bar dataKey="passagens" radius={[6, 6, 0, 0]} fill="var(--color-primary)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <QueryState isLoading={passagens.isLoading} error={null} />
+          {passagens.data && topDestinos.length === 0 ? (
+            <EmptyState compact message="Sem passagens publicadas para o último mês." />
+          ) : (
+            topDestinos.length > 0 && (
+              <div style={{ height: topDestinos.length * 34 + 16 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={topDestinos}
+                    layout="vertical"
+                    margin={{ left: 0, right: 44, top: 4, bottom: 4 }}
+                    barCategoryGap={6}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--color-border)"
+                      horizontal={false}
+                    />
+                    <XAxis
+                      type="number"
+                      domain={[0, "dataMax"]}
+                      tickLine={false}
+                      axisLine={false}
+                      fontSize={12}
+                      allowDecimals={false}
+                      stroke="var(--color-muted-foreground)"
+                      hide
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="destino"
+                      tickLine={false}
+                      axisLine={false}
+                      fontSize={12}
+                      width={140}
+                      interval={0}
+                      tick={({ x, y, payload }) => (
+                        <text
+                          x={Number(x) - 8}
+                          y={Number(y)}
+                          dy={4}
+                          textAnchor="end"
+                          fontSize={12}
+                          fill="var(--color-muted-foreground)"
+                        >
+                          <title>{tituloNome(String(payload.value))}</title>
+                          {rotuloEixo(tituloNome(String(payload.value)))}
+                        </text>
+                      )}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "var(--color-muted)" }}
+                      contentStyle={tooltipStyle}
+                      labelFormatter={(t) => tituloNome(String(t))}
+                      formatter={(v) => [num(Number(v)), "Passagens"]}
+                    />
+                    <Bar
+                      dataKey="passagens"
+                      isAnimationActive={false}
+                      radius={[0, 6, 6, 0]}
+                      fill="var(--color-primary)"
+                      label={{
+                        position: "right",
+                        fontSize: 12,
+                        fill: "var(--color-foreground)",
+                        formatter: (v: unknown) => num(Number(v)),
+                      }}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )
+          )}
           <SourceNote>Fonte: ANTT, MONITRIIP. Só linhas interestaduais.</SourceNote>
         </SectionCard>
 
         <SectionCard title="Alertas e ocorrências" bodyClassName="p-0">
           {alertas.length === 0 ? (
             <EmptyState
+              compact
+              icon={CheckCircle2}
               message={
                 carregandoViagens ? "Carregando…" : "Nenhuma ocorrência na operação de hoje."
               }
@@ -627,15 +736,15 @@ function Dashboard() {
                   <li key={a.id}>
                     <Link
                       to={a.to}
-                      className="flex items-center gap-3 border-b border-border/60 px-5 py-3.5 transition-colors last:border-0 hover:bg-muted/70"
+                      className="flex items-center gap-3 border-b border-border/60 px-4 py-3.5 sm:px-5 transition-colors last:border-0 hover:bg-muted/70"
                     >
                       <span
                         className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-${alertTone[a.kind]}-soft text-${alertTone[a.kind]}`}
                       >
                         <Icon className="h-4 w-4" />
                       </span>
-                      <span className="flex-1 text-sm">{a.text}</span>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                      <span className="min-w-0 flex-1 text-sm text-pretty">{a.text}</span>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                     </Link>
                   </li>
                 );

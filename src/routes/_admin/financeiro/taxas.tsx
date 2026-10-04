@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
   AlertTriangle,
+  ArrowRight,
   Ban,
   CheckCircle2,
   CircleDollarSign,
@@ -13,13 +14,18 @@ import {
 } from "lucide-react";
 import {
   DataTable,
+  EmptyState,
   FilterBar,
+  FilterSelect,
   PageHeader,
   QueryState,
   SectionCard,
   SourceNote,
   StatCard,
+  StatGrid,
   StatusBadge,
+  toneText,
+  Vazio,
   type Column,
   type Tone,
 } from "@/components/common";
@@ -42,7 +48,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { brl, hojeISO, num } from "@/lib/format";
+import { brl, hojeISO, num, tituloNome } from "@/lib/format";
 import { usePermissao } from "@/services/acesso";
 import { useEmpresas } from "@/services/dados-publicos";
 import {
@@ -102,40 +108,73 @@ export function taxaColumns(
     {
       key: "number",
       header: "Número",
-      render: (t) => <span className="tabular font-semibold">{t.numero}</span>,
+      nowrap: true,
+      mobile: "subtitle",
+      render: (t) => (
+        <span className="tabular font-semibold md:text-foreground">
+          {t.numero}
+          <span className="font-normal md:hidden"> · {competenciaLegivel(t.competencia)}</span>
+        </span>
+      ),
     },
-    { key: "company", header: "Empresa", render: (t) => empresa(t.empresa_id) },
-    { key: "comp", header: "Competência", render: (t) => competenciaLegivel(t.competencia) },
+    {
+      key: "company",
+      header: "Empresa",
+      mobile: "title",
+      cellClassName: "min-w-[12rem]",
+      render: (t) => tituloNome(empresa(t.empresa_id)),
+    },
+    {
+      key: "comp",
+      header: "Competência",
+      nowrap: true,
+      hideOnMobile: true,
+      render: (t) => <span className="tabular">{competenciaLegivel(t.competencia)}</span>,
+    },
     {
       key: "boardings",
       header: "Embarques",
       align: "right",
+      hideOnMobile: true,
       render: (t) => <span className="tabular">{num(t.embarques)}</span>,
     },
     {
       key: "amount",
       header: "Valor",
       align: "right",
+      nowrap: true,
+      mobile: "meta",
       render: (t) => <span className="tabular">{brl(t.valor)}</span>,
     },
     {
       key: "balance",
       header: "Em aberto",
       align: "right",
-      render: (t) => (
-        <span className="tabular text-muted-foreground">
-          {t.status === "cancelada" ? "—" : brl(t.saldo)}
-        </span>
-      ),
+      nowrap: true,
+      mobile: "meta",
+      render: (t) =>
+        t.status === "cancelada" ? (
+          <Vazio />
+        ) : (
+          <span className="tabular font-semibold">{brl(t.saldo)}</span>
+        ),
     },
     {
       key: "due",
       header: "Vencimento",
+      nowrap: true,
+      mobile: "meta",
       render: (t) => <span className="tabular">{dataISO(t.vencimento)}</span>,
     },
-    { key: "status", header: "Status", render: (t) => <TaxaStatusBadge status={t.status} /> },
+    {
+      key: "status",
+      header: "Status",
+      mobile: "badge",
+      render: (t) => <TaxaStatusBadge status={t.status} />,
+    },
   ];
-  if (acoes) cols.push({ key: "actions", header: "", align: "right", render: acoes });
+  if (acoes)
+    cols.push({ key: "actions", header: "", align: "right", mobile: "action", render: acoes });
   return cols;
 }
 
@@ -151,16 +190,30 @@ export function AvisoConfiguracaoTaxa() {
   ].filter(Boolean);
   if (faltando.length === 0) return null;
   return (
-    <div className="mb-5 flex items-start gap-3 rounded-xl border border-warning/35 bg-warning-soft px-4 py-3 text-sm text-warning-foreground">
-      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-      <p>
-        <span className="font-semibold">Cobrança não configurada.</span> Defina{" "}
-        {faltando.join(" e ")} em{" "}
-        <Link to="/configuracoes" className="font-semibold underline underline-offset-2">
-          Configurações
-        </Link>{" "}
-        para que as taxas possam ser geradas no fechamento da competência.
-      </p>
+    <div
+      role="status"
+      className="mb-6 flex flex-col gap-3 rounded-2xl bg-warning-soft p-4 text-warning-foreground sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+    >
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-card/70">
+        <AlertTriangle className="h-[1.125rem] w-[1.125rem]" aria-hidden="true" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="font-display text-sm font-bold">Cobrança não configurada</p>
+        <p className="mt-0.5 text-sm text-pretty opacity-90">
+          Defina {faltando.join(" e ")} para que as taxas possam ser geradas no fechamento da
+          competência.
+        </p>
+      </div>
+      <Button
+        asChild
+        variant="outline"
+        size="sm"
+        className="shrink-0 border-transparent bg-card shadow-sm max-sm:h-10 max-sm:w-full"
+      >
+        <Link to="/configuracoes">
+          Abrir configurações <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+      </Button>
     </div>
   );
 }
@@ -232,7 +285,7 @@ export function RegistrarPagamentoDialog({
           {taxa ? (
             <div className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm">
               <p className="font-semibold">
-                {taxa.numero} · {empresa(taxa.empresa_id)}
+                {taxa.numero} · {tituloNome(empresa(taxa.empresa_id))}
               </p>
               <p className="text-muted-foreground">
                 Competência {competenciaLegivel(taxa.competencia)} · valor {brl(taxa.valor)} · em
@@ -258,7 +311,7 @@ export function RegistrarPagamentoDialog({
                 <SelectContent>
                   {abertas.map((t) => (
                     <SelectItem key={t.id} value={t.id}>
-                      {t.numero} · {empresa(t.empresa_id)} · {brl(t.saldo)}
+                      {t.numero} · {tituloNome(empresa(t.empresa_id))} · {brl(t.saldo)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -546,21 +599,22 @@ function FeesPage() {
     (id) => empresa(id),
     editar
       ? (t) =>
-      t.status === "pendente" || t.status === "inadimplente" ? (
-        <div className="flex justify-end gap-1.5">
-          <Button variant="outline" size="sm" onClick={() => setPagar(t)}>
-            <HandCoins className="h-3.5 w-3.5" /> Pagamento
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setCancelar(t)}
-            aria-label={`Cancelar taxa ${t.numero}`}
-          >
-            <Ban className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      ) : null
+          t.status === "pendente" || t.status === "inadimplente" ? (
+            <div className="flex justify-end gap-1.5">
+              <Button variant="outline" size="sm" onClick={() => setPagar(t)}>
+                <HandCoins className="h-3.5 w-3.5" /> Pagamento
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCancelar(t)}
+                aria-label={`Cancelar taxa ${t.numero}`}
+                title="Cancelar taxa"
+              >
+                <Ban className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ) : null
       : undefined,
   );
 
@@ -569,8 +623,9 @@ function FeesPage() {
   return (
     <>
       <PageHeader
-        title="Financeiro · Taxas"
-        subtitle="Taxas de uso do terminal geradas no fechamento de cada competência"
+        eyebrow="Financeiro"
+        title="Taxas"
+        subtitle="Taxas de uso do terminal geradas no fechamento de cada competência."
         actions={
           editar ? (
             <Button onClick={() => setFecharAberto(true)}>
@@ -581,59 +636,63 @@ function FeesPage() {
       />
       <AvisoConfiguracaoTaxa />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Taxas emitidas" value={brl(totais.emitido)} icon={CircleDollarSign} />
-        <StatCard label="Pagas" value={brl(totais.pago)} icon={CheckCircle2} tone="success" />
-        <StatCard label="Pendentes" value={brl(totais.pendente)} icon={Clock} tone="warning" />
+      <StatGrid>
+        <StatCard
+          label="Taxas emitidas"
+          value={brl(totais.emitido)}
+          icon={CircleDollarSign}
+          tone="primary"
+        />
+        <StatCard
+          label="Pagas"
+          value={<span className={toneText.success}>{brl(totais.pago)}</span>}
+          icon={CheckCircle2}
+          tone="success"
+        />
+        <StatCard
+          label="Pendentes"
+          value={<span className={toneText.warning}>{brl(totais.pendente)}</span>}
+          icon={Clock}
+          tone="warning"
+        />
         <StatCard
           label="Inadimplentes"
-          value={brl(totais.inadimplente)}
+          value={<span className={toneText.danger}>{brl(totais.inadimplente)}</span>}
           icon={TrendingDown}
           tone="danger"
         />
-      </div>
+      </StatGrid>
 
       <div className="mt-6">
         <FilterBar>
-          <Select value={competencia} onValueChange={setCompetencia}>
-            <SelectTrigger className="h-9 w-[11rem]">
-              <SelectValue placeholder="Competência" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={TODOS}>Todas as competências</SelectItem>
-              {competencias.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {competenciaLegivel(c)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={empresaId} onValueChange={setEmpresaId}>
-            <SelectTrigger className="h-9 w-[16rem]">
-              <SelectValue placeholder="Empresa" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={TODOS}>Todas as empresas</SelectItem>
-              {empresasComTaxa.map((e) => (
-                <SelectItem key={e.id} value={e.id}>
-                  {nomeDaEmpresa(e)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="h-9 w-[11rem]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={TODOS}>Todos os status</SelectItem>
-              {Object.entries(taxaTone).map(([k, v]) => (
-                <SelectItem key={k} value={k}>
-                  {v.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            value={competencia}
+            onValueChange={setCompetencia}
+            placeholder="Competência"
+            allLabel="Todas as competências"
+            allValue={TODOS}
+            options={competencias.map((c) => ({ value: c, label: competenciaLegivel(c) }))}
+            className="sm:min-w-[14rem]"
+          />
+          <FilterSelect
+            value={empresaId}
+            onValueChange={setEmpresaId}
+            placeholder="Empresa"
+            allLabel="Todas as empresas"
+            allValue={TODOS}
+            options={empresasComTaxa.map((e) => ({
+              value: e.id,
+              label: tituloNome(nomeDaEmpresa(e)),
+            }))}
+          />
+          <FilterSelect
+            value={status}
+            onValueChange={setStatus}
+            placeholder="Status"
+            allLabel="Todos os status"
+            allValue={TODOS}
+            options={Object.entries(taxaTone).map(([k, v]) => ({ value: k, label: v.label }))}
+          />
         </FilterBar>
 
         <SectionCard title="Taxas" bodyClassName="p-0">
@@ -642,10 +701,31 @@ function FeesPage() {
             <DataTable
               columns={columns}
               rows={rows}
-              emptyMessage={
-                semTaxas
-                  ? "Nenhuma taxa gerada ainda. As taxas são criadas no fechamento da competência, a partir dos embarques confirmados na catraca de cada empresa."
-                  : "Nenhuma taxa com esses filtros."
+              empty={
+                semTaxas ? (
+                  <EmptyState
+                    icon={CircleDollarSign}
+                    title="Nenhuma taxa gerada ainda"
+                    message="As taxas são criadas no fechamento da competência, a partir dos embarques confirmados na catraca de cada empresa."
+                  />
+                ) : (
+                  <EmptyState
+                    message="Nenhuma taxa com esses filtros."
+                    action={
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setCompetencia(TODOS);
+                          setEmpresaId(TODOS);
+                          setStatus(TODOS);
+                        }}
+                      >
+                        Limpar filtros
+                      </Button>
+                    }
+                  />
+                )
               }
             />
           )}

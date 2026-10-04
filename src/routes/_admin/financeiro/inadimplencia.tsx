@@ -1,18 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { toast } from "sonner";
-import { RefreshCw } from "lucide-react";
+import { Building2, CalendarClock, CircleCheck, RefreshCw, TrendingDown } from "lucide-react";
 import {
   DataTable,
+  EmptyState,
   PageHeader,
   QueryState,
   SectionCard,
+  SourceNote,
   StatCard,
+  StatGrid,
   StatusBadge,
+  toneText,
   type Column,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { brl } from "@/lib/format";
+import { brl, num, tituloNome } from "@/lib/format";
 import { usePermissao } from "@/services/acesso";
 import { useEmpresas } from "@/services/dados-publicos";
 import {
@@ -68,7 +72,7 @@ function OverduePage() {
       if (!emAtraso(t) || t.saldo <= 0) continue;
       const r = porEmpresa.get(t.empresa_id) ?? {
         id: t.empresa_id,
-        company: empresa(t.empresa_id),
+        company: tituloNome(empresa(t.empresa_id)),
         amount: 0,
         count: 0,
         competencias: [],
@@ -87,6 +91,7 @@ function OverduePage() {
   }, [taxas.data, empresas.data]);
 
   const total = rows.reduce((s, r) => s + r.amount, 0);
+  const maiorAtraso = rows.reduce((m, r) => Math.max(m, r.days), 0);
 
   async function recalcular() {
     try {
@@ -101,23 +106,29 @@ function OverduePage() {
     {
       key: "company",
       header: "Empresa",
+      mobile: "title",
+      cellClassName: "min-w-[12rem]",
       render: (r) => <span className="font-semibold">{r.company}</span>,
     },
     {
       key: "amount",
       header: "Valor vencido",
       align: "right",
-      render: (r) => <span className="tabular">{brl(r.amount)}</span>,
+      nowrap: true,
+      mobile: "meta",
+      render: (r) => <span className="tabular font-semibold">{brl(r.amount)}</span>,
     },
     {
       key: "count",
       header: "Taxas",
       align: "right",
-      render: (r) => <span className="tabular">{r.count}</span>,
+      mobile: "meta",
+      render: (r) => <span className="tabular">{num(r.count)}</span>,
     },
     {
       key: "comp",
       header: "Competências",
+      mobile: "subtitle",
       render: (r) => (
         <span className="tabular text-muted-foreground">
           {[...r.competencias].sort().map(competenciaLegivel).join(", ")}
@@ -126,18 +137,22 @@ function OverduePage() {
     },
     {
       key: "due",
-      header: "Vencimento mais antigo",
+      header: "Venc. mais antigo",
+      nowrap: true,
+      mobile: "meta",
       render: (r) => <span className="tabular">{dataISO(r.oldestDue)}</span>,
     },
     {
       key: "days",
       header: "Dias em atraso",
       align: "right",
+      mobile: "meta",
       render: (r) => <span className="tabular">{r.days}</span>,
     },
     {
       key: "status",
       header: "Situação",
+      mobile: "badge",
       render: () => <StatusBadge tone="danger">Em aberto</StatusBadge>,
     },
   ];
@@ -145,8 +160,9 @@ function OverduePage() {
   return (
     <>
       <PageHeader
-        title="Financeiro · Inadimplência"
-        subtitle="Taxas vencidas e não quitadas, agrupadas por empresa"
+        eyebrow="Financeiro"
+        title="Inadimplência"
+        subtitle="Taxas vencidas e não quitadas, agrupadas por empresa."
         actions={
           editar ? (
             <Button variant="outline" onClick={recalcular} disabled={atualizar.isPending}>
@@ -156,25 +172,47 @@ function OverduePage() {
           ) : undefined
         }
       />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <StatCard label="Total vencido" value={brl(total)} tone="danger" />
-        <StatCard label="Empresas com valores em aberto" value={rows.length} tone="neutral" />
-      </div>
+      <StatGrid cols={3}>
+        <StatCard
+          label="Total vencido"
+          value={<span className={toneText.danger}>{brl(total)}</span>}
+          icon={TrendingDown}
+          tone="danger"
+        />
+        <StatCard
+          label="Empresas com valores em aberto"
+          value={num(rows.length)}
+          icon={Building2}
+          tone="neutral"
+        />
+        <StatCard
+          label="Maior atraso"
+          value={rows.length ? `${num(maiorAtraso)} ${maiorAtraso === 1 ? "dia" : "dias"}` : "—"}
+          icon={CalendarClock}
+          tone="warning"
+        />
+      </StatGrid>
       <div className="mt-6">
-        <SectionCard bodyClassName="p-0">
+        <SectionCard title="Valores vencidos por empresa" bodyClassName="p-0">
           <QueryState isLoading={taxas.isLoading} error={taxas.error} />
           {taxas.data && (
             <DataTable
               columns={columns}
               rows={rows}
-              emptyMessage="Nenhum valor vencido. Taxas pendentes passam a inadimplentes automaticamente no dia seguinte ao vencimento (verificação diária às 06:00)."
+              empty={
+                <EmptyState
+                  icon={CircleCheck}
+                  title="Nenhum valor vencido"
+                  message="Taxas pendentes passam a inadimplentes automaticamente no dia seguinte ao vencimento (verificação diária às 06:00)."
+                />
+              }
             />
           )}
         </SectionCard>
-        <p className="mt-3 text-xs text-muted-foreground italic">
+        <SourceNote>
           Relação apresentada apenas por valores, sem qualquer julgamento sobre as empresas. Valor
           vencido = valor da taxa menos pagamentos confirmados.
-        </p>
+        </SourceNote>
       </div>
     </>
   );

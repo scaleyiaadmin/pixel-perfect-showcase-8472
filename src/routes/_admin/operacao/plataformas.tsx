@@ -1,12 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Bus, CircleCheck, CircleOff, Pencil, Plus, Trash2, Wrench } from "lucide-react";
+import {
+  Bus,
+  CircleCheck,
+  LayoutGrid,
+  CircleOff,
+  Pencil,
+  Plus,
+  Trash2,
+  Wrench,
+} from "lucide-react";
 import {
   EmptyState,
   PageHeader,
   QueryState,
   SectionCard,
   StatusBadge,
+  toneClass,
   type Tone,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
@@ -23,6 +33,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { tituloNome } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { usePermissao } from "@/services/acesso";
 import type { Plataforma } from "@/services/gestao-tipos";
@@ -60,30 +71,27 @@ export const Route = createFileRoute("/_admin/operacao/plataformas")({
 
 type Situacao = "disponivel" | "ocupada" | "manutencao" | "inativa";
 
-const config: Record<Situacao, { tone: Tone; label: string; icon: typeof Bus; ring: string }> = {
+const config: Record<Situacao, { tone: Tone; label: string; icon: typeof Bus }> = {
   disponivel: {
     tone: "success",
     label: "Disponível",
     icon: CircleCheck,
-    ring: "border-success/35 bg-success-soft",
   },
-  ocupada: { tone: "info", label: "Ocupada", icon: Bus, ring: "border-info/35 bg-info-soft" },
+  ocupada: { tone: "info", label: "Ocupada", icon: Bus },
   manutencao: {
     tone: "warning",
     label: "Manutenção",
     icon: Wrench,
-    ring: "border-warning/40 bg-warning-soft",
   },
   inativa: {
     tone: "neutral",
     label: "Inativa",
     icon: CircleOff,
-    ring: "border-border bg-muted/50",
   },
 };
 
 const rotuloViagem = (v: ViagemDetalhada) =>
-  `${horaPrevista(v)} · ${v.tipo === "chegada" ? v.origem : v.destino}`;
+  `${horaPrevista(v)} · ${tituloNome(v.tipo === "chegada" ? v.origem : v.destino)}`;
 
 function PlatformsPage() {
   const hoje = useHoje();
@@ -114,7 +122,8 @@ function PlatformsPage() {
         title="Plataformas"
         subtitle="Ocupação das plataformas da Nova Rodoviária de Manhuaçu"
         actions={
-          editar ? (
+          // Sem plataformas, o botão fica só dentro do estado vazio.
+          editar && lista.length > 0 ? (
             <Button onClick={() => setEditando("nova")}>
               <Plus className="h-4 w-4" /> Nova plataforma
             </Button>
@@ -124,13 +133,24 @@ function PlatformsPage() {
 
       <QueryState isLoading={plataformas.isLoading} error={plataformas.error} />
       {plataformas.data && lista.length === 0 && (
-        <SectionCard>
-          <EmptyState message="Nenhuma plataforma cadastrada. Cadastre as plataformas do terminal em “Nova plataforma” para alocar as viagens e acompanhar a ocupação." />
+        <SectionCard bodyClassName="p-0">
+          <EmptyState
+            icon={LayoutGrid}
+            title="Nenhuma plataforma cadastrada"
+            message="Cadastre as plataformas do terminal para alocar as viagens e acompanhar a ocupação."
+            action={
+              editar ? (
+                <Button onClick={() => setEditando("nova")}>
+                  <Plus className="h-4 w-4" /> Nova plataforma
+                </Button>
+              ) : undefined
+            }
+          />
         </SectionCard>
       )}
 
       {lista.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))] gap-3 sm:gap-4">
           {lista.map((p) => {
             const { s, ocupante, proxima } = situacao(p);
             const c = config[s];
@@ -138,13 +158,10 @@ function PlatformsPage() {
             return (
               <div
                 key={p.id}
-                className={cn(
-                  "group rounded-xl border p-5 shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5",
-                  c.ring,
-                )}
+                className={cn("surface-card flex min-w-0 flex-col rounded-xl bg-card p-4 sm:p-5")}
               >
-                <div className="flex items-start justify-between">
-                  <div>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
                     <p className="text-[11px] font-bold tracking-[0.18em] uppercase text-muted-foreground">
                       Plataforma
                     </p>
@@ -162,13 +179,20 @@ function PlatformsPage() {
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
                     )}
-                    <Icon className="h-5 w-5 text-muted-foreground" />
+                    <span
+                      className={cn(
+                        "grid h-8 w-8 shrink-0 place-items-center rounded-lg border",
+                        toneClass[c.tone],
+                      )}
+                    >
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                    </span>
                   </div>
                 </div>
                 <div className="mt-4">
                   <StatusBadge tone={c.tone}>{c.label}</StatusBadge>
                 </div>
-                <p className="mt-3 min-h-[1.25rem] text-sm font-medium">
+                <p className="mt-3 min-h-[1.25rem] text-sm font-medium break-words">
                   {ocupante ? (
                     <Link
                       to="/operacao/viagens/$tripId"
@@ -178,7 +202,7 @@ function PlatformsPage() {
                       {rotuloViagem(ocupante)}
                     </Link>
                   ) : (
-                    "Sem viagem no momento"
+                    <span className="font-normal text-muted-foreground">Sem viagem agora</span>
                   )}
                 </p>
                 {proxima && (
@@ -201,15 +225,15 @@ function PlatformsPage() {
             title="Visão do saguão"
             description="Situação atual das plataformas · atualização automática a cada 30 s"
           >
-            <div className="rounded-xl border border-border bg-muted/40 p-6">
-              <div className="flex flex-wrap gap-3">
+            <div className="rounded-xl border border-border bg-muted/40 p-3 sm:p-6">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(6.5rem,1fr))] gap-3">
                 {lista.map((p) => {
                   const { s, ocupante } = situacao(p);
                   return (
                     <div
                       key={p.id}
                       className={cn(
-                        "flex h-24 w-32 flex-col items-center justify-center rounded-lg border-2 text-center",
+                        "flex h-24 min-w-0 flex-col items-center justify-center rounded-lg border-2 text-center",
                         s === "ocupada"
                           ? "border-info bg-info-soft"
                           : s === "manutencao"
@@ -220,7 +244,7 @@ function PlatformsPage() {
                       )}
                     >
                       <p className="tabular font-display text-2xl font-bold">{p.numero}</p>
-                      <p className="px-2 text-[11px] leading-tight text-muted-foreground">
+                      <p className="line-clamp-2 px-2 text-[11px] leading-tight text-muted-foreground">
                         {ocupante ? rotuloViagem(ocupante) : config[s].label}
                       </p>
                     </div>

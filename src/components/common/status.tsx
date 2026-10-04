@@ -5,14 +5,17 @@ import { cn } from "@/lib/utils";
 
 export type Tone = "success" | "warning" | "danger" | "info" | "neutral" | "primary";
 
-/** Fundo suave + texto + borda por tom (contraste AA garantido pelos tokens). */
+/**
+ * Fundo tingido + texto escuro do tom (pílula do ERP). A borda é transparente
+ * (quem usa `border` junto não ganha contorno); contraste AA pelos tokens.
+ */
 export const toneClass: Record<Tone, string> = {
-  success: "bg-success-soft text-success border-success/25",
-  warning: "bg-warning-soft text-warning-foreground border-warning/40",
-  danger: "bg-danger-soft text-danger border-danger/25",
-  info: "bg-info-soft text-info border-info/25",
-  neutral: "bg-neutral-soft text-muted-foreground border-border",
-  primary: "bg-primary-soft text-primary border-primary/20",
+  success: "bg-success-soft text-success border-transparent",
+  warning: "bg-warning-soft text-warning-foreground border-transparent",
+  danger: "bg-danger-soft text-danger border-transparent",
+  info: "bg-info-soft text-info border-transparent",
+  neutral: "bg-neutral-soft text-muted-foreground border-transparent",
+  primary: "bg-primary-soft text-primary border-transparent",
 };
 
 /** Só a cor do texto/ícone por tom (para ícones e números). */
@@ -47,8 +50,8 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border font-semibold leading-none whitespace-nowrap",
-        size === "sm" ? "h-5 px-2 text-[11px]" : "h-6 px-2.5 text-xs",
+        "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border font-medium leading-none whitespace-nowrap",
+        size === "sm" ? "h-5 px-2 text-[0.6875rem]" : "h-6 px-2.5 text-xs",
         toneClass[tone],
         className,
       )}

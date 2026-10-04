@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
 import {
-  BarChart3,
+  ArrowLeft,
+  ArrowRight,
   Building2,
   Bus,
   Download,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import {
   DataTable,
+  DateRangeFilter,
   EmptyState,
   FilterBar,
   PageHeader,
@@ -21,10 +23,9 @@ import {
   type Column,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { PrefeituraLogo, RodoviariaLogo } from "@/components/brand/Logos";
-import { brl, dataHora, hojeISO, num } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { brl, dataHora, hojeISO, num, tituloNome } from "@/lib/format";
 import { mesAno, useEmpresas, usePassagensMensais } from "@/services/dados-publicos";
 import {
   baixarCsv,
@@ -127,23 +128,47 @@ function ReportsPage() {
     <>
       <PageHeader
         title="Relatórios"
-        subtitle="Relatórios gerados a partir dos dados registrados no sistema"
+        subtitle="Relatórios gerados a partir dos dados registrados no sistema. Escolha o período e abra o relatório para exportar ou imprimir."
       />
       <SeletorPeriodo periodo={periodo} onChange={setPeriodo} />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {relatorios.map((r) => (
-          <SectionCard key={r.id}>
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary-soft text-primary">
-              <r.icon className="h-5 w-5" />
-            </span>
-            <h3 className="mt-3 font-display text-base font-bold">{r.title}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{r.description}</p>
-            <Button variant="outline" size="sm" className="mt-4" onClick={() => setPreview(r.id)}>
-              Visualizar
-            </Button>
-          </SectionCard>
+      {/* 5 relatórios sem buraco: 2 colunas (o último ocupa a linha) e, no desktop, 3 + 2. */}
+      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+        {relatorios.map((r, i) => (
+          <li
+            key={r.id}
+            className={cn(
+              "flex",
+              i < 3 ? "lg:col-span-2" : "lg:col-span-3",
+              "sm:max-lg:last:odd:col-span-2",
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => setPreview(r.id)}
+              className="surface-card group flex w-full items-start gap-4 p-4 text-left transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none sm:p-5"
+            >
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
+                <r.icon className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="font-display text-base leading-snug font-bold text-foreground">
+                  {r.title}
+                </span>
+                <span className="mt-1 text-sm text-pretty text-muted-foreground">
+                  {r.description}
+                </span>
+                <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                  Abrir relatório
+                  <ArrowRight
+                    className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                    aria-hidden="true"
+                  />
+                </span>
+              </span>
+            </button>
+          </li>
         ))}
-      </div>
+      </ul>
     </>
   );
 }
@@ -160,30 +185,13 @@ function SeletorPeriodo({
   return (
     <div className="no-print">
       <FilterBar>
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <Label htmlFor="rel-de" className="text-muted-foreground">
-            Período de
-          </Label>
-          <Input
-            id="rel-de"
-            type="date"
-            className="h-9 w-[10rem]"
-            value={periodo.de}
-            max={periodo.ate}
-            onChange={(e) => e.target.value && onChange({ ...periodo, de: e.target.value })}
-          />
-          <Label htmlFor="rel-ate" className="text-muted-foreground">
-            até
-          </Label>
-          <Input
-            id="rel-ate"
-            type="date"
-            className="h-9 w-[10rem]"
-            value={periodo.ate}
-            min={periodo.de}
-            onChange={(e) => e.target.value && onChange({ ...periodo, ate: e.target.value })}
-          />
-        </div>
+        <DateRangeFilter
+          label="Período"
+          from={periodo.de}
+          to={periodo.ate}
+          onFromChange={(v) => v && onChange({ ...periodo, de: v })}
+          onToChange={(v) => v && onChange({ ...periodo, ate: v })}
+        />
         {children}
       </FilterBar>
     </div>
@@ -217,11 +225,11 @@ function ReportPreview({
         const pronto = !carregando && !erro && dados;
         return (
           <>
-            <div className="no-print mb-4 flex flex-wrap items-center justify-between gap-2">
-              <Button variant="ghost" size="sm" onClick={onBack}>
-                Voltar para relatórios
+            <div className="no-print mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+              <Button variant="ghost" size="sm" onClick={onBack} className="-ml-2 w-fit">
+                <ArrowLeft className="h-4 w-4" /> Voltar para relatórios
               </Button>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 max-sm:[&>*]:flex-1">
                 <Button
                   variant="outline"
                   disabled={!pronto || dados.linhas.length === 0}
@@ -239,10 +247,10 @@ function ReportPreview({
             </div>
             <SeletorPeriodo periodo={periodo} onChange={onPeriodo} />
 
-            <div className="surface-card p-8">
-              <header className="flex flex-wrap items-center justify-between gap-6 border-b border-border pb-6">
+            <div className="surface-card p-4 sm:p-8">
+              <header className="flex flex-wrap items-center justify-center gap-4 border-b border-border pb-6 sm:justify-between sm:gap-6">
                 <PrefeituraLogo />
-                <div className="text-center">
+                <div className="order-first w-full text-center sm:order-none sm:w-auto">
                   <p className="font-display text-lg font-extrabold tracking-[0.12em] uppercase">
                     SisRodov Manhuaçu
                   </p>
@@ -254,7 +262,7 @@ function ReportPreview({
               </header>
 
               <div className="py-6 text-center">
-                <h1 className="font-display text-xl font-bold tracking-wide uppercase">
+                <h1 className="font-display text-lg font-bold tracking-wide text-balance uppercase sm:text-xl">
                   {def.title}
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -266,7 +274,15 @@ function ReportPreview({
               {pronto && (
                 <>
                   {dados.metricas.length > 0 && (
-                    <div className="grid gap-4 border-y border-border py-6 sm:grid-cols-3 lg:grid-cols-5">
+                    <div
+                      className={cn(
+                        "grid grid-cols-2 gap-x-4 gap-y-5 border-y border-border py-6",
+                        dados.metricas.length === 4
+                          ? "sm:grid-cols-4"
+                          : "sm:grid-cols-3 lg:grid-cols-5",
+                        "max-sm:[&>*:last-child:nth-child(odd)]:col-span-2",
+                      )}
+                    >
                       {dados.metricas.map((m) => (
                         <Metric key={m.label} label={m.label} value={m.value} />
                       ))}
@@ -274,7 +290,7 @@ function ReportPreview({
                   )}
                   <div className="mt-6">
                     {dados.linhas.length === 0 ? (
-                      <EmptyState message={dados.vazio} />
+                      <EmptyState title="Nada para mostrar no período" message={dados.vazio} />
                     ) : (
                       <TabelaRelatorio dados={dados} />
                     )}
@@ -410,7 +426,7 @@ function RelEmbarques({ periodo, children }: PropsRelatorio) {
     const linhas = [...porEmpresa.entries()]
       .sort(([, a], [, b]) => b.acessos - a.acessos)
       .map(([id, r]) => [
-        id ? empresa(id) : "Empresa não identificada",
+        id ? tituloNome(empresa(id)) : "Empresa não identificada",
         r.viagens,
         r.acessos,
         r.bilhetes,
@@ -593,7 +609,7 @@ function RelConciliacao({ periodo, children }: PropsRelatorio) {
       linhas: conc.data.map((c) => [
         dataISO(c.data),
         c.numero || "—",
-        empresa(c.empresa_id),
+        tituloNome(empresa(c.empresa_id)),
         `${c.origem} → ${c.destino}`,
         c.bilhetes,
         c.acessos,

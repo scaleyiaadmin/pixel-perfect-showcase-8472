@@ -9,7 +9,10 @@ import {
   SectionCard,
   SourceNote,
   StatCard,
+  StatGrid,
   StatusBadge,
+  Vazio,
+  ouVazio,
   type Column,
 } from "@/components/common";
 import {
@@ -27,7 +30,7 @@ import {
   useViagensDoDia,
   type EmpresaCadastro,
 } from "@/services/acesso";
-import { brl, hojeISO, num } from "@/lib/format";
+import { brl, hojeISO, num, tituloNome } from "@/lib/format";
 
 export const Route = createFileRoute("/_admin/empresas/")({
   head: () => ({
@@ -103,18 +106,26 @@ function CompaniesPage() {
     {
       key: "name",
       header: "Empresa",
+      mobile: "title",
+      cellClassName: "min-w-[14rem]",
       render: (c) => (
-        <span className="flex items-center gap-2">
-          {c.cor && (
-            <span
-              className="h-2.5 w-2.5 shrink-0 rounded-full"
-              style={{ backgroundColor: c.cor }}
-            />
-          )}
-          <span>
-            <span className="font-semibold">{nomeExibicao(c)}</span>
+        <span className="flex items-start gap-2.5">
+          <span
+            aria-hidden="true"
+            className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-border"
+            style={c.cor ? { backgroundColor: c.cor } : undefined}
+          />
+          <span className="min-w-0">
+            <span className="block font-semibold text-foreground">
+              {tituloNome(nomeExibicao(c))}
+            </span>
             {c.nome_fantasia?.trim() && (
-              <span className="block text-xs text-muted-foreground">{c.razao_social}</span>
+              <span
+                className="block truncate text-xs font-normal text-muted-foreground"
+                title={c.razao_social}
+              >
+                {tituloNome(c.razao_social)}
+              </span>
             )}
           </span>
         </span>
@@ -123,26 +134,43 @@ function CompaniesPage() {
     {
       key: "cnpj",
       header: "CNPJ",
+      nowrap: true,
+      mobile: "subtitle",
       render: (c) => <span className="tabular text-muted-foreground">{formatCnpj(c.cnpj)}</span>,
     },
-    { key: "fonte", header: "Fonte", render: (c) => c.fonte },
+    {
+      key: "fonte",
+      header: "Fonte",
+      hideOnMobile: true,
+      nowrap: true,
+      // Some no tablet para a tabela caber sem rolagem (a fonte aparece no detalhe).
+      className: "hidden xl:table-cell",
+      cellClassName: "hidden xl:table-cell",
+      render: (c) => ouVazio(c.fonte),
+    },
     {
       key: "lines",
       header: "Linhas",
       align: "right",
+      nowrap: true,
+      mobile: "meta",
       render: (c) => <span className="tabular">{c.linhas}</span>,
     },
     {
       key: "trips",
       header: "Partidas hoje",
       align: "right",
+      nowrap: true,
+      mobile: "meta",
       render: (c) => <span className="tabular">{c.partidasHoje}</span>,
     },
     {
       key: "viagens",
-      header: "Viagens registradas hoje",
+      header: "Viagens hoje",
       align: "right",
-      render: (c) => <span className="tabular">{viagens.data ? c.viagensHoje : "—"}</span>,
+      nowrap: true,
+      mobile: "meta",
+      render: (c) => (viagens.data ? <span className="tabular">{c.viagensHoje}</span> : <Vazio />),
     },
     ...(verFinanceiro
       ? [
@@ -150,24 +178,34 @@ function CompaniesPage() {
             key: "taxas",
             header: "Taxas em aberto",
             align: "right" as const,
-            render: (c: Row) => (
-              <span className="tabular">
-                {taxas.data && c.taxasEmAberto > 0 ? brl(c.taxasEmAberto) : "—"}
-              </span>
-            ),
+            nowrap: true,
+            mobile: "meta" as const,
+            render: (c: Row) =>
+              taxas.data && c.taxasEmAberto > 0 ? (
+                <span className="tabular font-medium">{brl(c.taxasEmAberto)}</span>
+              ) : (
+                <Vazio />
+              ),
           },
         ]
       : []),
     {
       key: "status",
       header: "Status",
+      mobile: "badge",
       render: (c) =>
         !c.ativa ? (
-          <StatusBadge tone="neutral">Inativa</StatusBadge>
+          <StatusBadge size="sm" tone="neutral">
+            Inativa
+          </StatusBadge>
         ) : c.opera_no_terminal ? (
-          <StatusBadge tone="success">Opera no terminal</StatusBadge>
+          <StatusBadge size="sm" tone="success">
+            No terminal
+          </StatusBadge>
         ) : (
-          <StatusBadge tone="neutral">Não opera no terminal</StatusBadge>
+          <StatusBadge size="sm" tone="neutral">
+            Fora do terminal
+          </StatusBadge>
         ),
     },
   ];
@@ -180,11 +218,11 @@ function CompaniesPage() {
   return (
     <>
       <PageHeader
-        title="Empresas de Transporte"
-        subtitle="Empresas com linhas autorizadas que atendem Manhuaçu"
+        title="Empresas de transporte"
+        subtitle="Empresas com linhas autorizadas que atendem Manhuaçu."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <StatGrid>
         <StatCard label="Empresas" value={empresas.data?.length ?? "—"} icon={Building2} />
         <StatCard label="Linhas" value={linhas.data?.length ?? "—"} icon={RouteIcon} tone="info" />
         <StatCard
@@ -195,24 +233,16 @@ function CompaniesPage() {
           tone="success"
         />
         <StatCard
-          label="Viagens registradas hoje"
+          label="Viagens hoje"
           value={viagensHoje === undefined ? "—" : num(viagensHoje)}
-          hint={
-            viagensHoje === 0
-              ? "Chegam pela integração das empresas ou por lançamento da equipe"
-              : undefined
-          }
+          hint={viagensHoje === 0 ? "Via integração ou lançamento da equipe" : undefined}
           icon={CalendarCheck}
           tone="warning"
         />
-      </div>
+      </StatGrid>
 
       <div className="mt-6">
-        <FilterBar
-          search={search}
-          onSearch={setSearch}
-          placeholder="Pesquisar empresa, CNPJ ou código ANTT..."
-        />
+        <FilterBar search={search} onSearch={setSearch} placeholder="Buscar empresa ou CNPJ" />
         <SectionCard bodyClassName="p-0">
           <QueryState isLoading={empresas.isLoading} error={empresas.error} />
           {(viagens.error || taxas.error) && (
@@ -224,6 +254,11 @@ function CompaniesPage() {
             <DataTable
               columns={columns}
               rows={rows}
+              emptyMessage={
+                search.trim()
+                  ? "Nenhuma empresa encontrada para a busca."
+                  : "Nenhuma empresa cadastrada."
+              }
               onRowClick={(c) =>
                 navigate({ to: "/empresas/$companyId", params: { companyId: c.id } })
               }

@@ -1,13 +1,16 @@
 import {
+  isValidElement,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
 import { cn } from "@/lib/utils";
-import { EmptyState } from "./feedback";
+import { VAZIO } from "@/lib/format";
+import { EmptyState, Vazio } from "./feedback";
 
 /* -------------------------------- DataTable ------------------------------ */
 
@@ -35,6 +38,8 @@ export interface Column<T> {
   mobile?: MobileRole;
   /** Atalho para `mobile: "hidden"`. */
   hideOnMobile?: boolean;
+  /** Esconde a coluna da tabela abaixo do breakpoint (th e td). */
+  hideBelow?: "md" | "lg" | "xl";
   /** Rótulo no cartão quando difere do cabeçalho (ex.: cabeçalho vazio). */
   mobileLabel?: string;
   render: (row: T) => ReactNode;
@@ -98,6 +103,36 @@ function useRolagemHorizontal(ativo: boolean) {
   return { ref, ...estado };
 }
 
+const hideBelowClass = {
+  md: "hidden md:table-cell",
+  lg: "hidden lg:table-cell",
+  xl: "hidden xl:table-cell",
+} as const;
+
+/** Conteúdo "vazio" no cartão: null/false/"" ou só o traço (<Vazio/> / "—"). */
+const semConteudo = (n: ReactNode) =>
+  n === null ||
+  n === undefined ||
+  n === false ||
+  n === "" ||
+  n === VAZIO ||
+  (isValidElement(n) && n.type === Vazio);
+
+/**
+ * Some, nos cartões, a linha cujo texto é só o traço de vazio — inclusive quando
+ * o "—" vem de dentro de um componente da página (o React não enxerga isso antes).
+ */
+function useOcultaVazios() {
+  const ref = useRef<HTMLUListElement>(null);
+  useLayoutEffect(() => {
+    ref.current?.querySelectorAll<HTMLElement>(".cartao-slot, .cartao-meta").forEach((el) => {
+      const alvo = el.classList.contains("cartao-meta") ? el.querySelector("dd") : el;
+      el.hidden = (alvo?.textContent ?? "").trim() === VAZIO;
+    });
+  });
+  return ref;
+}
+
 const alinhamento = (a?: Column<unknown>["align"]) =>
   a === "right" ? "text-right" : a === "center" ? "text-center" : "text-left";
 
@@ -149,6 +184,7 @@ export function DataTable<T extends { id?: string }>({
   className?: string;
 }) {
   const rolagem = useRolagemHorizontal(rows.length > 0);
+  const cartoes = useOcultaVazios();
 
   if (rows.length === 0) {
     return <>{empty ?? <EmptyState message={emptyMessage} />}</>;
@@ -181,18 +217,19 @@ export function DataTable<T extends { id?: string }>({
         >
           <table className="w-full text-sm" style={{ minWidth }}>
             <thead>
-              <tr className="border-b border-border">
+              <tr className="border-b border-border/70">
                 {columns.map((c) => (
                   <th
                     key={c.key}
                     scope="col"
                     className={cn(
-                      "bg-card px-4 py-3 text-[11px] font-bold tracking-[0.08em] whitespace-nowrap text-muted-foreground uppercase",
+                      "h-11 bg-card px-4 text-[0.8125rem] font-medium whitespace-nowrap text-muted-foreground first:pl-5 last:pr-5",
                       // Sticky só funciona quando a tabela não rola na horizontal.
                       stickyHeader &&
                         !rolagem.rola &&
-                        "sticky top-16 z-10 shadow-[inset_0_-1px_0_var(--border)]",
+                        "sticky top-16 z-10 shadow-[inset_0_-1px_0_color-mix(in_oklab,var(--border)_70%,transparent)]",
                       alinhamento(c.align),
+                      c.hideBelow && hideBelowClass[c.hideBelow],
                       c.className,
                     )}
                   >
@@ -209,8 +246,8 @@ export function DataTable<T extends { id?: string }>({
                   onKeyDown={teclado(row)}
                   tabIndex={onRowClick ? 0 : undefined}
                   className={cn(
-                    "border-b border-border/70 transition-colors last:border-0",
-                    onRowClick && "cursor-pointer hover:bg-muted/60 focus-visible:bg-muted/60",
+                    "border-b border-border/60 transition-colors last:border-0",
+                    onRowClick && "cursor-pointer hover:bg-muted/40 focus-visible:bg-muted/50",
                     rowClassName?.(row),
                   )}
                 >
@@ -218,9 +255,10 @@ export function DataTable<T extends { id?: string }>({
                     <td
                       key={c.key}
                       className={cn(
-                        "px-4 py-3 align-middle",
+                        "px-4 py-3.5 align-middle first:pl-5 last:pr-5",
                         alinhamento(c.align),
                         c.nowrap && "whitespace-nowrap",
+                        c.hideBelow && hideBelowClass[c.hideBelow],
                         c.cellClassName,
                       )}
                     >
@@ -249,9 +287,14 @@ export function DataTable<T extends { id?: string }>({
 
       {/* ---------- Cartões (celular) ---------- */}
       {cards && (
-        <ul className="divide-y divide-border md:hidden">
+        <ul ref={cartoes} className="divide-y divide-border/70 md:hidden">
           {rows.map((row, i) => {
-            const pick = (r: MobileRole) => columns.filter((_, j) => roles[j] === r);
+            // Cada slot só aparece se tiver conteúdo (sem "—" sozinho nem rodapé vazio).
+            const pick = (r: MobileRole) =>
+              columns
+                .filter((_, j) => roles[j] === r)
+                .map((c) => ({ c, node: c.render(row) }))
+                .filter((x) => !semConteudo(x.node));
             const titulo = pick("title");
             const subtitulo = pick("subtitle");
             const badges = pick("badge");
@@ -273,24 +316,27 @@ export function DataTable<T extends { id?: string }>({
                 {(titulo.length > 0 || badges.length > 0) && (
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      {titulo.map((c) => (
+                      {titulo.map(({ c, node }) => (
                         <div
                           key={c.key}
-                          className="text-[0.9375rem] leading-snug font-semibold text-foreground"
+                          className="cartao-slot text-[0.9375rem] leading-snug font-semibold text-foreground"
                         >
-                          {c.render(row)}
+                          {node}
                         </div>
                       ))}
-                      {subtitulo.map((c) => (
-                        <div key={c.key} className="mt-0.5 text-sm text-muted-foreground">
-                          {c.render(row)}
+                      {subtitulo.map(({ c, node }) => (
+                        <div
+                          key={c.key}
+                          className="cartao-slot mt-0.5 text-sm text-muted-foreground"
+                        >
+                          {node}
                         </div>
                       ))}
                     </div>
                     {badges.length > 0 && (
                       <div className="flex shrink-0 flex-col items-end gap-1">
-                        {badges.map((c) => (
-                          <div key={c.key}>{c.render(row)}</div>
+                        {badges.map(({ c, node }) => (
+                          <div key={c.key}>{node}</div>
                         ))}
                       </div>
                     )}
@@ -298,12 +344,12 @@ export function DataTable<T extends { id?: string }>({
                 )}
                 {metas.length > 0 && (
                   <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
-                    {metas.map((c) => (
-                      <div key={c.key} className="min-w-0">
-                        <dt className="text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase">
+                    {metas.map(({ c, node }) => (
+                      <div key={c.key} className="cartao-meta min-w-0">
+                        <dt className="text-xs font-medium text-muted-foreground">
                           {c.mobileLabel ?? c.header}
                         </dt>
-                        <dd className="mt-0.5 break-words text-foreground">{c.render(row)}</dd>
+                        <dd className="mt-0.5 break-words text-foreground">{node}</dd>
                       </div>
                     ))}
                   </dl>
@@ -315,8 +361,8 @@ export function DataTable<T extends { id?: string }>({
                     onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => e.stopPropagation()}
                   >
-                    {acoes.map((c) => (
-                      <div key={c.key}>{c.render(row)}</div>
+                    {acoes.map(({ c, node }) => (
+                      <div key={c.key}>{node}</div>
                     ))}
                   </div>
                 )}

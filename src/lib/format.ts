@@ -160,3 +160,19 @@ export function tituloNome(texto: string | null | undefined): string {
   }
   return tokens.map((t, i) => (t === "S.A." ? t : palavra(t, i === 0))).join(" ");
 }
+
+/**
+ * Como `tituloNome`, mas para "cidade + UF": a UF volta em maiúsculas.
+ * "CARATINGA/MG" → "Caratinga/MG" · "SÃO PAULO - SP" → "São Paulo - SP" ·
+ * "MANHUACU (MG)" → "Manhuaçu (MG)". Sem UF, igual a `tituloNome`.
+ */
+export function cidadeNome(texto: string | null | undefined): string {
+  const limpo = (texto ?? "").replace(/\s+/g, " ").trim();
+  const m =
+    limpo.match(/^(.*?\S)(\s*[/\-–]\s*)(\p{L}{2})$/u) ??
+    limpo.match(/^(.*?\S)(\s*\()(\p{L}{2})\)$/u);
+  if (!m) return tituloNome(limpo);
+  const [, cidade, sep, uf] = m;
+  const fecha = sep.trim() === "(" ? ")" : "";
+  return `${tituloNome(cidade)}${sep}${uf.toLocaleUpperCase("pt-BR")}${fecha}`;
+}

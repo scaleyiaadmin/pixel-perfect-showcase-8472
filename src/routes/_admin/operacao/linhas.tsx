@@ -3,20 +3,17 @@ import { useMemo, useState } from "react";
 import {
   DataTable,
   FilterBar,
+  FilterSelect,
   PageHeader,
   QueryState,
   SectionCard,
   SourceNote,
   StatusBadge,
+  Vazio,
   type Column,
+  type Tone,
 } from "@/components/common";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { tituloNome } from "@/lib/format";
 import { nomeEmpresa, useLinhas, type Linha } from "@/services/dados-publicos";
 
 export const Route = createFileRoute("/_admin/operacao/linhas")({
@@ -34,10 +31,11 @@ export const Route = createFileRoute("/_admin/operacao/linhas")({
   component: LinesPage,
 });
 
-const relacaoLabel = {
-  origem: "Parte de Manhuaçu",
-  destino: "Termina em Manhuaçu",
-  passagem: "Passa por Manhuaçu",
+/** Relação da linha com Manhuaçu: badge curto + explicação completa na dica. */
+const relacao: Record<Linha["relacao_manhuacu"], { label: string; title: string; tone: Tone }> = {
+  origem: { label: "Origem", title: "Parte de Manhuaçu", tone: "success" },
+  destino: { label: "Destino", title: "Termina em Manhuaçu", tone: "info" },
+  passagem: { label: "Passagem", title: "Passa por Manhuaçu", tone: "neutral" },
 };
 
 function LinesPage() {
@@ -64,22 +62,60 @@ function LinesPage() {
     {
       key: "code",
       header: "Código",
+      nowrap: true,
+      mobile: "meta",
       render: (l) => <span className="tabular font-semibold">{l.codigo}</span>,
     },
-    { key: "desc", header: "Linha", render: (l) => l.descricao },
+    {
+      key: "desc",
+      header: "Linha",
+      mobile: "title",
+      cellClassName: "min-w-[10rem] font-medium",
+      render: (l) => tituloNome(l.descricao),
+    },
     {
       key: "company",
       header: "Empresa",
-      render: (l) => <span className="text-muted-foreground">{nomeEmpresa(l)}</span>,
+      mobile: "subtitle",
+      cellClassName: "min-w-[9rem] text-muted-foreground",
+      render: (l) =>
+        l.empresa?.razao_social ? (
+          tituloNome(l.empresa.razao_social)
+        ) : (
+          <Vazio title={l.fonte === "DER-MG" ? "Não informada pelo DER-MG" : "Não informada"} />
+        ),
     },
-    { key: "rel", header: "Em Manhuaçu", render: (l) => relacaoLabel[l.relacao_manhuacu] },
+    {
+      key: "rel",
+      header: "Em Manhuaçu",
+      nowrap: true,
+      mobile: "meta",
+      render: (l) => {
+        const r = relacao[l.relacao_manhuacu];
+        return (
+          <span title={r.title}>
+            <StatusBadge size="sm" tone={r.tone} dot={false}>
+              {r.label}
+            </StatusBadge>
+          </span>
+        );
+      },
+    },
     {
       key: "ambito",
       header: "Âmbito",
+      nowrap: true,
+      mobile: "badge",
       render: (l) => (
-        <StatusBadge tone={l.ambito === "interestadual" ? "info" : "primary"} dot={false}>
-          {l.fonte === "ANTT" ? "Interestadual · ANTT" : "Intermunicipal · DER-MG"}
-        </StatusBadge>
+        <span title={l.fonte === "ANTT" ? "Interestadual · ANTT" : "Intermunicipal · DER-MG"}>
+          <StatusBadge
+            size="sm"
+            tone={l.ambito === "interestadual" ? "info" : "primary"}
+            dot={false}
+          >
+            {l.fonte === "ANTT" ? "ANTT" : "DER-MG"}
+          </StatusBadge>
+        </span>
       ),
     },
   ];
@@ -90,25 +126,22 @@ function LinesPage() {
         title="Linhas"
         subtitle="Linhas autorizadas que atendem o Terminal Rodoviário de Manhuaçu"
       />
-      <FilterBar
-        search={search}
-        onSearch={setSearch}
-        placeholder="Pesquisar linha, cidade ou empresa..."
-      >
-        <Select value={fonte} onValueChange={setFonte}>
-          <SelectTrigger className="h-9 w-[14rem]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todas">Todas as linhas</SelectItem>
-            <SelectItem value="ANTT">Interestaduais (ANTT)</SelectItem>
-            <SelectItem value="DER-MG">Intermunicipais (DER-MG)</SelectItem>
-          </SelectContent>
-        </Select>
+      <FilterBar search={search} onSearch={setSearch} placeholder="Buscar linha ou cidade">
+        <FilterSelect
+          value={fonte}
+          onValueChange={setFonte}
+          aria-label="Tipo de linha"
+          allLabel="Todas as linhas"
+          allValue="todas"
+          options={[
+            { value: "ANTT", label: "Interestaduais (ANTT)" },
+            { value: "DER-MG", label: "Intermunicipais (DER-MG)" },
+          ]}
+        />
       </FilterBar>
       <SectionCard bodyClassName="p-0">
         <QueryState isLoading={linhas.isLoading} error={linhas.error} />
-        {linhas.data && <DataTable columns={columns} rows={rows} />}
+        {linhas.data && <DataTable minWidth="40rem" columns={columns} rows={rows} />}
       </SectionCard>
       <SourceNote>
         Fontes: ANTT (SIGMA, Dados Abertos) e DER-MG (quadro de itinerários intermunicipais).

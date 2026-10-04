@@ -1,21 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
+  DataTable,
   EmptyState,
   FilterBar,
+  FilterSelect,
   PageHeader,
   QueryState,
   SectionCard,
   SourceNote,
   StatusBadge,
+  Vazio,
+  type Column,
 } from "@/components/common";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { num, tituloNome } from "@/lib/format";
 import {
   descreverDias,
   destinoDaPartida,
@@ -23,7 +21,66 @@ import {
   nomeEmpresa,
   operaEm,
   useHorarios,
+  type Horario,
+  type Linha,
 } from "@/services/dados-publicos";
+
+/** Empresa da linha em caixa mista; sem empresa publicada mostra o traço com a explicação. */
+function EmpresaLinha({ linha }: { linha: Linha }) {
+  if (linha.empresa?.razao_social) return <>{tituloNome(linha.empresa.razao_social)}</>;
+  return <Vazio title={linha.fonte === "DER-MG" ? "Não informada pelo DER-MG" : "Não informada"} />;
+}
+
+const colunas: Column<Horario>[] = [
+  {
+    key: "hora",
+    header: "Horário",
+    nowrap: true,
+    mobile: "meta",
+    render: (h) => <span className="tabular font-semibold">{horaCurta(h.hora)}</span>,
+  },
+  {
+    key: "destino",
+    header: "Destino",
+    mobile: "title",
+    cellClassName: "min-w-[9rem]",
+    render: (h) => (
+      <span className="font-medium">
+        {tituloNome(destinoDaPartida(h))}
+        {h.tipo_servico && (
+          <span className="ml-2 text-xs font-normal text-muted-foreground">
+            {tituloNome(h.tipo_servico)}
+          </span>
+        )}
+      </span>
+    ),
+  },
+  {
+    key: "empresa",
+    header: "Empresa",
+    mobile: "subtitle",
+    cellClassName: "min-w-[9rem] text-muted-foreground",
+    render: (h) => <EmpresaLinha linha={h.linha} />,
+  },
+  {
+    key: "dias",
+    header: "Dias",
+    mobile: "meta",
+    cellClassName: "min-w-[7rem]",
+    render: (h) => descreverDias(h.dias_semana),
+  },
+  {
+    key: "linha",
+    header: "Linha",
+    nowrap: true,
+    mobile: "badge",
+    render: (h) => (
+      <StatusBadge size="sm" tone={h.linha.fonte === "ANTT" ? "info" : "primary"} dot={false}>
+        {h.linha.fonte} · {h.linha.codigo}
+      </StatusBadge>
+    ),
+  },
+];
 
 export const Route = createFileRoute("/_admin/operacao/horarios")({
   head: () => ({
@@ -66,60 +123,31 @@ function SchedulesPage() {
     <>
       <PageHeader title="Horários" subtitle="Grade oficial de partidas do terminal de Manhuaçu" />
 
-      <FilterBar search={search} onSearch={setSearch} placeholder="Pesquisar destino ou empresa...">
-        <Select value={dia} onValueChange={setDia}>
-          <SelectTrigger className="h-9 w-[12rem]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os dias</SelectItem>
-            <SelectItem value="hoje">Só hoje</SelectItem>
-          </SelectContent>
-        </Select>
+      <FilterBar search={search} onSearch={setSearch} placeholder="Buscar destino ou empresa">
+        <FilterSelect
+          value={dia}
+          onValueChange={setDia}
+          aria-label="Dias de operação"
+          options={[
+            { value: "todos", label: "Todos os dias" },
+            { value: "hoje", label: "Só hoje" },
+          ]}
+        />
       </FilterBar>
 
-      <SectionCard bodyClassName="p-0" title="Grade de partidas">
+      <SectionCard
+        bodyClassName="p-0"
+        title="Grade de partidas"
+        description={horarios.data ? `${num(rows.length)} horários` : undefined}
+      >
         <QueryState isLoading={horarios.isLoading} error={horarios.error} />
-        {horarios.data && rows.length === 0 && <EmptyState message="Nenhuma partida encontrada." />}
-        {rows.length > 0 && (
-          <div className="overflow-x-auto">
-            <div className="min-w-[48rem]">
-              <div className="grid grid-cols-[6rem_1fr_1fr_9rem_10rem] gap-3 border-b border-border bg-muted/60 px-5 py-3 text-[11px] font-bold tracking-[0.12em] uppercase text-muted-foreground">
-                <span>Horário</span>
-                <span>Destino</span>
-                <span>Empresa</span>
-                <span>Dias</span>
-                <span>Linha</span>
-              </div>
-              <div className="divide-y divide-border/60">
-                {rows.map((h) => (
-                  <div
-                    key={h.id}
-                    className="grid grid-cols-[6rem_1fr_1fr_9rem_10rem] items-center gap-3 px-5 py-3.5 transition-colors hover:bg-muted/50"
-                  >
-                    <span className="tabular font-display text-xl font-bold">
-                      {horaCurta(h.hora)}
-                    </span>
-                    <span className="truncate text-sm font-semibold">
-                      {destinoDaPartida(h)}
-                      {h.tipo_servico && (
-                        <span className="ml-2 font-normal text-muted-foreground">
-                          {h.tipo_servico}
-                        </span>
-                      )}
-                    </span>
-                    <span className="truncate text-sm text-muted-foreground">
-                      {nomeEmpresa(h.linha)}
-                    </span>
-                    <span className="text-sm">{descreverDias(h.dias_semana)}</span>
-                    <StatusBadge tone={h.linha.fonte === "ANTT" ? "info" : "primary"} dot={false}>
-                      {h.linha.fonte} · {h.linha.codigo}
-                    </StatusBadge>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+        {horarios.data && (
+          <DataTable
+            minWidth="40rem"
+            columns={colunas}
+            rows={rows}
+            empty={<EmptyState message="Nenhuma partida encontrada com esses filtros." />}
+          />
         )}
       </SectionCard>
       <SourceNote>

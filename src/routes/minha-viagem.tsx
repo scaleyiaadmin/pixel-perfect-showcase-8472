@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { PrefeituraLogo, RodoviariaLogo, SisRodovLogo } from "@/components/brand/Logos";
+import { MonitorPlay } from "lucide-react";
+import { PrefeituraLogo, RodoviariaLogo } from "@/components/brand/Logos";
+import { Button } from "@/components/ui/button";
+import { tituloNome } from "@/lib/format";
 import { EmptyState, QueryState, StatusBadge, tripStatusTone } from "@/components/common";
 import {
   Select,
@@ -73,20 +76,19 @@ function PassengerTrip() {
   const opcoes = paraDestino.filter((v) => empresa === "todas" || nomeEmpresaViagem(v) === empresa);
 
   return (
-    <div className="min-h-screen bg-background px-4 py-10">
+    <div className="min-h-dvh bg-background px-4 py-6 sm:py-10">
       <div className="mx-auto w-full max-w-lg">
-        <div className="mb-6 flex items-center justify-between">
+        <header className="mb-5 flex items-center">
           <RodoviariaLogo />
-          <PrefeituraLogo />
-        </div>
+        </header>
 
-        <div className="surface-card overflow-hidden">
-          <div className="gradient-institutional px-6 py-7 text-primary-foreground">
-            <p className="text-xs font-bold tracking-[0.25em] uppercase text-primary-foreground/70">
-              Sua viagem
-            </p>
-            <h1 className="mt-2 font-display text-3xl font-extrabold">Saindo de Manhuaçu</h1>
-            <p className="mt-1 text-primary-foreground/80">
+        <div className="overflow-hidden rounded-2xl bg-card shadow-sm">
+          <div className="border-b border-border px-5 py-6 sm:px-6 sm:py-7">
+            <p className="text-xs font-bold tracking-[0.16em] uppercase text-primary">Sua viagem</p>
+            <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-foreground">
+              Saindo de Manhuaçu
+            </h1>
+            <p className="mt-1 text-foreground/75 first-letter:uppercase">
               {today?.toLocaleDateString("pt-BR", {
                 weekday: "long",
                 day: "numeric",
@@ -95,10 +97,13 @@ function PassengerTrip() {
             </p>
           </div>
 
-          <div className="border-b border-border px-6 py-5">
-            <p className="mb-2 text-[11px] font-bold tracking-[0.12em] uppercase text-muted-foreground">
+          <div className="border-b border-border px-5 py-5 sm:px-6">
+            <label
+              htmlFor="destino"
+              className="mb-2 block text-xs font-bold tracking-[0.12em] uppercase text-foreground/80"
+            >
               Para onde você vai?
-            </p>
+            </label>
             <Select
               value={destino}
               onValueChange={(d) => {
@@ -106,13 +111,13 @@ function PassengerTrip() {
                 setEmpresa("todas");
               }}
             >
-              <SelectTrigger className="h-11">
+              <SelectTrigger id="destino" className="h-11 w-full text-base">
                 <SelectValue placeholder="Escolha o destino" />
               </SelectTrigger>
               <SelectContent>
                 {destinos.map((d) => (
-                  <SelectItem key={d} value={d}>
-                    {d}
+                  <SelectItem key={d} value={d} className="min-h-11">
+                    {tituloNome(d)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -120,19 +125,24 @@ function PassengerTrip() {
           </div>
 
           {destino && empresas.length > 1 && (
-            <div className="border-b border-border px-6 py-4">
-              <p className="mb-2 text-[11px] font-bold tracking-[0.12em] uppercase text-muted-foreground">
+            <div className="border-b border-border px-5 py-4 sm:px-6">
+              <label
+                htmlFor="empresa"
+                className="mb-2 block text-xs font-bold tracking-[0.12em] uppercase text-foreground/80"
+              >
                 Empresa
-              </p>
+              </label>
               <Select value={empresa} onValueChange={setEmpresa}>
-                <SelectTrigger className="h-10">
+                <SelectTrigger id="empresa" className="h-11 w-full text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todas">Todas as empresas</SelectItem>
+                  <SelectItem value="todas" className="min-h-11">
+                    Todas as empresas
+                  </SelectItem>
                   {empresas.map((e) => (
-                    <SelectItem key={e} value={e}>
-                      {e}
+                    <SelectItem key={e} value={e} className="min-h-11">
+                      {tituloNome(e)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -146,7 +156,7 @@ function PassengerTrip() {
           )}
 
           {destino && opcoes.length === 0 && (
-            <EmptyState message={`Sem partidas para ${destino} hoje.`} />
+            <EmptyState message={`Sem partidas para ${tituloNome(destino)} hoje.`} />
           )}
 
           {opcoes.length > 0 && (
@@ -154,37 +164,47 @@ function PassengerTrip() {
               {opcoes.map((v) => {
                 const st = tripStatusTone[v.status];
                 return (
-                  <li key={v.id} className="flex items-center gap-4 px-6 py-4">
-                    <span className="tabular w-16 font-display text-2xl font-bold">
+                  <li
+                    key={v.id}
+                    className="flex min-h-16 items-center gap-3 px-5 py-4 sm:gap-4 sm:px-6"
+                  >
+                    <span className="tabular w-16 shrink-0 font-display text-2xl font-bold">
                       {horaPrevista(v)}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold">{nomeEmpresaViagem(v)}</p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {v.origem} → {v.destino}
+                      <p className="truncate font-semibold">{tituloNome(nomeEmpresaViagem(v))}</p>
+                      <p className="line-clamp-2 text-sm text-foreground/75">
+                        {tituloNome(v.origem)} → {tituloNome(v.destino)}
                         {v.plataforma ? ` · Plataforma ${v.plataforma.numero}` : ""}
                         {!v.previsto_em ? " · horário no terminal a confirmar" : ""}
                       </p>
                     </div>
-                    <StatusBadge tone={st.tone}>{st.label}</StatusBadge>
+                    <StatusBadge tone={st.tone} className="shrink-0">
+                      {st.label}
+                    </StatusBadge>
                   </li>
                 );
               })}
             </ul>
           )}
 
-          <p className="border-t border-border px-6 py-4 text-xs text-muted-foreground">
+          <p className="border-t border-border bg-muted/40 px-5 py-4 text-sm leading-relaxed text-foreground/80 sm:px-6">
             Viagens do dia geradas da grade oficial (ANTT e DER-MG) e atualizadas pela equipe do
             terminal. Confirme a plataforma no painel do terminal.
           </p>
         </div>
 
-        <div className="mt-6 flex items-center justify-between">
-          <SisRodovLogo />
-          <Link to="/painel" className="text-sm font-semibold text-primary hover:underline">
+        <Button asChild variant="outline" size="lg" className="mt-5 h-11 w-full sm:w-auto">
+          <Link to="/painel">
+            <MonitorPlay className="h-4 w-4" />
             Ver painel de partidas
           </Link>
-        </div>
+        </Button>
+
+        <footer className="mt-8 flex items-center justify-center gap-3 border-t border-border pt-5 text-xs font-medium tracking-wide text-foreground/70 uppercase sm:justify-start">
+          <span>Realização</span>
+          <PrefeituraLogo size="sm" />
+        </footer>
       </div>
     </div>
   );

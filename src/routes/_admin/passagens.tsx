@@ -3,28 +3,24 @@ import { useMemo, useState } from "react";
 import { Ticket, TicketX, TicketCheck, TicketSlash } from "lucide-react";
 import {
   DataTable,
+  DateRangeFilter,
   EmptyState,
   FilterBar,
+  FilterSelect,
   PageHeader,
   QueryState,
   SectionCard,
   SourceNote,
   StatCard,
+  StatGrid,
   StatusBadge,
+  Vazio,
   type Column,
   type Tone,
 } from "@/components/common";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { brl, dataHora, hojeISO, num } from "@/lib/format";
+import { brl, dataHora, hojeISO, num, tituloNome } from "@/lib/format";
 import { mesAno, useEmpresas, usePassagensMensais } from "@/services/dados-publicos";
 import { mapaEmpresas, useBilhetes, type BilheteComViagem } from "@/services/financeiro";
 
@@ -59,12 +55,16 @@ function TicketsPage() {
     <>
       <PageHeader
         title="Passagens"
-        subtitle="Bilhetes informados pelas empresas e resumo público da ANTT"
+        subtitle="Bilhetes informados pelas empresas e resumo público da ANTT."
       />
       <Tabs defaultValue="bilhetes">
-        <TabsList className="mb-5">
-          <TabsTrigger value="bilhetes">Bilhetes das empresas</TabsTrigger>
-          <TabsTrigger value="antt">Resumo mensal ANTT</TabsTrigger>
+        <TabsList className="mb-5 w-full justify-start overflow-x-auto sm:w-auto">
+          <TabsTrigger value="bilhetes" className="shrink-0">
+            Bilhetes das empresas
+          </TabsTrigger>
+          <TabsTrigger value="antt" className="shrink-0">
+            Resumo ANTT
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="bilhetes">
           <BilhetesTab />
@@ -79,6 +79,15 @@ function TicketsPage() {
 
 /* ------------------------------- Bilhetes ------------------------------- */
 
+/** Cidade em title-case mantendo a UF em maiúsculas ("CARATINGA/MG" → "Caratinga/MG"). */
+function cidadeNome(c: string) {
+  const m = c.match(/^(.*?)(\s*[/-]\s*)([A-Za-z]{2})$/);
+  return m ? `${tituloNome(m[1])}${m[2]}${m[3].toUpperCase()}` : tituloNome(c);
+}
+
+/** Nome de cidade em title-case ou traço cinza quando ausente. */
+const ouVazioNome = (v: string | null | undefined) => (v ? cidadeNome(v) : <Vazio />);
+
 function BilhetesTab() {
   const [de, setDe] = useState(() => hojeISO());
   const [ate, setAte] = useState(() => hojeISO());
@@ -86,7 +95,8 @@ function BilhetesTab() {
   const [status, setStatus] = useState("todos");
 
   const empresas = useEmpresas();
-  const empresa = mapaEmpresas(empresas.data);
+  const nomeEmpresa = mapaEmpresas(empresas.data);
+  const empresa = (id: string | null | undefined) => tituloNome(nomeEmpresa(id));
   const bilhetes = useBilhetes({ periodo: { de, ate } });
 
   const todos = bilhetes.data ?? [];
@@ -110,37 +120,75 @@ function BilhetesTab() {
     {
       key: "code",
       header: "Passagem",
+      nowrap: true,
+      mobile: "meta",
       render: (t) => <span className="tabular font-semibold">{t.codigo}</span>,
     },
     {
       key: "trip",
       header: "Viagem",
+      nowrap: true,
+      hideOnMobile: true,
+      render: (t) =>
+        t.viagem?.numero ? (
+          <span className="tabular text-muted-foreground">{t.viagem.numero}</span>
+        ) : (
+          <Vazio />
+        ),
+    },
+    {
+      key: "company",
+      header: "Empresa",
+      mobile: "subtitle",
+      cellClassName: "min-w-[10rem]",
       render: (t) => (
-        <span className="tabular text-muted-foreground">{t.viagem?.numero || "—"}</span>
+        <>
+          {empresa(t.empresa_id)}
+          {t.viagem?.numero && (
+            <span className="tabular md:hidden"> · Viagem {t.viagem.numero}</span>
+          )}
+        </>
       ),
     },
-    { key: "company", header: "Empresa", render: (t) => empresa(t.empresa_id) },
-    { key: "origin", header: "Origem", render: (t) => t.origem || "—" },
-    { key: "dest", header: "Destino", render: (t) => t.destino || "—" },
+    {
+      key: "origin",
+      header: "Origem",
+      hideOnMobile: true,
+      cellClassName: "min-w-[8rem]",
+      render: (t) => ouVazioNome(t.origem),
+    },
+    {
+      key: "dest",
+      header: "Destino",
+      mobile: "title",
+      cellClassName: "min-w-[8rem]",
+      render: (t) => (
+        <>
+          <span className="md:hidden">{ouVazioNome(t.origem)} → </span>
+          {ouVazioNome(t.destino)}
+        </>
+      ),
+    },
     {
       key: "value",
       header: "Valor",
       align: "right",
-      render: (t) => (
-        <span className="tabular">
-          {t.gratuidade ? (
-            <span className="text-muted-foreground">{t.gratuidade}</span>
-          ) : t.valor === null ? (
-            "—"
-          ) : (
-            brl(t.valor)
-          )}
-        </span>
-      ),
+      nowrap: true,
+      mobile: "meta",
+      render: (t) =>
+        t.gratuidade ? (
+          <span className="text-muted-foreground">{t.gratuidade}</span>
+        ) : t.valor === null ? (
+          <Vazio />
+        ) : (
+          <span className="tabular">{brl(t.valor)}</span>
+        ),
     },
     {
       key: "issued",
       header: "Emissão",
+      nowrap: true,
+      mobile: "meta",
       render: (t) => (
         <span className="tabular text-muted-foreground">{dataHora(t.emitido_em)}</span>
       ),
@@ -148,6 +196,7 @@ function BilhetesTab() {
     {
       key: "status",
       header: "Status",
+      mobile: "badge",
       render: (t) => (
         <StatusBadge tone={statusMap[t.status].tone}>{statusMap[t.status].label}</StatusBadge>
       ),
@@ -156,11 +205,12 @@ function BilhetesTab() {
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <StatGrid>
         <StatCard
           label={hoje ? "Emitidas hoje" : "Emitidas no período"}
           value={num(todos.length)}
           icon={Ticket}
+          tone="primary"
         />
         <StatCard
           label="Canceladas"
@@ -180,63 +230,56 @@ function BilhetesTab() {
           icon={TicketSlash}
           tone="warning"
         />
-      </div>
+      </StatGrid>
 
       <div className="mt-6">
-        <FilterBar
-          search={search}
-          onSearch={setSearch}
-          placeholder="Pesquisar passagem, viagem, empresa ou destino..."
-        >
-          <div className="flex items-center gap-2 text-sm">
-            <Label htmlFor="bil-de" className="text-muted-foreground">
-              Emissão de
-            </Label>
-            <Input
-              id="bil-de"
-              type="date"
-              className="h-9 w-[10rem]"
-              value={de}
-              max={ate}
-              onChange={(e) => e.target.value && setDe(e.target.value)}
-            />
-            <Label htmlFor="bil-ate" className="text-muted-foreground">
-              até
-            </Label>
-            <Input
-              id="bil-ate"
-              type="date"
-              className="h-9 w-[10rem]"
-              value={ate}
-              min={de}
-              onChange={(e) => e.target.value && setAte(e.target.value)}
-            />
-          </div>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="h-9 w-[12rem]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos os status</SelectItem>
-              {Object.entries(statusMap).map(([k, v]) => (
-                <SelectItem key={k} value={k}>
-                  {v.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <FilterBar search={search} onSearch={setSearch} placeholder="Buscar passagem ou destino">
+          <DateRangeFilter
+            label="Emissão"
+            from={de}
+            to={ate}
+            onFromChange={(v) => v && setDe(v)}
+            onToChange={(v) => v && setAte(v)}
+          />
+          <FilterSelect
+            value={status}
+            onValueChange={setStatus}
+            placeholder="Status"
+            allLabel="Todos os status"
+            options={Object.entries(statusMap).map(([k, v]) => ({ value: k, label: v.label }))}
+          />
         </FilterBar>
 
-        <SectionCard bodyClassName="p-0">
+        <SectionCard title="Bilhetes" bodyClassName="p-0">
           <QueryState isLoading={bilhetes.isLoading} error={bilhetes.error} />
           {bilhetes.data && (
             <DataTable
               columns={columns}
               rows={rows}
-              emptyMessage={
-                todos.length === 0
-                  ? "Nenhum bilhete no período. Os bilhetes chegam pela integração das empresas de ônibus (os mesmos registros de venda e cancelamento enviados à ANTT/MONITRIIP)."
-                  : "Nenhum bilhete com esses filtros."
+              empty={
+                todos.length === 0 ? (
+                  <EmptyState
+                    icon={Ticket}
+                    title="Nenhum bilhete no período"
+                    message="Os bilhetes chegam pela integração das empresas de ônibus (os mesmos registros de venda e cancelamento enviados à ANTT/MONITRIIP)."
+                  />
+                ) : (
+                  <EmptyState
+                    message="Nenhum bilhete com esses filtros."
+                    action={
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSearch("");
+                          setStatus("todos");
+                        }}
+                      >
+                        Limpar filtros
+                      </Button>
+                    }
+                  />
+                )
               }
             />
           )}
@@ -313,11 +356,29 @@ function ResumoAnttTab() {
   const descontos = rows.reduce((s, r) => s + r.descontos, 0);
 
   const columns: Column<LinhaResumo>[] = [
-    { key: "origin", header: "Origem", render: (r) => r.origem },
-    { key: "dest", header: "Destino", render: (r) => r.destino },
+    {
+      key: "origin",
+      header: "Origem",
+      hideOnMobile: true,
+      cellClassName: "min-w-[9rem]",
+      render: (r) => r.origem,
+    },
+    {
+      key: "dest",
+      header: "Destino",
+      mobile: "title",
+      cellClassName: "min-w-[9rem]",
+      render: (r) => (
+        <>
+          <span className="md:hidden">{r.origem} → </span>
+          {r.destino}
+        </>
+      ),
+    },
     {
       key: "dir",
       header: "Sentido",
+      mobile: "badge",
       render: (r) =>
         r.sentido === "saida" ? (
           <StatusBadge tone="primary">Saindo</StatusBadge>
@@ -329,32 +390,38 @@ function ResumoAnttTab() {
       key: "qty",
       header: "Passagens",
       align: "right",
+      mobile: "meta",
       render: (r) => <span className="tabular font-semibold">{num(r.quantidade)}</span>,
     },
     {
       key: "normal",
       header: "Tarifa normal",
       align: "right",
+      mobile: "meta",
       render: (r) => <span className="tabular">{num(r.normal)}</span>,
     },
     {
       key: "disc",
       header: "Gratuidade/desconto",
+      mobileLabel: "Gratuidade",
       align: "right",
+      mobile: "meta",
       render: (r) => <span className="tabular">{num(r.descontos)}</span>,
     },
     {
       key: "avg",
       header: "Valor médio",
       align: "right",
+      nowrap: true,
+      mobile: "meta",
       render: (r) => <span className="tabular">{brl(r.valorMedio)}</span>,
     },
   ];
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Saindo de Manhuaçu" value={num(saindo)} icon={Ticket} />
+      <StatGrid cols={3}>
+        <StatCard label="Saindo de Manhuaçu" value={num(saindo)} icon={Ticket} tone="primary" />
         <StatCard
           label="Chegando a Manhuaçu"
           value={num(chegando)}
@@ -367,21 +434,17 @@ function ResumoAnttTab() {
           icon={TicketSlash}
           tone="neutral"
         />
-      </div>
+      </StatGrid>
       <div className="mt-6">
         <FilterBar>
-          <Select value={mes} onValueChange={setEscolhido} disabled={meses.length === 0}>
-            <SelectTrigger className="h-9 w-[12rem]">
-              <SelectValue placeholder="Mês de emissão" />
-            </SelectTrigger>
-            <SelectContent>
-              {meses.map((m) => (
-                <SelectItem key={m} value={m}>
-                  Emitidas em {mesAno(m)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            value={mes}
+            onValueChange={setEscolhido}
+            disabled={meses.length === 0}
+            placeholder="Mês de emissão"
+            aria-label="Mês de emissão"
+            options={meses.map((m) => ({ value: m, label: `Emitidas em ${mesAno(m)}` }))}
+          />
         </FilterBar>
         <SectionCard
           title="Passagens interestaduais por trecho"
@@ -391,7 +454,11 @@ function ResumoAnttTab() {
           <QueryState isLoading={passagens.isLoading} error={passagens.error} />
           {passagens.data &&
             (rows.length === 0 ? (
-              <EmptyState message="Sem dados públicos importados. O resumo vem da ANTT (MONITRIIP, dados abertos) e é atualizado automaticamente todo dia." />
+              <EmptyState
+                icon={Ticket}
+                title="Sem dados públicos importados"
+                message="O resumo vem da ANTT (MONITRIIP, dados abertos) e é atualizado automaticamente todo dia."
+              />
             ) : (
               <DataTable columns={columns} rows={rows} />
             ))}

@@ -12,13 +12,17 @@ import {
 } from "lucide-react";
 import {
   DataTable,
+  EmptyState,
   FilterBar,
+  FilterSelect,
   PageHeader,
   QueryState,
   SectionCard,
   SourceNote,
   StatCard,
+  StatGrid,
   StatusBadge,
+  Vazio,
   type Column,
   type Tone,
 } from "@/components/common";
@@ -52,7 +56,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { dataHora, num } from "@/lib/format";
+import { dataHora, num, tituloNome } from "@/lib/format";
 import { usePermissao } from "@/services/acesso";
 import { formatCnpj, useEmpresas, useImportacoes } from "@/services/dados-publicos";
 import type { EventoIntegracao } from "@/services/gestao-tipos";
@@ -99,6 +103,56 @@ const statusEventoTone: Record<string, { tone: Tone; label: string }> = {
   erro: { tone: "danger", label: "Erro" },
 };
 
+const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+// Abreviações em inglês também aparecem em alguns arquivos da ANTT.
+const MESES_EN = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+];
+
+/**
+ * Competência legível e única ("out/2026") a partir dos formatos gravados pelas
+ * importações: "2026-10" (DER-MG), "2026-08-01" e "Out2026"/"Set2026" (ANTT).
+ */
+function formatarCompetencia(valor: string | null | undefined): string | null {
+  const v = (valor ?? "").trim();
+  if (!v) return null;
+  const iso = /^(\d{4})-(\d{2})(?:-\d{2})?/.exec(v);
+  if (iso) {
+    const m = Number(iso[2]);
+    if (m >= 1 && m <= 12) return `${MESES[m - 1]}/${iso[1]}`;
+  }
+  const abrev = /^([a-zà-ú]{3})[a-zà-ú]*[\s/._-]*(\d{4})$/i.exec(v);
+  if (abrev) {
+    const nome = abrev[1].toLowerCase();
+    const i = MESES.indexOf(nome) >= 0 ? MESES.indexOf(nome) : MESES_EN.indexOf(nome);
+    if (i >= 0) return `${MESES[i]}/${abrev[2]}`;
+  }
+  return v;
+}
+
+const ROTULO_RECURSO: Record<string, string> = {
+  horarios: "Horários",
+  linhas: "Linhas",
+  passagens: "Passagens",
+  empresas: "Empresas",
+  secoes: "Seções",
+  itinerarios: "Itinerários",
+};
+
+const rotuloRecurso = (r: string) =>
+  ROTULO_RECURSO[r.toLowerCase()] ?? r.charAt(0).toUpperCase() + r.slice(1);
+
 const mensagemErro = (e: unknown) =>
   e instanceof Error ? e.message : "Não foi possível concluir a operação.";
 
@@ -118,7 +172,7 @@ function IntegrationsPage() {
     <>
       <PageHeader
         title="Integrações"
-        subtitle="Sistemas externos que enviam dados ao terminal: empresas de ônibus (os mesmos registros do MONITRIIP/ANTT), catracas e pagamento"
+        subtitle="Sistemas externos que enviam dados ao terminal: empresas de ônibus (os mesmos registros do MONITRIIP/ANTT), catracas e pagamento."
         actions={
           editar ? (
             <Button onClick={() => setCriando(true)}>
@@ -128,25 +182,25 @@ function IntegrationsPage() {
         }
       />
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+      <StatGrid cols={3} className="mb-6">
         <StatCard
           label="Integrações ativas"
-          value={integracoes.isLoading ? "…" : ativas}
-          hint={`${lista.length} cadastrada(s)`}
+          value={integracoes.isLoading ? "…" : num(ativas)}
+          hint={lista.length === 1 ? "1 cadastrada" : `${num(lista.length)} cadastradas`}
           icon={PlugZap}
         />
         <StatCard
-          label="Último evento recebido"
+          label="Último evento"
           value={ultimo ? dataHora(ultimo) : "—"}
-          hint={ultimo ? "de qualquer integração" : "nenhum evento recebido ainda"}
+          hint={ultimo ? "De qualquer integração" : "Nenhum evento recebido ainda"}
           icon={RadioTower}
           tone="info"
         />
         <ImportacaoResumo />
-      </div>
+      </StatGrid>
 
       <Tabs defaultValue="integracoes">
-        <TabsList className="flex-wrap">
+        <TabsList>
           <TabsTrigger value="integracoes">Integrações</TabsTrigger>
           <TabsTrigger value="eventos">Eventos recebidos</TabsTrigger>
           <TabsTrigger value="publicos">Dados públicos</TabsTrigger>
@@ -158,6 +212,7 @@ function IntegrationsPage() {
             integracoes={lista}
             isLoading={integracoes.isLoading}
             error={integracoes.error}
+            onCriar={() => setCriando(true)}
           />
         </TabsContent>
         <TabsContent value="eventos" className="mt-4">
@@ -182,10 +237,12 @@ function ListaIntegracoes({
   integracoes,
   isLoading,
   error,
+  onCriar,
 }: {
   integracoes: IntegracaoComEmpresa[];
   isLoading: boolean;
   error: unknown;
+  onCriar: () => void;
 }) {
   const revogar = useRevogarIntegracao();
   const reativar = useReativarIntegracao();
@@ -197,37 +254,55 @@ function ListaIntegracoes({
     {
       key: "nome",
       header: "Integração",
+      mobile: "title",
+      cellClassName: "min-w-[12rem]",
       render: (i) => (
-        <div>
+        <div className="min-w-0">
           <p className="font-semibold">{i.nome}</p>
-          {i.descricao && <p className="text-xs text-muted-foreground">{i.descricao}</p>}
+          {i.descricao && (
+            <p className="text-xs font-normal text-muted-foreground">{i.descricao}</p>
+          )}
         </div>
       ),
     },
-    { key: "tipo", header: "Tipo", render: (i) => rotuloTipoIntegracao(i.tipo) },
+    {
+      key: "tipo",
+      header: "Tipo",
+      mobile: "subtitle",
+      render: (i) => rotuloTipoIntegracao(i.tipo),
+    },
     {
       key: "empresa",
       header: "Empresa",
+      mobile: "meta",
+      cellClassName: "min-w-[12rem]",
       render: (i) =>
         i.empresa ? (
           <div>
-            <p>{i.empresa.razao_social}</p>
-            <p className="tabular text-xs text-muted-foreground">{formatCnpj(i.empresa.cnpj)}</p>
+            <p>{tituloNome(i.empresa.razao_social)}</p>
+            <p className="tabular text-xs whitespace-nowrap text-muted-foreground">
+              {formatCnpj(i.empresa.cnpj)}
+            </p>
           </div>
         ) : (
-          <span className="text-muted-foreground">—</span>
+          <Vazio />
         ),
     },
     {
       key: "chave",
       header: "Chave",
-      render: (i) => <code className="text-xs">{i.chave_prefixo}…</code>,
+      nowrap: true,
+      mobile: "meta",
+      render: (i) => (
+        <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">{i.chave_prefixo}…</code>
+      ),
     },
     {
       key: "ativa",
       header: "Situação",
+      mobile: "badge",
       render: (i) => (
-        <StatusBadge tone={i.ativa ? "success" : "neutral"}>
+        <StatusBadge size="sm" tone={i.ativa ? "success" : "neutral"}>
           {i.ativa ? "Ativa" : "Revogada"}
         </StatusBadge>
       ),
@@ -235,14 +310,20 @@ function ListaIntegracoes({
     {
       key: "ultimo",
       header: "Último evento",
-      render: (i) => (
-        <span className="tabular">{i.ultimo_evento_em ? dataHora(i.ultimo_evento_em) : "Nunca"}</span>
-      ),
+      nowrap: true,
+      mobile: "meta",
+      render: (i) =>
+        i.ultimo_evento_em ? (
+          <span className="tabular">{dataHora(i.ultimo_evento_em)}</span>
+        ) : (
+          <span className="text-muted-foreground">Nunca</span>
+        ),
     },
     {
       key: "acoes",
       header: "",
       align: "right",
+      mobile: "action",
       render: (i) =>
         !editar ? null : i.ativa ? (
           <Button variant="outline" size="sm" onClick={() => setRevogando(i)}>
@@ -274,7 +355,20 @@ function ListaIntegracoes({
         <DataTable
           columns={colunas}
           rows={integracoes}
-          emptyMessage="Nenhuma integração criada. Crie uma chave para cada empresa de ônibus, catraca ou sistema de pagamento que vai enviar dados ao terminal."
+          empty={
+            <EmptyState
+              icon={PlugZap}
+              title="Nenhuma integração criada"
+              message="Crie uma chave para cada empresa de ônibus, catraca ou sistema de pagamento que vai enviar dados ao terminal."
+              action={
+                editar ? (
+                  <Button onClick={onCriar}>
+                    <Plus className="h-4 w-4" /> Nova integração
+                  </Button>
+                ) : undefined
+              }
+            />
+          }
         />
       )}
 
@@ -283,9 +377,8 @@ function ListaIntegracoes({
           <AlertDialogHeader>
             <AlertDialogTitle>Revogar a chave de “{revogando?.nome}”?</AlertDialogTitle>
             <AlertDialogDescription>
-              O sistema externo deixa de conseguir enviar dados imediatamente. Os dados já
-              recebidos são mantidos. Para voltar a receber, reative a integração ou crie uma nova
-              chave.
+              O sistema externo deixa de conseguir enviar dados imediatamente. Os dados já recebidos
+              são mantidos. Para voltar a receber, reative a integração ou crie uma nova chave.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -352,27 +445,41 @@ function NovaIntegracaoDialog({
         {chave ? (
           <>
             <DialogHeader>
+              <div className="mb-1 grid h-10 w-10 place-items-center rounded-xl bg-success-soft text-success max-sm:mx-auto">
+                <Check className="h-5 w-5" aria-hidden="true" />
+              </div>
               <DialogTitle>Chave criada</DialogTitle>
               <DialogDescription>
-                Envie esta chave ao responsável técnico de “{nome}”. Ela vai no header{" "}
-                <code>x-api-key</code> de cada requisição.
+                Envie esta chave ao responsável técnico de “{nome}”.
               </DialogDescription>
             </DialogHeader>
-            <div className="rounded-lg border border-border bg-muted/50 p-3">
-              <code className="block text-sm break-all">{chave}</code>
-            </div>
-            <div className="flex items-start gap-2 rounded-lg border border-warning/35 bg-warning-soft px-3 py-2 text-sm text-warning-foreground">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-              <p>
-                Esta é a única vez que a chave aparece. Copie agora e guarde em local seguro; se
-                perder, revogue e crie outra.
-              </p>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase">
+                  Chave de acesso
+                </p>
+                <CampoCopiavel texto={chave} rotulo="Copiar chave" />
+              </div>
+              <dl className="grid gap-3 rounded-xl bg-muted/60 p-3 text-sm sm:grid-cols-[auto_1fr] sm:gap-x-4 sm:gap-y-2">
+                <dt className="text-muted-foreground">Header</dt>
+                <dd className="-mt-2 sm:mt-0">
+                  <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
+                    x-api-key: {"<chave>"}
+                  </code>
+                </dd>
+                <dt className="text-muted-foreground">Endereço</dt>
+                <dd className="-mt-2 font-mono text-xs break-all sm:mt-0">{URL_INGESTAO}</dd>
+              </dl>
+              <div className="flex items-start gap-2.5 rounded-xl bg-warning-soft px-3 py-2.5 text-sm text-warning-foreground">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <p>
+                  <span className="font-semibold">Esta é a única vez que a chave aparece.</span>{" "}
+                  Copie agora e guarde em local seguro; se perder, revogue e crie outra.
+                </p>
+              </div>
             </div>
             <DialogFooter>
-              <BotaoCopiar texto={chave} rotulo="Copiar chave" />
-              <Button variant="outline" onClick={() => fechar(false)}>
-                Concluir
-              </Button>
+              <Button onClick={() => fechar(false)}>Concluir</Button>
             </DialogFooter>
           </>
         ) : (
@@ -424,7 +531,7 @@ function NovaIntegracaoDialog({
                       <SelectContent>
                         {(empresas.data ?? []).map((e) => (
                           <SelectItem key={e.id} value={e.id}>
-                            {e.razao_social} · {formatCnpj(e.cnpj)}
+                            {tituloNome(e.razao_social)} · {formatCnpj(e.cnpj)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -470,41 +577,58 @@ function EventosRecebidos({ integracoes }: { integracoes: IntegracaoComEmpresa[]
   });
   const eventos = useEventosIntegracao(filtro);
   const [aberto, setAberto] = useState<EventoIntegracao | null>(null);
-  const nomes = useMemo(
-    () => new Map(integracoes.map((i) => [i.id, i.nome])),
-    [integracoes],
-  );
+  const nomes = useMemo(() => new Map(integracoes.map((i) => [i.id, i.nome])), [integracoes]);
 
   const colunas: Column<EventoIntegracao>[] = [
     {
       key: "recebido",
       header: "Recebido em",
-      render: (e) => <span className="tabular whitespace-nowrap">{dataHora(e.recebido_em)}</span>,
+      nowrap: true,
+      mobile: "meta",
+      render: (e) => <span className="tabular">{dataHora(e.recebido_em)}</span>,
     },
     {
       key: "integracao",
       header: "Integração",
+      mobile: "title",
       render: (e) =>
-        e.integracao_id ? (nomes.get(e.integracao_id) ?? "—") : <span className="text-muted-foreground">Excluída</span>,
+        e.integracao_id ? (
+          (nomes.get(e.integracao_id) ?? <Vazio />)
+        ) : (
+          <span className="text-muted-foreground">Excluída</span>
+        ),
     },
-    { key: "tipo", header: "Tipo", render: (e) => ROTULO_EVENTO[e.tipo] ?? e.tipo },
+    {
+      key: "tipo",
+      header: "Tipo",
+      mobile: "subtitle",
+      render: (e) => ROTULO_EVENTO[e.tipo] ?? e.tipo,
+    },
     {
       key: "status",
       header: "Status",
+      mobile: "badge",
       render: (e) => {
         const s = statusEventoTone[e.status];
-        return <StatusBadge tone={s?.tone ?? "neutral"}>{s?.label ?? e.status}</StatusBadge>;
+        return (
+          <StatusBadge size="sm" tone={s?.tone ?? "neutral"}>
+            {s?.label ?? e.status}
+          </StatusBadge>
+        );
       },
     },
     {
       key: "msg",
       header: "Mensagem",
-      render: (e) => <span className="text-muted-foreground">{e.erro ?? "—"}</span>,
+      mobile: "meta",
+      cellClassName: "min-w-[12rem]",
+      render: (e) => (e.erro ? <span className="text-muted-foreground">{e.erro}</span> : <Vazio />),
     },
     {
       key: "ver",
       header: "",
       align: "right",
+      mobile: "action",
       render: (e) => (
         <Button variant="ghost" size="sm" onClick={() => setAberto(e)}>
           Ver dados
@@ -516,49 +640,32 @@ function EventosRecebidos({ integracoes }: { integracoes: IntegracaoComEmpresa[]
   return (
     <>
       <FilterBar>
-        <Select
-          value={filtro.status}
+        <FilterSelect
+          value={filtro.status ?? "todos"}
           onValueChange={(v) => setFiltro((f) => ({ ...f, status: v as FiltroEventos["status"] }))}
-        >
-          <SelectTrigger className="h-9 w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os status</SelectItem>
-            <SelectItem value="processado">Processados</SelectItem>
-            <SelectItem value="ignorado">Ignorados</SelectItem>
-            <SelectItem value="erro">Com erro</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={filtro.tipo} onValueChange={(v) => setFiltro((f) => ({ ...f, tipo: v }))}>
-          <SelectTrigger className="h-9 w-52">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os tipos</SelectItem>
-            {TIPOS_EVENTO.map((t) => (
-              <SelectItem key={t} value={t}>
-                {ROTULO_EVENTO[t]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={filtro.integracaoId}
+          aria-label="Status do evento"
+          allLabel="Todos os status"
+          options={[
+            { value: "processado", label: "Processados" },
+            { value: "ignorado", label: "Ignorados" },
+            { value: "erro", label: "Com erro" },
+          ]}
+        />
+        <FilterSelect
+          value={filtro.tipo ?? "todos"}
+          onValueChange={(v) => setFiltro((f) => ({ ...f, tipo: v }))}
+          aria-label="Tipo de evento"
+          allLabel="Todos os tipos"
+          options={TIPOS_EVENTO.map((t) => ({ value: t, label: ROTULO_EVENTO[t] }))}
+        />
+        <FilterSelect
+          value={filtro.integracaoId ?? "todas"}
           onValueChange={(v) => setFiltro((f) => ({ ...f, integracaoId: v }))}
-        >
-          <SelectTrigger className="h-9 w-60">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todas">Todas as integrações</SelectItem>
-            {integracoes.map((i) => (
-              <SelectItem key={i.id} value={i.id}>
-                {i.nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          aria-label="Integração"
+          allLabel="Todas as integrações"
+          allValue="todas"
+          options={integracoes.map((i) => ({ value: i.id, label: i.nome }))}
+        />
       </FilterBar>
 
       <SectionCard
@@ -615,17 +722,17 @@ function ImportacaoResumo() {
   const ultima = ultimas[0];
   return (
     <StatCard
-      label="Dados públicos (ANTT/DER-MG)"
+      label="Dados públicos"
       value={isLoading ? "…" : ultima ? dataHora(ultima.executado_em) : "—"}
       hint={
         error
-          ? "falha ao consultar a importação"
+          ? "Falha ao consultar a importação"
           : ultima
-            ? "última importação automática"
-            : "nenhuma importação registrada"
+            ? "Última importação (ANTT/DER-MG)"
+            : "Nenhuma importação registrada"
       }
       icon={DatabaseZap}
-      tone="neutral"
+      tone="info"
     />
   );
 }
@@ -644,13 +751,48 @@ function DadosPublicos() {
       ) : (
         <DataTable
           columns={[
-            { key: "fonte", header: "Fonte", render: (i) => <span className="font-semibold">{i.fonte}</span> },
-            { key: "recurso", header: "Recurso", render: (i) => i.recurso },
-            { key: "comp", header: "Competência", render: (i) => <span className="tabular">{i.competencia}</span> },
-            { key: "reg", header: "Registros", align: "right", render: (i) => <span className="tabular">{num(i.registros)}</span> },
+            {
+              key: "recurso",
+              header: "Recurso",
+              mobile: "title",
+              render: (i) => <span className="font-semibold">{rotuloRecurso(i.recurso)}</span>,
+            },
+            {
+              key: "fonte",
+              header: "Fonte",
+              nowrap: true,
+              mobile: "subtitle",
+              render: (i) => i.fonte,
+            },
+            {
+              key: "comp",
+              header: "Competência",
+              nowrap: true,
+              mobile: "meta",
+              render: (i) => {
+                const c = formatarCompetencia(i.competencia);
+                return c ? (
+                  <span className="tabular" title={i.competencia}>
+                    {c}
+                  </span>
+                ) : (
+                  <Vazio />
+                );
+              },
+            },
+            {
+              key: "reg",
+              header: "Registros",
+              align: "right",
+              nowrap: true,
+              mobile: "meta",
+              render: (i) => <span className="tabular">{num(i.registros)}</span>,
+            },
             {
               key: "exec",
               header: "Executado em",
+              nowrap: true,
+              mobile: "meta",
               render: (i) => <span className="tabular">{dataHora(i.executado_em)}</span>,
             },
           ]}
@@ -658,7 +800,7 @@ function DadosPublicos() {
           emptyMessage="Nenhuma importação registrada. A importação diária roda pelo GitHub Actions (scripts/importar-dados-publicos.ts)."
         />
       )}
-      <div className="px-5 pb-4">
+      <div className="border-t border-border px-4 pb-4 sm:px-5">
         <SourceNote>
           Fontes: Portal de Dados Abertos da ANTT e DER-MG. Esses dados não precisam de chave: são
           públicos e atualizados sem intervenção da equipe.
@@ -676,17 +818,12 @@ function ComoIntegrar() {
       <SectionCard title="Endereço e autenticação">
         <div className="space-y-4 text-sm">
           <div>
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-              Endpoint (POST, JSON UTF-8)
+            <p className="mb-1.5 text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase">
+              Endpoint <span className="font-normal normal-case">· POST, JSON UTF-8</span>
             </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <code className="rounded-md border border-border bg-muted/50 px-3 py-1.5 break-all">
-                {URL_INGESTAO}
-              </code>
-              <BotaoCopiar texto={URL_INGESTAO} rotulo="Copiar" />
-            </div>
+            <CampoCopiavel texto={URL_INGESTAO} rotulo="Copiar" />
           </div>
-          <ul className="list-disc space-y-1.5 pl-5 text-muted-foreground">
+          <ul className="list-disc space-y-2 pl-5 leading-relaxed text-muted-foreground [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.8125rem] [&_code]:[overflow-wrap:anywhere] [&_code]:text-foreground">
             <li>
               Envie a chave da integração no header <code>x-api-key</code> (ou{" "}
               <code>Authorization: Bearer srv_…</code>).
@@ -725,7 +862,9 @@ function ComoIntegrar() {
           <Tabs defaultValue="simples">
             <TabsList>
               <TabsTrigger value="simples">Formato do terminal</TabsTrigger>
-              {ex.monitriip && <TabsTrigger value="monitriip">MONITRIIP ({ex.monitriip.servico})</TabsTrigger>}
+              {ex.monitriip && (
+                <TabsTrigger value="monitriip">MONITRIIP ({ex.monitriip.servico})</TabsTrigger>
+              )}
               <TabsTrigger value="curl">curl</TabsTrigger>
             </TabsList>
             <TabsContent value="simples" className="mt-3">
@@ -733,8 +872,12 @@ function ComoIntegrar() {
             </TabsContent>
             {ex.monitriip && (
               <TabsContent value="monitriip" className="mt-3">
-                <p className="mb-2 text-xs text-muted-foreground">
-                  Mesmo corpo enviado à ANTT. URL: <code>{URL_INGESTAO}{ex.monitriip.caminho}</code>{" "}
+                <p className="mb-2 text-xs leading-relaxed text-muted-foreground [&_code]:font-mono [&_code]:[overflow-wrap:anywhere] [&_code]:text-foreground">
+                  Mesmo corpo enviado à ANTT. URL:{" "}
+                  <code>
+                    {URL_INGESTAO}
+                    {ex.monitriip.caminho}
+                  </code>{" "}
                   (ou a URL base, já que o <code>idLog</code> identifica o tipo).
                 </p>
                 <BlocoCodigo texto={JSON.stringify(ex.monitriip.corpo, null, 2)} />
@@ -774,10 +917,24 @@ function BotaoCopiar({ texto, rotulo }: { texto: string; rotulo: string }) {
   );
 }
 
+/** Valor em fonte mono que quebra em qualquer ponto (não corta) + botão copiar ao lado. */
+function CampoCopiavel({ texto, rotulo }: { texto: string; rotulo: string }) {
+  return (
+    <div className="flex flex-col gap-2 rounded-xl bg-muted p-2 sm:flex-row sm:items-center">
+      <code className="min-w-0 flex-1 px-1.5 py-1 font-mono text-[0.8125rem] leading-relaxed break-all text-foreground select-all">
+        {texto}
+      </code>
+      <div className="shrink-0 max-sm:[&>button]:w-full">
+        <BotaoCopiar texto={texto} rotulo={rotulo} />
+      </div>
+    </div>
+  );
+}
+
 function BlocoCodigo({ texto }: { texto: string }) {
   return (
     <div className="relative">
-      <pre className="max-h-[28rem] overflow-auto rounded-lg border border-border bg-muted/50 p-4 text-xs leading-relaxed">
+      <pre className="max-h-[28rem] overflow-auto rounded-xl bg-muted p-4 pt-12 font-mono text-xs leading-relaxed sm:pt-4 sm:pr-28">
         {texto}
       </pre>
       <div className="absolute top-2 right-2">

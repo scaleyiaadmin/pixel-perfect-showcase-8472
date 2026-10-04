@@ -11,6 +11,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
+import { CHAVE_TEMA } from "@/components/layout/ThemeToggle";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -26,7 +27,7 @@ function NotFoundComponent() {
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Voltar ao início
           </Link>
@@ -58,13 +59,13 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Tentar novamente
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="inline-flex items-center justify-center rounded-lg border border-input bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             Voltar ao início
           </a>
@@ -77,8 +78,12 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 const TITULO = "SisRodov · Terminal Rodoviário de Manhuaçu";
 const DESCRICAO =
   "Sistema municipal de gestão e controle do Terminal Rodoviário de Manhuaçu: partidas, embarques, empresas, taxas e painel público.";
+// Inter (sistema) · Barlow Condensed (painel de TV, font-board) · JetBrains Mono.
 const FONTES =
-  "https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap";
+  "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap";
+
+// Aplica o tema salvo antes da primeira pintura (evita piscar claro → escuro).
+const SCRIPT_TEMA = `try{if(localStorage.getItem("${CHAVE_TEMA}")==="dark")document.documentElement.classList.add("dark")}catch(e){}`;
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -88,7 +93,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: TITULO },
       { name: "description", content: DESCRICAO },
       { name: "author", content: "Prefeitura Municipal de Manhuaçu" },
-      { name: "theme-color", content: "#1b2a4a" },
+      { name: "theme-color", content: "#e6e9f0" },
       { name: "color-scheme", content: "light" },
       { property: "og:title", content: TITULO },
       { property: "og:description", content: DESCRICAO },
@@ -97,7 +102,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary" },
     ],
     links: [
-      // Fontes do design system (Barlow, Barlow Condensed, Archivo, JetBrains Mono).
+      // Fontes do design system.
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: FONTES },
@@ -116,8 +121,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
         <HeadContent />
       </head>
       <body>

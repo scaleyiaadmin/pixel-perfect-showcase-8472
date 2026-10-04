@@ -1,18 +1,22 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { HandCoins } from "lucide-react";
+import { ArrowRight, FileWarning, HandCoins, Scale, Wallet } from "lucide-react";
 import {
   DataTable,
+  EmptyState,
   PageHeader,
   QueryState,
   SectionCard,
   SourceNote,
   StatCard,
+  StatGrid,
   StatusBadge,
+  toneText,
+  Vazio,
   type Column,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { brl, num } from "@/lib/format";
+import { brl, num, tituloNome } from "@/lib/format";
 import { usePermissao } from "@/services/acesso";
 import { useEmpresas } from "@/services/dados-publicos";
 import {
@@ -40,6 +44,12 @@ export const Route = createFileRoute("/_admin/financeiro/pendencias")({
   component: PendingPage,
 });
 
+/** Cidade em title-case mantendo a UF em maiúsculas ("CARATINGA/MG" → "Caratinga/MG"). */
+function cidadeNome(c: string) {
+  const m = c.match(/^(.*?)(\s*[/-]\s*)([A-Za-z]{2})$/);
+  return m ? `${tituloNome(m[1])}${m[2]}${m[3].toUpperCase()}` : tituloNome(c);
+}
+
 function PendingPage() {
   const empresas = useEmpresas();
   const empresa = mapaEmpresas(empresas.data);
@@ -65,51 +75,71 @@ function PendingPage() {
     {
       key: "date",
       header: "Data",
+      nowrap: true,
+      mobile: "meta",
       render: (d) => <span className="tabular">{dataISO(d.data)}</span>,
     },
     {
       key: "trip",
       header: "Viagem",
+      mobile: "title",
+      cellClassName: "min-w-[12rem]",
       render: (d) => (
         <span>
-          <span className="tabular font-semibold">{d.numero || "—"}</span>
-          <span className="block text-xs text-muted-foreground">
-            {d.origem} → {d.destino}
+          <span className="tabular font-semibold">{d.numero || <Vazio />}</span>
+          <span className="block text-xs font-normal text-muted-foreground">
+            {cidadeNome(d.origem)} → {cidadeNome(d.destino)}
           </span>
         </span>
       ),
     },
-    { key: "company", header: "Empresa", render: (d) => empresa(d.empresa_id) },
+    {
+      key: "company",
+      header: "Empresa",
+      mobile: "subtitle",
+      cellClassName: "min-w-[10rem]",
+      render: (d) => tituloNome(empresa(d.empresa_id)),
+    },
     {
       key: "gate",
       header: "Catraca",
       align: "right",
+      mobile: "meta",
       render: (d) => <span className="tabular">{num(d.acessos)}</span>,
     },
     {
       key: "tickets",
       header: "Bilhetes",
       align: "right",
+      mobile: "meta",
       render: (d) => <span className="tabular">{num(d.bilhetes)}</span>,
     },
     {
       key: "report",
       header: "Relato",
       align: "right",
-      render: (d) => <span className="tabular">{d.relato === null ? "—" : num(d.relato)}</span>,
+      mobile: "meta",
+      render: (d) =>
+        d.relato === null ? (
+          <Vazio title="Relato não enviado" />
+        ) : (
+          <span className="tabular">{num(d.relato)}</span>
+        ),
     },
     {
       key: "diff",
       header: "Diferença",
       align: "right",
+      mobile: "meta",
       render: (d) => <span className="tabular font-semibold">{num(d.diferenca)}</span>,
     },
     {
       key: "sit",
       header: "Situação",
+      mobile: "badge",
       render: (d) =>
         d.situacao_conferencia === "necessita-conferencia" ? (
-          <StatusBadge tone="info">Necessita conferência</StatusBadge>
+          <StatusBadge tone="info">Conferir</StatusBadge>
         ) : (
           <StatusBadge tone="warning">Em análise</StatusBadge>
         ),
@@ -121,15 +151,31 @@ function PendingPage() {
   return (
     <>
       <PageHeader
-        title="Financeiro · Pendências"
-        subtitle="Taxas em aberto e divergências que podem alterar a cobrança"
+        eyebrow="Financeiro"
+        title="Pendências"
+        subtitle="Taxas em aberto e divergências que podem alterar a cobrança."
       />
       <AvisoConfiguracaoTaxa />
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Total em aberto" value={brl(total)} tone="warning" />
-        <StatCard label="Taxas em aberto" value={rows.length} tone="neutral" />
-        <StatCard label="Divergências a conferir" value={divRows.length} tone="danger" />
-      </div>
+      <StatGrid cols={3}>
+        <StatCard
+          label="Total em aberto"
+          value={<span className={toneText.warning}>{brl(total)}</span>}
+          icon={Wallet}
+          tone="warning"
+        />
+        <StatCard
+          label="Taxas em aberto"
+          value={num(rows.length)}
+          icon={FileWarning}
+          tone="neutral"
+        />
+        <StatCard
+          label="Divergências a conferir"
+          value={num(divRows.length)}
+          icon={Scale}
+          tone="danger"
+        />
+      </StatGrid>
 
       <div className="mt-6">
         <SectionCard title="Taxas em aberto" bodyClassName="p-0">
@@ -138,7 +184,18 @@ function PendingPage() {
             <DataTable
               columns={taxaCols}
               rows={rows}
-              emptyMessage="Nenhuma taxa em aberto. As taxas são geradas no fechamento da competência, a partir dos embarques confirmados na catraca."
+              empty={
+                <EmptyState
+                  icon={Wallet}
+                  title="Nenhuma taxa em aberto"
+                  message="As taxas são geradas no fechamento da competência, a partir dos embarques confirmados na catraca."
+                  action={
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/financeiro/taxas">Ver todas as taxas</Link>
+                    </Button>
+                  }
+                />
+              }
             />
           )}
         </SectionCard>
@@ -150,7 +207,9 @@ function PendingPage() {
           description="A taxa é calculada pelos acessos na catraca; viagens com diferença entre as fontes ainda não conferidas."
           actions={
             <Button asChild variant="outline" size="sm">
-              <Link to="/conciliacao">Abrir conciliação</Link>
+              <Link to="/conciliacao">
+                Abrir conciliação <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </Button>
           }
           bodyClassName="p-0"
@@ -160,7 +219,13 @@ function PendingPage() {
             <DataTable
               columns={divCols}
               rows={divRows}
-              emptyMessage="Nenhuma divergência pendente. As fontes são cruzadas quando chegam bilhetes e relatos das empresas e acessos das catracas pela integração."
+              empty={
+                <EmptyState
+                  icon={Scale}
+                  title="Nenhuma divergência pendente"
+                  message="As fontes são cruzadas quando chegam bilhetes e relatos das empresas e acessos das catracas pela integração."
+                />
+              }
             />
           )}
         </SectionCard>

@@ -8,12 +8,14 @@ import {
   QueryState,
   SectionCard,
   StatCard,
+  StatGrid,
   StatusBadge,
+  Vazio,
   type Column,
   type Tone,
 } from "@/components/common";
 import { Input } from "@/components/ui/input";
-import { hora, num } from "@/lib/format";
+import { hora, num, tituloNome } from "@/lib/format";
 import type { EventoEmbarque } from "@/services/gestao-tipos";
 import {
   dataBR,
@@ -118,35 +120,59 @@ function GateControlPage() {
     {
       key: "time",
       header: "Horário",
+      nowrap: true,
+      mobile: "meta",
       render: (e) => <span className="tabular font-semibold">{hora(e.ocorrido_em)}</span>,
     },
-    { key: "device", header: "Equipamento", render: (e) => e.dispositivo || "—" },
+    {
+      key: "event",
+      header: "Evento",
+      nowrap: true,
+      mobile: "title",
+      render: (e) => eventoLabel[e.evento],
+    },
+    {
+      key: "device",
+      header: "Equipamento",
+      mobile: "subtitle",
+      render: (e) => e.dispositivo || <Vazio title="Equipamento não identificado" />,
+    },
     {
       key: "trip",
       header: "Viagem",
+      mobile: "meta",
+      cellClassName: "min-w-[10rem]",
       render: (e) =>
         e.viagem ? (
           <span className="text-muted-foreground">
             <span className="tabular">{horaPrevista(e.viagem)}</span> ·{" "}
-            {e.viagem.tipo === "chegada" ? e.viagem.origem : e.viagem.destino}
+            {tituloNome(e.viagem.tipo === "chegada" ? e.viagem.origem : e.viagem.destino)}
           </span>
         ) : (
-          <span className="text-muted-foreground">Sem viagem vinculada</span>
+          <Vazio title="Sem viagem vinculada" />
         ),
     },
     {
       key: "ticket",
       header: "Passagem",
-      render: (e) => (
-        <span className="tabular text-muted-foreground">{e.bilhete_codigo || "—"}</span>
-      ),
+      nowrap: true,
+      hideOnMobile: true,
+      render: (e) =>
+        e.bilhete_codigo ? (
+          <span className="tabular text-muted-foreground">{e.bilhete_codigo}</span>
+        ) : (
+          <Vazio />
+        ),
     },
-    { key: "event", header: "Evento", render: (e) => eventoLabel[e.evento] },
     {
       key: "status",
       header: "Status",
+      nowrap: true,
+      mobile: "badge",
       render: (e) => (
-        <StatusBadge tone={statusTone[e.status].tone}>{statusTone[e.status].label}</StatusBadge>
+        <StatusBadge size="sm" tone={statusTone[e.status].tone}>
+          {statusTone[e.status].label}
+        </StatusBadge>
       ),
     },
   ];
@@ -157,17 +183,19 @@ function GateControlPage() {
         title="Controle de Embarque"
         subtitle="Acompanhamento dos acessos registrados nas catracas do terminal"
         actions={
-          <Input
-            type="date"
-            value={data ?? ""}
-            onChange={(e) => e.target.value && setData(e.target.value)}
-            className="h-9 w-[10.5rem]"
-            aria-label="Data"
-          />
+          <label className="flex items-center gap-2 text-sm">
+            <span className="shrink-0 font-medium text-muted-foreground">Data</span>
+            <Input
+              type="date"
+              value={data ?? ""}
+              onChange={(e) => e.target.value && setData(e.target.value)}
+              className="tabular h-11 w-full bg-card sm:h-9 sm:w-[10.5rem]"
+            />
+          </label>
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <StatGrid>
         <StatCard
           label={eHoje ? "Acessos hoje" : `Acessos em ${data ? dataBR(data) : ""}`}
           value={eventos.data ? num(acessos) : "—"}
@@ -179,8 +207,8 @@ function GateControlPage() {
           icon={ScanLine}
           tone="success"
           hint={
-            eHoje
-              ? `leitura nos últimos 15 min · ${dispositivos.length} com leitura hoje`
+            eHoje && eventos.data
+              ? `nos últimos 15 min · ${dispositivos.length} com leitura hoje`
               : undefined
           }
         />
@@ -197,23 +225,21 @@ function GateControlPage() {
           icon={TriangleAlert}
           tone="warning"
         />
-      </div>
+      </StatGrid>
 
       <QueryState isLoading={!data || eventos.isLoading} error={eventos.error} />
 
       {eventos.data && dispositivos.length > 0 && (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
           {dispositivos.map((g) => {
             const recente = eHoje && agora - new Date(g.ultimo).getTime() < RECENTE_MS;
             return (
-              <div
-                key={g.nome}
-                className={`rounded-xl border p-5 shadow-[var(--shadow-card)] ${recente ? "border-success/30 bg-success-soft" : "border-border bg-card"}`}
-              >
-                <div className="flex items-center justify-between">
-                  <p className="font-display text-lg font-bold">{g.nome}</p>
+              <div key={g.nome} className="surface-card min-w-0 rounded-xl bg-card p-4 sm:p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="min-w-0 font-display text-lg font-bold break-words">{g.nome}</p>
                   <ScanLine
-                    className={`h-5 w-5 ${recente ? "text-success" : "text-muted-foreground"}`}
+                    className={`h-5 w-5 shrink-0 ${recente ? "text-success" : "text-muted-foreground"}`}
+                    aria-hidden="true"
                   />
                 </div>
                 <div className="mt-3">
@@ -241,10 +267,14 @@ function GateControlPage() {
         >
           {eventos.data && lista.length === 0 ? (
             <EmptyState
-              message={`Nenhuma leitura de catraca em ${data ? dataBR(data) : "esta data"}. Os acessos chegam automaticamente quando as catracas do terminal estiverem integradas (Integrações → chave do tipo catraca).`}
+              icon={ScanLine}
+              title={`Sem leituras em ${data ? dataBR(data) : "esta data"}`}
+              message="Os acessos chegam sozinhos quando as catracas forem integradas em Integrações."
             />
           ) : (
-            eventos.data && <DataTable columns={columns} rows={lista.slice(0, 300)} />
+            eventos.data && (
+              <DataTable minWidth="40rem" columns={columns} rows={lista.slice(0, 300)} />
+            )
           )}
         </SectionCard>
         {lista.length > 300 && (
