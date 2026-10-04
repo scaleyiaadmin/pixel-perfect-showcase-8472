@@ -78,9 +78,9 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 const TITULO = "SisRodov · Terminal Rodoviário de Manhuaçu";
 const DESCRICAO =
   "Sistema municipal de gestão e controle do Terminal Rodoviário de Manhuaçu: partidas, embarques, empresas, taxas e painel público.";
-// Inter (sistema) · Barlow Condensed (painel de TV, font-board) · JetBrains Mono.
+// Inter (sistema e painel de TV) · JetBrains Mono.
 const FONTES =
-  "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap";
+  "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap";
 
 // Aplica o tema salvo antes da primeira pintura (evita piscar claro → escuro).
 const SCRIPT_TEMA = `try{if(localStorage.getItem("${CHAVE_TEMA}")==="dark")document.documentElement.classList.add("dark")}catch(e){}`;

@@ -1,6 +1,8 @@
 import { useId } from "react";
 import { cn } from "@/lib/utils";
 import prefeituraLogo from "@/assets/prefeitura-logo.png";
+// Mesmo arquivo com o texto em branco e o brasão nas cores originais (fundo escuro).
+import prefeituraLogoEscuro from "@/assets/prefeitura-logo-escuro.png";
 
 /**
  * Marcas institucionais.
@@ -12,7 +14,7 @@ import prefeituraLogo from "@/assets/prefeitura-logo.png";
 /**
  * Brasão + nome da Prefeitura.
  * - `variant="color"` (padrão): arquivo oficial, para fundo claro.
- * - `variant="light"`: versão monocromática branca, para fundo escuro (painel).
+ * - `variant="light"`: brasão colorido com texto branco, para fundo escuro (painel).
  * - `inverted`: arquivo colorido num selo branco arredondado — o mais legível
  *   sobre fundo escuro quando o brasão é pequeno (TV).
  * - `size`: sm (h-7) · md (h-10, padrão) · lg (h-14) · xl (h-20).
@@ -37,14 +39,11 @@ export function PrefeituraLogo({
       )}
     >
       <img
-        src={prefeituraLogo}
+        src={variant === "light" && !inverted ? prefeituraLogoEscuro : prefeituraLogo}
         alt="Prefeitura de Manhuaçu"
         className={cn(
           "w-auto object-contain",
           size === "sm" ? "h-7" : size === "lg" ? "h-14" : size === "xl" ? "h-20" : "h-10",
-          variant === "light" &&
-            !inverted &&
-            "[filter:brightness(0)_invert(1)_drop-shadow(0_1px_1px_rgb(0_0_0/0.35))]",
         )}
       />
     </div>
@@ -328,16 +327,26 @@ export function MarcaSisRodovPrefeitura({
           escuro ? "bg-white/30" : auto ? "bg-foreground/15" : "bg-[hsl(224_33%_14%/0.18)]",
         )}
       />
+      {/* Fundo claro: arquivo oficial · fundo escuro: brasão colorido com texto branco. */}
       <img
-        src={prefeituraLogo}
+        src={escuro ? prefeituraLogoEscuro : prefeituraLogo}
         alt=""
         className={cn(
           "w-auto min-w-0 shrink object-contain object-left",
           sm ? "h-[1.625rem]" : lg ? "h-[3.5rem]" : "h-[2.375rem]",
-          escuro && "[filter:brightness(0)_invert(1)]",
-          auto && "dark:[filter:brightness(0)_invert(1)]",
+          auto && "dark:hidden",
         )}
       />
+      {auto && (
+        <img
+          src={prefeituraLogoEscuro}
+          alt=""
+          className={cn(
+            "hidden w-auto min-w-0 shrink object-contain object-left dark:block",
+            sm ? "h-[1.625rem]" : lg ? "h-[3.5rem]" : "h-[2.375rem]",
+          )}
+        />
+      )}
     </div>
   );
 }

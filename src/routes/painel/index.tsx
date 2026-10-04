@@ -89,6 +89,8 @@ function BoardDepartures() {
     hora: horaPrevista(v),
     local: cidadeNome(v.destino),
     empresa: empresaPainel(v),
+    linha: v.linha?.codigo || null,
+    previsto: v.previsto_em ? new Date(v.previsto_em).getTime() : null,
     plataforma: v.plataforma ? String(v.plataforma.numero) : null,
     status: statusPartida(v),
     destaque: v.id === idDestaque,

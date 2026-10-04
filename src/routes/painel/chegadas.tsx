@@ -75,6 +75,8 @@ function BoardArrivals() {
     hora: v.previsto_em ? horaPrevista(v) : hora(v.chegou_em!),
     local: cidadeNome(v.origem),
     empresa: empresaPainel(v),
+    linha: v.linha?.codigo || null,
+    previsto: v.previsto_em ? new Date(v.previsto_em).getTime() : null,
     plataforma: v.plataforma ? String(v.plataforma.numero) : null,
     status: situacao(v),
     destaque: v.id === idDestaque,

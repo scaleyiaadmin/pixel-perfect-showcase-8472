@@ -70,10 +70,16 @@
   --color-board-row: var(--board-row);
   --color-board-accent: var(--board-accent);
   --color-board-accent-foreground: var(--board-accent-foreground);
+  --color-board-muted: var(--board-muted);
+  --color-board-success: var(--board-success);
+  --color-board-success-foreground: var(--board-success-foreground);
+  --color-board-warning: var(--board-warning);
+  --color-board-warning-foreground: var(--board-warning-foreground);
+  --color-board-danger: var(--board-danger);
+  --color-board-danger-foreground: var(--board-danger-foreground);
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   /* Mantido para compatibilidade: títulos também usam Inter. */
   --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-board: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
@@ -149,15 +155,26 @@
   --sidebar-ring: hsl(228 82% 58%);
 
   /* Painel de TV: sempre escuro. Acento = azul vibrante claro (AA sobre --board). */
-  --board: oklch(0.19 0.04 258);
-  --board-foreground: oklch(0.96 0.01 250);
-  --board-row: oklch(0.24 0.045 258);
+  --board: hsl(225 56% 10%);
+  --board-foreground: hsl(220 40% 97%);
+  /* Texto secundário (AA sobre --board e --board-row). */
+  --board-muted: hsl(222 22% 70%);
+  --board-row: hsl(224 42% 15.5%);
   --board-accent: hsl(226 95% 72%);
-  --board-accent-foreground: oklch(0.19 0.04 258);
+  --board-accent-foreground: hsl(225 56% 10%);
+  /* Situações do painel: cores sólidas fixas (não seguem o tema claro/escuro). */
+  --board-success: hsl(146 64% 46%);
+  --board-success-foreground: hsl(150 80% 8%);
+  --board-warning: hsl(41 98% 58%);
+  --board-warning-foreground: hsl(30 85% 10%);
+  --board-danger: hsl(0 72% 48%);
+  --board-danger-foreground: hsl(0 0% 100%);
 
   /* Mantidos por compatibilidade. */
   --gradient-institutional: linear-gradient(135deg, hsl(228 70% 45%), hsl(228 82% 58%));
-  --gradient-board: linear-gradient(180deg, oklch(0.19 0.04 258), oklch(0.16 0.035 258));
+  --gradient-board:
+    radial-gradient(70% 55% at 12% -12%, hsl(228 82% 58% / 0.16), transparent 70%),
+    linear-gradient(180deg, hsl(224 56% 12.5%), hsl(226 60% 7.5%));
 
   /* Sombras do ERP: card = shadow-sm; raised = shadow-md/lg. */
   --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.05);
@@ -377,6 +394,21 @@ button:disabled:not(.bg-primary):not(.bg-destructive) {
   100% {
     background-color: transparent;
   }
+}
+
+/* Última chamada: pisca suave (com menos movimento, fica acesa e parada). */
+@keyframes board-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@utility board-blink {
+  animation: board-blink 1.6s ease-in-out infinite;
 }
 
 @utility board-highlight {
