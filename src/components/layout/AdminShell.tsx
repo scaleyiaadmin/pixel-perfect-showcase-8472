@@ -109,7 +109,7 @@ const navigation: NavSecao[] = [
       { label: "Empresas", to: "/empresas", icon: Building2 },
       { label: "Relatórios", to: "/relatorios", icon: ScrollText },
       { label: "Integrações", to: "/integracoes", icon: Plug },
-      { label: "Configurações", to: "/configuracoes", icon: Cog },
+      // Configurações fica no menu do perfil (avatar), não na barra lateral.
     ],
   },
 ];
