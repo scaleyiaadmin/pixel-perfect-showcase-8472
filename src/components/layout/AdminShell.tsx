@@ -503,7 +503,7 @@ function SidebarContent({
       <div
         className={cn(
           "relative flex shrink-0 items-center justify-center border-b border-black/[0.07] dark:border-white/[0.06]",
-          recolhido ? "h-16 px-2" : drawer ? "h-20 justify-start pr-12 pl-4" : "h-24 px-3.5",
+          recolhido ? "h-16 px-2" : drawer ? "h-20 justify-start pr-12 pl-4" : "h-24 px-5",
         )}
       >
         {recolhido ? (
@@ -516,7 +516,7 @@ function SidebarContent({
             aria-label="SisRodov — início"
           >
             {/* No drawer (escala 100%) o lockup é reduzido para caber ao lado do X. */}
-            <MarcaSisRodovPrefeitura size="md" className={drawer ? "[zoom:0.74]" : undefined} />
+            <MarcaSisRodovPrefeitura size="md" className={drawer ? "[zoom:0.74]" : "[zoom:0.86]"} />
           </Link>
         )}
         {onClose && (
