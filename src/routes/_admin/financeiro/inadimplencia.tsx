@@ -1,14 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo } from "react";
+import { toast } from "sonner";
+import { RefreshCw } from "lucide-react";
 import {
   DataTable,
   PageHeader,
+  QueryState,
   SectionCard,
   StatCard,
   StatusBadge,
   type Column,
-  DemoBanner,
 } from "@/components/common";
-import { brl, companies, fees } from "@/data/mock";
+import { Button } from "@/components/ui/button";
+import { brl } from "@/lib/format";
+import { usePermissao } from "@/services/acesso";
+import { useEmpresas } from "@/services/dados-publicos";
+import {
+  competenciaLegivel,
+  dataISO,
+  diasDesde,
+  emAtraso,
+  mapaEmpresas,
+  mensagemErro,
+  useAtualizarInadimplencia,
+  useTaxas,
+} from "@/services/financeiro";
 
 export const Route = createFileRoute("/_admin/financeiro/inadimplencia")({
   head: () => ({
@@ -33,27 +49,53 @@ interface Row {
   company: string;
   amount: number;
   count: number;
-  lastDue: string;
+  competencias: string[];
+  oldestDue: string;
   days: number;
 }
 
 function OverduePage() {
-  const rows: Row[] = companies
-    .map((c) => {
-      const list = fees.filter((f) => f.companyId === c.id && f.status === "inadimplente");
-      return {
-        id: c.id,
-        company: c.name,
-        amount: list.reduce((s, f) => s + f.amount, 0),
-        count: list.length,
-        lastDue: list[list.length - 1]?.dueDate ?? "—",
-        days: list.length ? 11 + list.length * 7 : 0,
+  const empresas = useEmpresas();
+  const empresa = mapaEmpresas(empresas.data);
+  const taxas = useTaxas({ status: ["pendente", "inadimplente"] });
+  const atualizar = useAtualizarInadimplencia();
+  const { editar } = usePermissao("financeiro");
+
+  const rows: Row[] = useMemo(() => {
+    const porEmpresa = new Map<string, Row>();
+    for (const t of taxas.data ?? []) {
+      // Inclui pendentes já vencidas que o job diário ainda não marcou.
+      if (!emAtraso(t) || t.saldo <= 0) continue;
+      const r = porEmpresa.get(t.empresa_id) ?? {
+        id: t.empresa_id,
+        company: empresa(t.empresa_id),
+        amount: 0,
+        count: 0,
+        competencias: [],
+        oldestDue: t.vencimento,
+        days: 0,
       };
-    })
-    .filter((r) => r.count > 0)
-    .sort((a, b) => b.amount - a.amount);
+      r.amount += t.saldo;
+      r.count += 1;
+      r.competencias.push(t.competencia);
+      if (t.vencimento < r.oldestDue) r.oldestDue = t.vencimento;
+      r.days = diasDesde(r.oldestDue);
+      porEmpresa.set(t.empresa_id, r);
+    }
+    return [...porEmpresa.values()].sort((a, b) => b.amount - a.amount);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taxas.data, empresas.data]);
 
   const total = rows.reduce((s, r) => s + r.amount, 0);
+
+  async function recalcular() {
+    try {
+      const n = await atualizar.mutateAsync();
+      toast.success(n ? `${n} taxa(s) marcada(s) como inadimplente.` : "Situação já atualizada.");
+    } catch (e) {
+      toast.error(mensagemErro(e));
+    }
+  }
 
   const columns: Column<Row>[] = [
     {
@@ -69,14 +111,23 @@ function OverduePage() {
     },
     {
       key: "count",
-      header: "Quantidade de taxas",
+      header: "Taxas",
       align: "right",
       render: (r) => <span className="tabular">{r.count}</span>,
     },
     {
+      key: "comp",
+      header: "Competências",
+      render: (r) => (
+        <span className="tabular text-muted-foreground">
+          {[...r.competencias].sort().map(competenciaLegivel).join(", ")}
+        </span>
+      ),
+    },
+    {
       key: "due",
-      header: "Maior vencimento",
-      render: (r) => <span className="tabular">{r.lastDue}</span>,
+      header: "Vencimento mais antigo",
+      render: (r) => <span className="tabular">{dataISO(r.oldestDue)}</span>,
     },
     {
       key: "days",
@@ -95,24 +146,34 @@ function OverduePage() {
     <>
       <PageHeader
         title="Financeiro · Inadimplência"
-        subtitle="Valores vencidos informados pelo sistema municipal"
+        subtitle="Taxas vencidas e não quitadas, agrupadas por empresa"
+        actions={
+          editar ? (
+            <Button variant="outline" onClick={recalcular} disabled={atualizar.isPending}>
+              <RefreshCw className={`h-4 w-4 ${atualizar.isPending ? "animate-spin" : ""}`} />{" "}
+              Atualizar situação
+            </Button>
+          ) : undefined
+        }
       />
-      <DemoBanner reason="aguardando integração com o sistema municipal" />
       <div className="grid gap-4 sm:grid-cols-2">
         <StatCard label="Total vencido" value={brl(total)} tone="danger" />
         <StatCard label="Empresas com valores em aberto" value={rows.length} tone="neutral" />
       </div>
       <div className="mt-6">
         <SectionCard bodyClassName="p-0">
-          <DataTable
-            columns={columns}
-            rows={rows}
-            emptyMessage="Nenhum valor vencido no período."
-          />
+          <QueryState isLoading={taxas.isLoading} error={taxas.error} />
+          {taxas.data && (
+            <DataTable
+              columns={columns}
+              rows={rows}
+              emptyMessage="Nenhum valor vencido. Taxas pendentes passam a inadimplentes automaticamente no dia seguinte ao vencimento (verificação diária às 06:00)."
+            />
+          )}
         </SectionCard>
         <p className="mt-3 text-xs text-muted-foreground italic">
-          Relação apresentada apenas por valores, sem qualquer julgamento sobre as empresas.
-          Informações demonstrativas.
+          Relação apresentada apenas por valores, sem qualquer julgamento sobre as empresas. Valor
+          vencido = valor da taxa menos pagamentos confirmados.
         </p>
       </div>
     </>

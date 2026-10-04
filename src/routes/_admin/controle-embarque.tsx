@@ -1,17 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { Clock, DoorOpen, ScanLine, TriangleAlert } from "lucide-react";
 import {
   DataTable,
+  EmptyState,
   PageHeader,
+  QueryState,
   SectionCard,
   StatCard,
   StatusBadge,
   type Column,
   type Tone,
-  DemoBanner,
 } from "@/components/common";
-import { boardingEvents, gateStats, gates, num } from "@/data/mock";
-import type { BoardingEvent } from "@/types";
+import { Input } from "@/components/ui/input";
+import { hora, num } from "@/lib/format";
+import type { EventoEmbarque } from "@/services/gestao-tipos";
+import {
+  dataBR,
+  horaPrevista,
+  useEventosEmbarque,
+  useHoje,
+  type EventoEmbarqueDetalhado,
+} from "@/services/operacao";
 
 export const Route = createFileRoute("/_admin/controle-embarque")({
   head: () => ({
@@ -32,35 +42,112 @@ export const Route = createFileRoute("/_admin/controle-embarque")({
   component: GateControlPage,
 });
 
-const eventTone: Record<string, Tone> = {
-  Confirmado: "success",
-  Pendente: "warning",
-  Rejeitado: "danger",
+const statusTone: Record<EventoEmbarque["status"], { tone: Tone; label: string }> = {
+  confirmado: { tone: "success", label: "Confirmado" },
+  pendente: { tone: "warning", label: "Pendente" },
+  rejeitado: { tone: "danger", label: "Rejeitado" },
 };
 
+const eventoLabel: Record<EventoEmbarque["evento"], string> = {
+  acesso: "Acesso",
+  reentrada: "Reentrada",
+  negado: "Acesso negado",
+};
+
+/** Equipamento sem leitura há mais que isso aparece como "sem leitura recente". */
+const RECENTE_MS = 15 * 60 * 1000;
+
 function GateControlPage() {
-  const columns: Column<BoardingEvent>[] = [
+  const hoje = useHoje();
+  const [data, setData] = useState<string | null>(null);
+  const [agora, setAgora] = useState(0);
+
+  useEffect(() => {
+    if (hoje && !data) setData(hoje);
+  }, [hoje, data]);
+
+  useEffect(() => {
+    setAgora(Date.now());
+    const id = window.setInterval(() => setAgora(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const eventos = useEventosEmbarque(data);
+  const lista = useMemo(() => eventos.data ?? [], [eventos.data]);
+
+  const { acessos, pendentes, dispositivos } = useMemo(() => {
+    const porDispositivo = new Map<
+      string,
+      { nome: string; acessos: number; reentradas: number; negados: number; ultimo: string }
+    >();
+    let acessos = 0;
+    let pendentes = 0;
+    for (const e of lista) {
+      if (e.evento === "acesso" && e.status === "confirmado") acessos++;
+      if (e.status === "pendente") pendentes++;
+      const nome = e.dispositivo || "Não identificado";
+      const d = porDispositivo.get(nome) ?? {
+        nome,
+        acessos: 0,
+        reentradas: 0,
+        negados: 0,
+        ultimo: e.ocorrido_em,
+      };
+      if (e.evento === "acesso" && e.status === "confirmado") d.acessos++;
+      if (e.evento === "reentrada") d.reentradas++;
+      if (e.evento === "negado") d.negados++;
+      if (e.ocorrido_em > d.ultimo) d.ultimo = e.ocorrido_em;
+      porDispositivo.set(nome, d);
+    }
+    return {
+      acessos,
+      pendentes,
+      dispositivos: [...porDispositivo.values()].sort((a, b) =>
+        a.nome.localeCompare(b.nome, "pt-BR"),
+      ),
+    };
+  }, [lista]);
+
+  const ultimo = lista[0];
+  const ativos = dispositivos.filter(
+    (d) => agora - new Date(d.ultimo).getTime() < RECENTE_MS,
+  ).length;
+  const eHoje = data === hoje;
+
+  const columns: Column<EventoEmbarqueDetalhado>[] = [
     {
       key: "time",
       header: "Horário",
-      render: (e) => <span className="tabular font-semibold">{e.time}</span>,
+      render: (e) => <span className="tabular font-semibold">{hora(e.ocorrido_em)}</span>,
     },
-    { key: "device", header: "Equipamento", render: (e) => e.device },
+    { key: "device", header: "Equipamento", render: (e) => e.dispositivo || "—" },
     {
       key: "trip",
       header: "Viagem",
-      render: (e) => <span className="tabular text-muted-foreground">{e.tripCode}</span>,
+      render: (e) =>
+        e.viagem ? (
+          <span className="text-muted-foreground">
+            <span className="tabular">{horaPrevista(e.viagem)}</span> ·{" "}
+            {e.viagem.tipo === "chegada" ? e.viagem.origem : e.viagem.destino}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">Sem viagem vinculada</span>
+        ),
     },
     {
       key: "ticket",
       header: "Passagem",
-      render: (e) => <span className="tabular text-muted-foreground">{e.ticketCode}</span>,
+      render: (e) => (
+        <span className="tabular text-muted-foreground">{e.bilhete_codigo || "—"}</span>
+      ),
     },
-    { key: "event", header: "Evento", render: (e) => e.event },
+    { key: "event", header: "Evento", render: (e) => eventoLabel[e.evento] },
     {
       key: "status",
       header: "Status",
-      render: (e) => <StatusBadge tone={eventTone[e.status]}>{e.status}</StatusBadge>,
+      render: (e) => (
+        <StatusBadge tone={statusTone[e.status].tone}>{statusTone[e.status].label}</StatusBadge>
+      ),
     },
   ];
 
@@ -69,55 +156,102 @@ function GateControlPage() {
       <PageHeader
         title="Controle de Embarque"
         subtitle="Acompanhamento dos acessos registrados nas catracas do terminal"
+        actions={
+          <Input
+            type="date"
+            value={data ?? ""}
+            onChange={(e) => e.target.value && setData(e.target.value)}
+            className="h-9 w-[10.5rem]"
+            aria-label="Data"
+          />
+        }
       />
-      <DemoBanner />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Acessos hoje" value={num(gateStats.accessesToday)} icon={DoorOpen} />
         <StatCard
-          label="Catracas online"
-          value={gateStats.onlineGates}
+          label={eHoje ? "Acessos hoje" : `Acessos em ${data ? dataBR(data) : ""}`}
+          value={eventos.data ? num(acessos) : "—"}
+          icon={DoorOpen}
+        />
+        <StatCard
+          label={eHoje ? "Equipamentos ativos" : "Equipamentos com leitura"}
+          value={eventos.data ? (eHoje ? ativos : dispositivos.length) : "—"}
           icon={ScanLine}
           tone="success"
+          hint={
+            eHoje
+              ? `leitura nos últimos 15 min · ${dispositivos.length} com leitura hoje`
+              : undefined
+          }
         />
-        <StatCard label="Último acesso" value={gateStats.lastAccess} icon={Clock} tone="info" />
+        <StatCard
+          label="Último acesso"
+          value={ultimo ? hora(ultimo.ocorrido_em) : "—"}
+          icon={Clock}
+          tone="info"
+          hint={ultimo?.dispositivo || undefined}
+        />
         <StatCard
           label="Eventos pendentes"
-          value={gateStats.pendingEvents}
+          value={eventos.data ? pendentes : "—"}
           icon={TriangleAlert}
           tone="warning"
         />
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {gates.map((g) => (
-          <div
-            key={g.id}
-            className="rounded-xl border border-success/30 bg-success-soft p-5 shadow-[var(--shadow-card)]"
-          >
-            <div className="flex items-center justify-between">
-              <p className="font-display text-lg font-bold">{g.name}</p>
-              <ScanLine className="h-5 w-5 text-success" />
-            </div>
-            <div className="mt-3">
-              <StatusBadge tone="success">Online</StatusBadge>
-            </div>
-            <p className="tabular mt-3 text-sm text-muted-foreground">{g.accesses} acessos hoje</p>
-          </div>
-        ))}
-      </div>
+      <QueryState isLoading={!data || eventos.isLoading} error={eventos.error} />
+
+      {eventos.data && dispositivos.length > 0 && (
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {dispositivos.map((g) => {
+            const recente = eHoje && agora - new Date(g.ultimo).getTime() < RECENTE_MS;
+            return (
+              <div
+                key={g.nome}
+                className={`rounded-xl border p-5 shadow-[var(--shadow-card)] ${recente ? "border-success/30 bg-success-soft" : "border-border bg-card"}`}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="font-display text-lg font-bold">{g.nome}</p>
+                  <ScanLine
+                    className={`h-5 w-5 ${recente ? "text-success" : "text-muted-foreground"}`}
+                  />
+                </div>
+                <div className="mt-3">
+                  {recente ? (
+                    <StatusBadge tone="success">Lendo agora</StatusBadge>
+                  ) : (
+                    <StatusBadge tone="neutral">Última leitura {hora(g.ultimo)}</StatusBadge>
+                  )}
+                </div>
+                <p className="tabular mt-3 text-sm text-muted-foreground">
+                  {num(g.acessos)} acessos · {num(g.reentradas)} reentradas · {num(g.negados)}{" "}
+                  negados
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <div className="mt-6">
         <SectionCard
           title="Eventos de embarque"
-          description="Últimos registros recebidos (dados demonstrativos)"
+          description="Leituras recebidas das catracas · atualização automática a cada 30 s"
           bodyClassName="p-0"
         >
-          <DataTable columns={columns} rows={boardingEvents} />
+          {eventos.data && lista.length === 0 ? (
+            <EmptyState
+              message={`Nenhuma leitura de catraca em ${data ? dataBR(data) : "esta data"}. Os acessos chegam automaticamente quando as catracas do terminal estiverem integradas (Integrações → chave do tipo catraca).`}
+            />
+          ) : (
+            eventos.data && <DataTable columns={columns} rows={lista.slice(0, 300)} />
+          )}
         </SectionCard>
-        <p className="mt-3 text-xs text-muted-foreground italic">
-          Nesta versão os equipamentos são representados visualmente, sem integração com hardware.
-        </p>
+        {lista.length > 300 && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Mostrando as 300 leituras mais recentes de {num(lista.length)}.
+          </p>
+        )}
       </div>
     </>
   );

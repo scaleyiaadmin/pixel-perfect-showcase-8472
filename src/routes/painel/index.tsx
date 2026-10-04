@@ -2,13 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Maximize2 } from "lucide-react";
 import { PrefeituraLogo, RodoviariaLogo } from "@/components/brand/Logos";
+import { TZ } from "@/lib/format";
 import {
-  destinoDaPartida,
-  horaCurta,
-  nomeEmpresa,
-  partidasDoDia,
-  useHorarios,
-} from "@/services/dados-publicos";
+  emAberto,
+  horaPrevista,
+  nomeEmpresaViagem,
+  useHoje,
+  useViagensDoDia,
+  type ViagemDetalhada,
+} from "@/services/operacao";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/painel/")({
@@ -55,9 +57,21 @@ export function BoardShell({ title, children }: { title: string; children: React
     const tick = () => {
       const now = new Date();
       setClock(
-        now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+        now.toLocaleTimeString("pt-BR", {
+          timeZone: TZ,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
       );
-      setToday(now.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" }));
+      setToday(
+        now.toLocaleDateString("pt-BR", {
+          timeZone: TZ,
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
+      );
     };
     tick();
     const id = window.setInterval(tick, 1000);
@@ -128,25 +142,50 @@ export function BoardShell({ title, children }: { title: string; children: React
   );
 }
 
-function BoardDepartures() {
-  const horarios = useHorarios();
-  const [now, setNow] = useState<Date | null>(null);
-
+/** Relógio do painel para os filtros (atualiza a cada 30 s). */
+export function useAgora() {
+  const [agora, setAgora] = useState<number | null>(null);
   useEffect(() => {
-    setNow(new Date());
-    const id = window.setInterval(() => setNow(new Date()), 30_000);
+    setAgora(Date.now());
+    const id = window.setInterval(() => setAgora(Date.now()), 30_000);
     return () => window.clearInterval(id);
   }, []);
+  return agora;
+}
 
-  // Próximas partidas programadas; saem da tela 5 minutos depois do horário.
-  const proximas = now
-    ? partidasDoDia(horarios.data ?? [], now)
-        .filter((h) => {
-          const [hh, mm] = h.hora.split(":").map(Number);
-          return hh * 60 + mm >= now.getHours() * 60 + now.getMinutes() - 5;
-        })
-        .slice(0, 9)
-    : [];
+const MIN = 60_000;
+
+/** Empresa curta para o painel. */
+export const empresaPainel = (v: ViagemDetalhada) => nomeEmpresaViagem(v);
+
+/**
+ * Viagens que aparecem no painel de partidas: saem do terminal (partida ou passagem),
+ * têm horário conhecido ou já estão em embarque, e ainda não se encerraram
+ * (as que partiram ficam 5 minutos; as canceladas, até 30 minutos depois do previsto).
+ */
+function noPainelDePartidas(v: ViagemDetalhada, agora: number) {
+  if (v.tipo === "chegada") return false;
+  const emEmbarque = v.status === "embarque" || v.status === "ultima-chamada";
+  const previsto = v.previsto_em ? new Date(v.previsto_em).getTime() : null;
+  if (!previsto && !emEmbarque && !v.chegou_em) return false;
+  if (v.status === "partiu" || v.status === "realizada") {
+    return v.partiu_em ? new Date(v.partiu_em).getTime() > agora - 5 * MIN : false;
+  }
+  if (v.status === "cancelada") return previsto ? previsto > agora - 30 * MIN : false;
+  if (emEmbarque || v.chegou_em) return true;
+  // Previstas/atrasadas sem atualização somem 2 h depois do horário.
+  return emAberto(v) && previsto !== null && previsto > agora - 120 * MIN;
+}
+
+function BoardDepartures() {
+  const hoje = useHoje();
+  const agora = useAgora();
+  const viagens = useViagensDoDia(hoje);
+
+  const proximas =
+    agora && viagens.data
+      ? viagens.data.filter((v) => noPainelDePartidas(v, agora)).slice(0, 9)
+      : [];
 
   return (
     <BoardShell title="Partidas">
@@ -159,41 +198,45 @@ function BoardDepartures() {
           <span className="text-center">Status</span>
         </div>
 
-        {horarios.isLoading && (
+        {(!hoje || viagens.isLoading) && (
           <p className="py-10 text-center font-board text-2xl text-board-foreground/60">
             Carregando…
           </p>
         )}
-        {horarios.error && (
+        {viagens.error && !viagens.data && (
           <p className="py-10 text-center font-board text-2xl text-board-foreground/60">
             Painel temporariamente indisponível.
           </p>
         )}
-        {horarios.data && proximas.length === 0 && (
+        {viagens.data && proximas.length === 0 && (
           <p className="py-10 text-center font-board text-2xl text-board-foreground/60">
             Sem mais partidas programadas hoje.
           </p>
         )}
 
-        {proximas.map((h) => {
-          const status = boardStatus.prevista;
+        {proximas.map((v) => {
+          const status = boardStatus[v.status] ?? boardStatus.prevista;
           return (
             <div
-              key={h.id}
+              key={v.id}
               className="grid grid-cols-[7rem_1fr_1fr_8rem_14rem] items-center gap-4 border-b border-board-foreground/10 py-4"
             >
               <span className="tabular font-board text-4xl font-bold md:text-5xl">
-                {horaCurta(h.hora)}
+                {horaPrevista(v)}
               </span>
               <span className="font-board text-3xl font-semibold tracking-wide uppercase md:text-4xl">
-                {destinoDaPartida(h)}
+                {v.destino}
               </span>
               <span className="font-board text-2xl tracking-wide text-board-foreground/75 uppercase md:text-3xl">
-                {h.linha.empresa?.razao_social ??
-                  (h.linha.fonte === "DER-MG" ? "Intermunicipal" : nomeEmpresa(h.linha))}
+                {empresaPainel(v)}
               </span>
-              <span className="text-center font-board text-4xl font-bold text-board-foreground/50 md:text-5xl">
-                —
+              <span
+                className={cn(
+                  "text-center font-board text-4xl font-bold md:text-5xl",
+                  !v.plataforma && "text-board-foreground/50",
+                )}
+              >
+                {v.plataforma?.numero ?? "—"}
               </span>
               <span className="flex justify-center">
                 <span

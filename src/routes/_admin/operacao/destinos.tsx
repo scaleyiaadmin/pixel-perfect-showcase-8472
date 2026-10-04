@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { MapPin } from "lucide-react";
 import { EmptyState, PageHeader, QueryState, SectionCard, SourceNote } from "@/components/common";
 import { mesAno, useLinhas, usePassagensMensais } from "@/services/dados-publicos";
-import { num } from "@/data/mock";
+import { num } from "@/lib/format";
 
 export const Route = createFileRoute("/_admin/operacao/destinos")({
   head: () => ({
@@ -75,7 +75,7 @@ function DestinationsPage() {
         >
           <QueryState isLoading={passagens.isLoading} error={passagens.error} />
           {passagens.data && ranking.length === 0 && (
-            <EmptyState message="Sem passagens registradas." />
+            <EmptyState message="Sem passagens importadas. Os dados vêm da ANTT (MONITRIIP) e são atualizados automaticamente todo dia." />
           )}
           <ul className="space-y-4">
             {ranking.map((d) => (

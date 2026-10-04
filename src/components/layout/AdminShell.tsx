@@ -1,5 +1,6 @@
-import { useMemo, useState, type ReactNode } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
   Bus,
@@ -32,9 +33,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PrefeituraLogo, SisRodovLogo } from "@/components/brand/Logos";
-import { allTrips, companyName, currentUser, notifications, tickets } from "@/data/mock";
 import { useEmpresas, useLinhas } from "@/services/dados-publicos";
-import { StatusBadge } from "@/components/common";
+import {
+  iniciais,
+  moduloDaRota,
+  nomePapel,
+  podeVer,
+  usePerfil,
+  usePerfis,
+  useSair,
+} from "@/services/acesso";
+import { getSupabase } from "@/lib/supabase";
+import { hojeISO, hora } from "@/lib/format";
+import type { Bilhete, Papel, Viagem } from "@/services/gestao-tipos";
 
 type NavItem = {
   label: string;
@@ -79,30 +90,78 @@ const navigation: NavItem[] = [
   { label: "Configurações", to: "/configuracoes", icon: Cog },
 ];
 
-function GlobalSearch() {
+type ResultadoBusca = {
+  viagens: Pick<Viagem, "id" | "numero" | "destino" | "previsto_em">[];
+  passagens: Pick<Bilhete, "id" | "codigo" | "destino">[];
+};
+
+/** Busca no banco (viagens de hoje e bilhetes), com espera curta entre as teclas. */
+function useBuscaNoBanco(termo: string, papel: Papel | null) {
+  const [q, setQ] = useState("");
+  useEffect(() => {
+    const t = window.setTimeout(() => setQ(termo.trim()), 300);
+    return () => window.clearTimeout(t);
+  }, [termo]);
+  const verViagens = podeVer(papel, "operacao");
+  const verPassagens = podeVer(papel, "passagens");
+  return useQuery({
+    queryKey: ["busca-global", q, verViagens, verPassagens],
+    enabled: q.length >= 2 && (verViagens || verPassagens),
+    staleTime: 30_000,
+    queryFn: async (): Promise<ResultadoBusca> => {
+      const db = getSupabase();
+      // Remove caracteres que têm significado no filtro do PostgREST.
+      const like = `%${q.replace(/[%_,()*]/g, " ")}%`;
+      const [viagens, passagens] = await Promise.all([
+        verViagens
+          ? db
+              .from("viagens")
+              .select("id, numero, destino, previsto_em")
+              .eq("data", hojeISO())
+              .or(`numero.ilike.${like},destino.ilike.${like}`)
+              .order("previsto_em")
+              .limit(4)
+          : null,
+        verPassagens
+          ? db.from("bilhetes").select("id, codigo, destino").ilike("codigo", like).limit(3)
+          : null,
+      ]);
+      if (viagens?.error) throw viagens.error;
+      if (passagens?.error) throw passagens.error;
+      return {
+        viagens: (viagens?.data ?? []) as ResultadoBusca["viagens"],
+        passagens: (passagens?.data ?? []) as ResultadoBusca["passagens"],
+      };
+    },
+  });
+}
+
+function GlobalSearch({ papel }: { papel: Papel | null }) {
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
   const empresas = useEmpresas();
   const linhas = useLinhas();
+  const busca = useBuscaNoBanco(term, papel);
 
   const results = useMemo(() => {
     const q = term.trim().toLowerCase();
     if (q.length < 2) return null;
     return {
-      viagens: allTrips
-        .filter((t) =>
-          `${t.number} ${t.destination} ${companyName(t.companyId)}`.toLowerCase().includes(q),
-        )
-        .slice(0, 4),
-      empresas: (empresas.data ?? [])
-        .filter((c) => c.razao_social.toLowerCase().includes(q))
-        .slice(0, 3),
-      passagens: tickets.filter((t) => t.code.toLowerCase().includes(q)).slice(0, 3),
-      destinos: [...new Set((linhas.data ?? []).flatMap((l) => l.cidades_atendidas))]
-        .filter((d) => d.toLowerCase().includes(q))
-        .slice(0, 3),
+      viagens: busca.data?.viagens ?? [],
+      empresas:
+        podeVer(papel, "empresas") && papel !== "empresa"
+          ? (empresas.data ?? [])
+              .filter((c) => c.razao_social.toLowerCase().includes(q))
+              .slice(0, 3)
+          : [],
+      passagens: busca.data?.passagens ?? [],
+      destinos: podeVer(papel, "operacao")
+        ? [...new Set((linhas.data ?? []).flatMap((l) => l.cidades_atendidas))]
+            .filter((d) => d.toLowerCase().includes(q))
+            .slice(0, 3)
+        : [],
     };
-  }, [term, empresas.data, linhas.data]);
+  }, [term, empresas.data, linhas.data, busca.data, papel]);
 
   const total = results
     ? results.viagens.length +
@@ -125,10 +184,16 @@ function GlobalSearch() {
       {open && results && (
         <div className="absolute top-11 left-0 z-50 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-[var(--shadow-raised)]">
           {total === 0 && (
-            <p className="px-4 py-5 text-sm text-muted-foreground">Nenhum resultado.</p>
+            <p className="px-4 py-5 text-sm text-muted-foreground">
+              {busca.isFetching
+                ? "Buscando..."
+                : busca.error
+                  ? "Falha na busca."
+                  : "Nenhum resultado."}
+            </p>
           )}
           {results.viagens.length > 0 && (
-            <SearchGroup title="Viagens">
+            <SearchGroup title="Viagens de hoje">
               {results.viagens.map((t) => (
                 <Link
                   key={t.id}
@@ -137,9 +202,10 @@ function GlobalSearch() {
                   className="flex items-center justify-between px-4 py-2 text-sm hover:bg-muted"
                 >
                   <span>
-                    {t.scheduled} · {t.destination}
+                    {t.previsto_em ? `${hora(t.previsto_em)} · ` : ""}
+                    {t.destino}
                   </span>
-                  <span className="text-xs text-muted-foreground">#{t.number}</span>
+                  {t.numero && <span className="text-xs text-muted-foreground">#{t.numero}</span>}
                 </Link>
               ))}
             </SearchGroup>
@@ -162,7 +228,8 @@ function GlobalSearch() {
             <SearchGroup title="Passagens">
               {results.passagens.map((t) => (
                 <Link key={t.id} to="/passagens" className="block px-4 py-2 text-sm hover:bg-muted">
-                  {t.code} · {t.destination}
+                  {t.codigo}
+                  {t.destino ? ` · ${t.destino}` : ""}
                 </Link>
               ))}
             </SearchGroup>
@@ -197,8 +264,41 @@ function SearchGroup({ title, children }: { title: string; children: ReactNode }
   );
 }
 
+/** Itens do menu que o papel do usuário acessa. */
+function menuDoPapel(papel: Papel | null): NavItem[] {
+  return navigation.filter((item) => {
+    const modulo = moduloDaRota(item.to);
+    return !modulo || podeVer(papel, modulo);
+  });
+}
+
+function useUsuarioLogado() {
+  const { perfil, sessao } = usePerfil();
+  const nome = perfil?.nome || sessao?.user.email?.split("@")[0] || "";
+  const email = perfil?.email ?? sessao?.user.email ?? "";
+  return {
+    perfil,
+    papel: perfil?.ativo ? perfil.papel : null,
+    nome,
+    email,
+    iniciais: iniciais(perfil?.nome ?? "", email),
+    papelNome: nomePapel(perfil?.papel),
+  };
+}
+
+function useSairEVoltar() {
+  const navigate = useNavigate();
+  const sairDaConta = useSair();
+  return async () => {
+    await sairDaConta();
+    navigate({ to: "/" });
+  };
+}
+
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const usuario = useUsuarioLogado();
+  const sairEVoltar = useSairEVoltar();
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
@@ -207,7 +307,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {navigation.map((item) => {
+        {menuDoPapel(usuario.papel).map((item) => {
           const active =
             pathname === item.to ||
             (item.children?.some((c) => pathname.startsWith(c.to)) ?? false) ||
@@ -263,32 +363,78 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="border-t border-sidebar-border p-4">
         <div className="flex items-center gap-3">
           <div className="grid h-9 w-9 place-items-center rounded-full bg-sidebar-primary text-sm font-bold text-sidebar-primary-foreground">
-            {currentUser.initials}
+            {usuario.iniciais}
           </div>
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-sm font-semibold text-sidebar-accent-foreground">
-              {currentUser.name}
+              {usuario.nome}
             </p>
-            <p className="truncate text-xs text-sidebar-foreground/70">{currentUser.role}</p>
+            <p className="truncate text-xs text-sidebar-foreground/70">{usuario.email}</p>
           </div>
         </div>
         <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-primary">
-          Perfil: {currentUser.profile}
+          Perfil: {usuario.papelNome}
         </p>
-        <Link
-          to="/"
-          onClick={onNavigate}
-          className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-sidebar-border px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
+        <button
+          type="button"
+          onClick={() => {
+            onNavigate?.();
+            sairEVoltar();
+          }}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-sidebar-border px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
         >
           <LogOut className="h-4 w-4" /> Sair
-        </Link>
+        </button>
       </div>
     </div>
   );
 }
 
+/** Avisos reais: hoje, só cadastros aguardando aprovação (contas sem nenhum acesso), para o administrador. */
+function Notificacoes() {
+  const { papel } = useUsuarioLogado();
+  const admin = papel === "administrador";
+  const perfis = usePerfis(admin);
+  if (!admin) return null;
+  const pendentes = (perfis.data ?? []).filter((p) => !p.ativo && !p.ultimo_acesso);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative" aria-label="Notificações">
+          <Bell className="h-5 w-5" />
+          {pendentes.length > 0 && (
+            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-danger" />
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80">
+        <DropdownMenuLabel>Notificações</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {pendentes.length === 0 ? (
+          <p className="px-2 py-3 text-sm text-muted-foreground">Nenhuma pendência.</p>
+        ) : (
+          <DropdownMenuItem asChild className="flex-col items-start gap-0.5 py-2.5">
+            <Link to="/configuracoes">
+              <span className="text-sm font-medium">
+                {pendentes.length === 1
+                  ? "1 cadastro aguardando aprovação"
+                  : `${pendentes.length} cadastros aguardando aprovação`}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Aprove ou recuse em Configurações → Usuários.
+              </span>
+            </Link>
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export function AdminShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const usuario = useUsuarioLogado();
+  const sairEVoltar = useSairEVoltar();
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -328,59 +474,42 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <PrefeituraLogo />
           </div>
 
-          <GlobalSearch />
+          <GlobalSearch papel={usuario.papel} />
 
           <div className="ml-auto flex items-center gap-1.5">
-            <StatusBadge tone="success" className="hidden sm:inline-flex">
-              Sistema operacional
-            </StatusBadge>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative" aria-label="Notificações">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-danger" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <DropdownMenuLabel>Notificações</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {notifications.map((n) => (
-                  <DropdownMenuItem key={n.id} className="flex-col items-start gap-0.5 py-2.5">
-                    <span className="text-sm font-medium">{n.title}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {n.detail} · {n.time}
-                    </span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Notificacoes />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted">
                   <div className="grid h-8 w-8 place-items-center rounded-full gradient-institutional text-xs font-bold text-primary-foreground">
-                    {currentUser.initials}
+                    {usuario.iniciais}
                   </div>
                   <div className="hidden text-left leading-tight sm:block">
-                    <p className="text-sm font-semibold">{currentUser.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{currentUser.role}</p>
+                    <p className="text-sm font-semibold">{usuario.nome}</p>
+                    <p className="text-[11px] text-muted-foreground">{usuario.papelNome}</p>
                   </div>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuLabel>Minha conta</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuLabel className="leading-tight">
+                  <span className="block truncate">{usuario.nome}</span>
+                  <span className="block truncate text-xs font-normal text-muted-foreground">
+                    {usuario.email}
+                  </span>
+                  <span className="block text-xs font-normal text-muted-foreground">
+                    Perfil: {usuario.papelNome}
+                  </span>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/configuracoes">Meu perfil</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/configuracoes">Preferências</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/">Sair</Link>
+                {podeVer(usuario.papel, "configuracoes") && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/configuracoes">Configurações</Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onSelect={() => sairEVoltar()}>
+                  <LogOut className="h-4 w-4" /> Sair
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
