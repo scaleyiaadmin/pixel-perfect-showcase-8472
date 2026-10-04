@@ -56,6 +56,15 @@ import {
   type ViagemDetalhada,
 } from "@/services/operacao";
 
+// "em 25 min", "em 1h 05min" ou "agora" até o horário previsto.
+function contagemRegressiva(ms: number) {
+  const min = Math.round(ms / 60_000);
+  if (min <= 0) return "agora";
+  if (min < 60) return `em ${min} min`;
+  const h = Math.floor(min / 60);
+  return `em ${h}h ${String(min % 60).padStart(2, "0")}min`;
+}
+
 export const Route = createFileRoute("/_admin/dashboard")({
   head: () => ({
     meta: [
@@ -411,55 +420,93 @@ function Dashboard() {
           className="flex flex-col"
           bodyClassName="flex flex-1 flex-col"
           actions={
-            proxima ? (
-              <StatusBadge size="sm" tone={tripStatusTone[proxima.status].tone}>
-                {tripStatusTone[proxima.status].label}
-              </StatusBadge>
-            ) : undefined
+            <Button asChild variant="ghost" size="sm" className="-mr-2 text-primary">
+              <Link to="/operacao/viagens">
+                Ver viagens <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
           }
         >
           {proxima ? (
-            <>
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-                <p className="tabular rounded-xl bg-primary-soft px-4 py-2.5 text-4xl leading-none font-bold text-primary sm:text-5xl">
-                  {horaPrevista(proxima)}
-                </p>
-                <div className="min-w-0">
-                  <p className="text-lg font-bold break-words text-foreground sm:text-xl">
-                    {cidadeNome(proxima.destino)}
+            <div className="flex flex-1 flex-col gap-5">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+                <div className="flex flex-col items-center rounded-2xl bg-primary-soft px-5 py-3">
+                  <p className="tabular text-4xl leading-none font-bold text-primary sm:text-5xl">
+                    {horaPrevista(proxima)}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    {proxima.empresa
-                      ? tituloNome(nomeEmpresaViagem(proxima))
-                      : "Empresa não informada"}
-                    {" · "}
-                    {proxima.plataforma
-                      ? `Plataforma ${proxima.plataforma.numero}`
-                      : "Plataforma a definir"}
+                  {proxima.previsto_em && (
+                    <p className="mt-1.5 text-xs font-semibold text-primary/80">
+                      {contagemRegressiva(new Date(proxima.previsto_em).getTime() - agora)}
+                    </p>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge size="sm" tone={tripStatusTone[proxima.status].tone}>
+                      {tripStatusTone[proxima.status].label}
+                    </StatusBadge>
+                    <span className="text-xs text-muted-foreground">Partida</span>
+                  </div>
+                  <p className="mt-1.5 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+                    <span>{cidadeNome(proxima.origem)}</span>
+                    <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-label="para" />
+                  </p>
+                  <p className="text-2xl font-bold break-words text-foreground">
+                    {cidadeNome(proxima.destino)}
                   </p>
                 </div>
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">
+
+              <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  {
+                    rotulo: "Empresa",
+                    valor: proxima.empresa ? tituloNome(nomeEmpresaViagem(proxima)) : null,
+                    vazio: "Não informada",
+                  },
+                  {
+                    rotulo: "Plataforma",
+                    valor: proxima.plataforma ? proxima.plataforma.numero : null,
+                    vazio: "A definir",
+                  },
+                  { rotulo: "Linha", valor: proxima.numero || null, vazio: "—" },
+                  { rotulo: "Veículo", valor: proxima.veiculo || null, vazio: "—" },
+                ].map((item) => (
+                  <div key={item.rotulo} className="min-w-0 rounded-xl bg-muted/60 px-3 py-2.5">
+                    <dt className="text-xs text-muted-foreground">{item.rotulo}</dt>
+                    <dd
+                      className={cn(
+                        "mt-0.5 truncate text-sm font-semibold",
+                        item.valor ? "text-foreground" : "text-muted-foreground",
+                      )}
+                      title={item.valor ?? undefined}
+                    >
+                      {item.valor ?? item.vazio}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+
+              <p className="mt-auto flex items-center gap-2 border-t pt-4 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4 shrink-0" />
                 {proximas.length - 1 === 0
                   ? "É a última partida prevista para hoje."
                   : `Mais ${num(proximas.length - 1)} ${proximas.length - 1 === 1 ? "partida prevista" : "partidas previstas"} até o fim do dia.`}
               </p>
-            </>
+            </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              {carregandoViagens
-                ? "Carregando…"
-                : lista.length === 0
-                  ? "As viagens de hoje ainda não foram geradas."
-                  : "Sem mais partidas previstas hoje."}
-            </p>
+            <EmptyState
+              compact
+              icon={Clock}
+              message={
+                carregandoViagens
+                  ? "Carregando…"
+                  : lista.length === 0
+                    ? "As viagens de hoje ainda não foram geradas."
+                    : "Sem mais partidas previstas hoje."
+              }
+            />
           )}
-          <div className="h-5 shrink-0" aria-hidden="true" />
-          <Button asChild variant="outline" className="mt-auto w-fit max-sm:w-full">
-            <Link to="/operacao/viagens">
-              Ver viagens do dia <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
-          </Button>
         </SectionCard>
 
         <SectionCard
