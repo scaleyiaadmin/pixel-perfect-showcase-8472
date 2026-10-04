@@ -1,0 +1,7 @@
+# Segredos locais nunca vão no upload do deploy (as variáveis ficam no painel da Vercel).
+.env
+.env.*
+!.env.example
+scripts/saida/
+supabase/.temp/
+.mcp.json
