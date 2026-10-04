@@ -33,7 +33,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { tituloNome } from "@/lib/format";
+import { cidadeNome } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { usePermissao } from "@/services/acesso";
 import type { Plataforma } from "@/services/gestao-tipos";
@@ -91,7 +91,7 @@ const config: Record<Situacao, { tone: Tone; label: string; icon: typeof Bus }> 
 };
 
 const rotuloViagem = (v: ViagemDetalhada) =>
-  `${horaPrevista(v)} · ${tituloNome(v.tipo === "chegada" ? v.origem : v.destino)}`;
+  `${horaPrevista(v)} · ${cidadeNome(v.tipo === "chegada" ? v.origem : v.destino)}`;
 
 function PlatformsPage() {
   const hoje = useHoje();
@@ -156,16 +156,13 @@ function PlatformsPage() {
             const c = config[s];
             const Icon = c.icon;
             return (
-              <div
-                key={p.id}
-                className={cn("surface-card flex min-w-0 flex-col rounded-xl bg-card p-4 sm:p-5")}
-              >
+              <div key={p.id} className="surface-card flex min-w-0 flex-col p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-[11px] font-bold tracking-[0.18em] uppercase text-muted-foreground">
                       Plataforma
                     </p>
-                    <p className="tabular font-display text-4xl font-extrabold">{p.numero}</p>
+                    <p className="tabular text-4xl font-extrabold">{p.numero}</p>
                   </div>
                   <div className="flex items-center gap-1">
                     {editar && (
@@ -243,7 +240,7 @@ function PlatformsPage() {
                               : "border-dashed border-border bg-card",
                       )}
                     >
-                      <p className="tabular font-display text-2xl font-bold">{p.numero}</p>
+                      <p className="tabular text-2xl font-bold">{p.numero}</p>
                       <p className="line-clamp-2 px-2 text-[11px] leading-tight text-muted-foreground">
                         {ocupante ? rotuloViagem(ocupante) : config[s].label}
                       </p>

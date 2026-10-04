@@ -16,7 +16,7 @@ import {
   type Tone,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { brl, dataHora, hora, num, tituloNome } from "@/lib/format";
+import { brl, cidadeNome, dataHora, hora, num, tituloNome } from "@/lib/format";
 import type { Bilhete, EventoEmbarque } from "@/services/gestao-tipos";
 import {
   dataBR,
@@ -161,8 +161,8 @@ function Detalhe({
       cellClassName: "min-w-[12rem]",
       render: (b) => (
         <>
-          {b.origem ? tituloNome(b.origem) : <Vazio />} →{" "}
-          {b.destino ? tituloNome(b.destino) : <Vazio />}
+          {b.origem ? cidadeNome(b.origem) : <Vazio />} →{" "}
+          {b.destino ? cidadeNome(b.destino) : <Vazio />}
         </>
       ),
     },
@@ -251,7 +251,7 @@ function Detalhe({
     <>
       <PageHeader
         title={`Viagem ${trip.numero || tipoViagemLabel[trip.tipo]}`}
-        subtitle={`${tituloNome(trip.origem)} → ${tituloNome(trip.destino)} · ${dataBR(trip.data)}`}
+        subtitle={`${cidadeNome(trip.origem)} → ${cidadeNome(trip.destino)} · ${dataBR(trip.data)}`}
         actions={<AcoesViagem viagem={trip} plataformas={plataformas} variant="botao" />}
       >
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -311,8 +311,8 @@ function Detalhe({
               label="Linha"
               value={trip.linha ? tituloNome(trip.linha.descricao) : "Lançada manualmente"}
             />
-            <Item label="Origem" value={tituloNome(trip.origem)} />
-            <Item label="Destino" value={tituloNome(trip.destino)} />
+            <Item label="Origem" value={cidadeNome(trip.origem)} />
+            <Item label="Destino" value={cidadeNome(trip.destino)} />
             <Item label="Data" value={dataBR(trip.data)} />
             <Item
               label="Previsto no terminal"
@@ -460,7 +460,7 @@ function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
     <li className="flex items-center justify-between gap-3 border-b border-border/60 pb-2 last:border-0">
       <span className="text-muted-foreground">{label}</span>
-      <span className="tabular font-display text-lg font-bold">{value}</span>
+      <span className="tabular text-lg font-bold">{value}</span>
     </li>
   );
 }

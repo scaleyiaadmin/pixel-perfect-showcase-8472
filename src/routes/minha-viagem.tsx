@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { MonitorPlay } from "lucide-react";
 import { PrefeituraLogo, RodoviariaLogo } from "@/components/brand/Logos";
 import { Button } from "@/components/ui/button";
-import { tituloNome } from "@/lib/format";
+import { cidadeNome, tituloNome } from "@/lib/format";
 import { EmptyState, QueryState, StatusBadge, tripStatusTone } from "@/components/common";
 import {
   Select,
@@ -85,7 +85,7 @@ function PassengerTrip() {
         <div className="overflow-hidden rounded-2xl bg-card shadow-sm">
           <div className="border-b border-border px-5 py-6 sm:px-6 sm:py-7">
             <p className="text-xs font-bold tracking-[0.16em] uppercase text-primary">Sua viagem</p>
-            <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-foreground">
+            <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground">
               Saindo de Manhuaçu
             </h1>
             <p className="mt-1 text-foreground/75 first-letter:uppercase">
@@ -117,7 +117,7 @@ function PassengerTrip() {
               <SelectContent>
                 {destinos.map((d) => (
                   <SelectItem key={d} value={d} className="min-h-11">
-                    {tituloNome(d)}
+                    {cidadeNome(d)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -156,7 +156,7 @@ function PassengerTrip() {
           )}
 
           {destino && opcoes.length === 0 && (
-            <EmptyState message={`Sem partidas para ${tituloNome(destino)} hoje.`} />
+            <EmptyState message={`Sem partidas para ${cidadeNome(destino)} hoje.`} />
           )}
 
           {opcoes.length > 0 && (
@@ -168,13 +168,13 @@ function PassengerTrip() {
                     key={v.id}
                     className="flex min-h-16 items-center gap-3 px-5 py-4 sm:gap-4 sm:px-6"
                   >
-                    <span className="tabular w-16 shrink-0 font-display text-2xl font-bold">
+                    <span className="tabular w-16 shrink-0 text-2xl font-bold">
                       {horaPrevista(v)}
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold">{tituloNome(nomeEmpresaViagem(v))}</p>
                       <p className="line-clamp-2 text-sm text-foreground/75">
-                        {tituloNome(v.origem)} → {tituloNome(v.destino)}
+                        {cidadeNome(v.origem)} → {cidadeNome(v.destino)}
                         {v.plataforma ? ` · Plataforma ${v.plataforma.numero}` : ""}
                         {!v.previsto_em ? " · horário no terminal a confirmar" : ""}
                       </p>

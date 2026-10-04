@@ -20,7 +20,7 @@ import {
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { brl, dataHora, hojeISO, num, tituloNome } from "@/lib/format";
+import { brl, dataHora, hojeISO, num, tituloNome, cidadeNome } from "@/lib/format";
 import { mesAno, useEmpresas, usePassagensMensais } from "@/services/dados-publicos";
 import { mapaEmpresas, useBilhetes, type BilheteComViagem } from "@/services/financeiro";
 
@@ -78,12 +78,6 @@ function TicketsPage() {
 }
 
 /* ------------------------------- Bilhetes ------------------------------- */
-
-/** Cidade em title-case mantendo a UF em maiúsculas ("CARATINGA/MG" → "Caratinga/MG"). */
-function cidadeNome(c: string) {
-  const m = c.match(/^(.*?)(\s*[/-]\s*)([A-Za-z]{2})$/);
-  return m ? `${tituloNome(m[1])}${m[2]}${m[3].toUpperCase()}` : tituloNome(c);
-}
 
 /** Nome de cidade em title-case ou traço cinza quando ausente. */
 const ouVazioNome = (v: string | null | undefined) => (v ? cidadeNome(v) : <Vazio />);

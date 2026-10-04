@@ -144,8 +144,7 @@ function CompaniesPage() {
       hideOnMobile: true,
       nowrap: true,
       // Some no tablet para a tabela caber sem rolagem (a fonte aparece no detalhe).
-      className: "hidden xl:table-cell",
-      cellClassName: "hidden xl:table-cell",
+      hideBelow: "xl",
       render: (c) => ouVazio(c.fonte),
     },
     {

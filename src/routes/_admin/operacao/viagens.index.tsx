@@ -55,7 +55,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { num, tituloNome } from "@/lib/format";
+import { cidadeNome, num, tituloNome } from "@/lib/format";
 import { usePermissao } from "@/services/acesso";
 import { useEmpresas } from "@/services/dados-publicos";
 import type { Plataforma, TipoViagem } from "@/services/gestao-tipos";
@@ -197,7 +197,7 @@ function TripsPage() {
       header: "Destino",
       mobile: "title",
       cellClassName: "min-w-[9rem] font-medium",
-      render: (v) => tituloNome(v.destino),
+      render: (v) => cidadeNome(v.destino),
     },
     {
       key: "company",
@@ -212,17 +212,16 @@ function TripsPage() {
       nowrap: true,
       mobile: comHora ? "hidden" : "meta",
       // Tablet: só as colunas essenciais, para Status e Ações caberem sem rolagem.
-      className: comHora ? "hidden xl:table-cell" : undefined,
-      cellClassName: comHora ? "hidden xl:table-cell" : undefined,
+      hideBelow: comHora ? "xl" : undefined,
       render: (v) => <span className="text-muted-foreground">{tipoViagemLabel[v.tipo]}</span>,
     },
     {
       key: "origin",
       header: "Origem",
       hideOnMobile: true,
-      className: "hidden xl:table-cell",
-      cellClassName: "hidden min-w-[9rem] text-muted-foreground xl:table-cell",
-      render: (v) => tituloNome(v.origem),
+      hideBelow: "xl",
+      cellClassName: "min-w-[9rem] text-muted-foreground",
+      render: (v) => cidadeNome(v.origem),
     },
     {
       key: "platform",
@@ -241,8 +240,7 @@ function TripsPage() {
       header: "Veículo",
       nowrap: true,
       hideOnMobile: true,
-      className: "hidden xl:table-cell",
-      cellClassName: "hidden xl:table-cell",
+      hideBelow: "xl",
       render: (v) =>
         v.veiculo ? <span className="tabular text-muted-foreground">{v.veiculo}</span> : <Vazio />,
     },
@@ -252,8 +250,7 @@ function TripsPage() {
       align: "right",
       nowrap: true,
       hideOnMobile: true,
-      className: "hidden xl:table-cell",
-      cellClassName: "hidden xl:table-cell",
+      hideBelow: "xl",
       render: (v) => (
         <span className="tabular">{num(embarques.data?.get(v.id)?.acessos ?? 0)}</span>
       ),
@@ -307,7 +304,7 @@ function TripsPage() {
             type="date"
             value={data ?? ""}
             onChange={(e) => e.target.value && setData(e.target.value)}
-            className="tabular h-11 w-full bg-card sm:h-9 sm:w-[10.5rem]"
+            className="tabular h-11 w-full bg-card sm:h-10 sm:w-[10.5rem]"
           />
         </label>
         <FilterSelect

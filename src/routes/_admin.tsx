@@ -41,7 +41,7 @@ function AdminLayout() {
     return (
       <TelaCentral>
         <ShieldAlert className="h-8 w-8 text-danger" />
-        <h1 className="font-display text-xl font-bold">Não foi possível verificar seu acesso</h1>
+        <h1 className="text-xl font-bold">Não foi possível verificar seu acesso</h1>
         <p className="text-sm text-muted-foreground">
           {error instanceof Error ? error.message : "Falha ao consultar o banco de dados."}
         </p>
@@ -59,7 +59,7 @@ function AdminLayout() {
     return (
       <TelaCentral>
         <Clock className="h-8 w-8 text-warning" />
-        <h1 className="font-display text-xl font-bold">Aguardando aprovação</h1>
+        <h1 className="text-xl font-bold">Aguardando aprovação</h1>
         <p className="text-sm text-muted-foreground">
           {perfil
             ? "Sua conta foi criada e aguarda a aprovação do administrador do sistema, que vai definir o seu perfil de acesso. Tente novamente mais tarde."
@@ -88,7 +88,7 @@ function AdminLayout() {
       ) : (
         <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
           <ShieldAlert className="h-8 w-8 text-muted-foreground" />
-          <h1 className="font-display text-xl font-bold">Acesso não permitido</h1>
+          <h1 className="text-xl font-bold">Acesso não permitido</h1>
           <p className="max-w-md text-sm text-muted-foreground">
             O seu perfil de acesso não inclui este módulo. Se precisar dele, peça ao administrador
             do sistema.
@@ -102,7 +102,7 @@ function AdminLayout() {
 function TelaCentral({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6">
-      <div className="flex w-full max-w-md flex-col items-center gap-4 rounded-xl border border-border bg-card p-8 text-center shadow-[var(--shadow-card)]">
+      <div className="surface-card flex w-full max-w-md flex-col items-center gap-4 p-8 text-center">
         <SisRodovLogo />
         {children}
       </div>

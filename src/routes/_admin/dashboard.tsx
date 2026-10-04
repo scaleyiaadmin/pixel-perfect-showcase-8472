@@ -34,11 +34,13 @@ import {
   StatusBadge,
   DataTable,
   Vazio,
+  toneClass,
   tripStatusTone,
   type Column,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { num, tituloNome } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { cidadeNome, num, tituloNome } from "@/lib/format";
 import { mesAno, useEmpresas, useLinhas, usePassagensMensais } from "@/services/dados-publicos";
 import {
   dataBR,
@@ -283,7 +285,7 @@ function Dashboard() {
       header: "Destino",
       mobile: "title",
       cellClassName: "min-w-[10rem] font-medium",
-      render: (v) => tituloNome(v.destino),
+      render: (v) => cidadeNome(v.destino),
     },
     {
       key: "company",
@@ -419,12 +421,12 @@ function Dashboard() {
           {proxima ? (
             <>
               <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-                <p className="tabular rounded-xl bg-primary-soft px-4 py-2.5 font-display text-4xl leading-none font-bold text-primary sm:text-5xl">
+                <p className="tabular rounded-xl bg-primary-soft px-4 py-2.5 text-4xl leading-none font-bold text-primary sm:text-5xl">
                   {horaPrevista(proxima)}
                 </p>
                 <div className="min-w-0">
-                  <p className="font-display text-lg font-bold break-words text-foreground sm:text-xl">
-                    {tituloNome(proxima.destino)}
+                  <p className="text-lg font-bold break-words text-foreground sm:text-xl">
+                    {cidadeNome(proxima.destino)}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {proxima.empresa
@@ -495,17 +497,26 @@ function Dashboard() {
               </StatGrid>
 
               <div
-                className="mt-5 flex h-3 overflow-hidden rounded-full bg-muted"
+                className="mt-5 flex h-2 gap-0.5 overflow-hidden rounded-full bg-muted"
                 role="img"
                 aria-label="Distribuição das viagens de hoje por situação"
               >
                 <div
-                  className="bg-success"
+                  className="rounded-full bg-success"
                   style={{ width: `${pct(contagem.realizadas + contagem.andamento)}%` }}
                 />
-                <div className="bg-info" style={{ width: `${pct(contagem.previstas)}%` }} />
-                <div className="bg-warning" style={{ width: `${pct(contagem.atrasadas)}%` }} />
-                <div className="bg-danger" style={{ width: `${pct(contagem.canceladas)}%` }} />
+                <div
+                  className="rounded-full bg-info"
+                  style={{ width: `${pct(contagem.previstas)}%` }}
+                />
+                <div
+                  className="rounded-full bg-warning"
+                  style={{ width: `${pct(contagem.atrasadas)}%` }}
+                />
+                <div
+                  className="rounded-full bg-danger"
+                  style={{ width: `${pct(contagem.canceladas)}%` }}
+                />
               </div>
               <SourceNote>
                 Viagens geradas da grade pública (ANTT e DER-MG) e atualizadas pela equipe do
@@ -688,15 +699,15 @@ function Dashboard() {
                           fontSize={12}
                           fill="var(--color-muted-foreground)"
                         >
-                          <title>{tituloNome(String(payload.value))}</title>
-                          {rotuloEixo(tituloNome(String(payload.value)))}
+                          <title>{cidadeNome(String(payload.value))}</title>
+                          {rotuloEixo(cidadeNome(String(payload.value)))}
                         </text>
                       )}
                     />
                     <Tooltip
                       cursor={{ fill: "var(--color-muted)" }}
                       contentStyle={tooltipStyle}
-                      labelFormatter={(t) => tituloNome(String(t))}
+                      labelFormatter={(t) => cidadeNome(String(t))}
                       formatter={(v) => [num(Number(v)), "Passagens"]}
                     />
                     <Bar
@@ -736,10 +747,13 @@ function Dashboard() {
                   <li key={a.id}>
                     <Link
                       to={a.to}
-                      className="flex items-center gap-3 border-b border-border/60 px-4 py-3.5 sm:px-5 transition-colors last:border-0 hover:bg-muted/70"
+                      className="flex items-center gap-3 border-b border-border/60 px-4 py-3.5 transition-colors sm:px-5 last:border-0 hover:bg-muted/70"
                     >
                       <span
-                        className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-${alertTone[a.kind]}-soft text-${alertTone[a.kind]}`}
+                        className={cn(
+                          "grid h-8 w-8 shrink-0 place-items-center rounded-lg",
+                          toneClass[alertTone[a.kind]],
+                        )}
                       >
                         <Icon className="h-4 w-4" />
                       </span>

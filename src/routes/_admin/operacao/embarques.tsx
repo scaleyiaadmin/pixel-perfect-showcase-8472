@@ -17,7 +17,7 @@ import {
   type Column,
 } from "@/components/common";
 import { Input } from "@/components/ui/input";
-import { hora, num, tituloNome } from "@/lib/format";
+import { cidadeNome, hora, num, tituloNome } from "@/lib/format";
 import { EmpresaViagem } from "./viagens.index";
 import {
   dataBR,
@@ -127,7 +127,7 @@ function BoardingsPage() {
       header: "Destino",
       mobile: "title",
       cellClassName: "min-w-[10rem] font-medium",
-      render: (v) => tituloNome(v.destino),
+      render: (v) => cidadeNome(v.destino),
     },
     {
       key: "company",
@@ -141,8 +141,7 @@ function BoardingsPage() {
       header: "Nº",
       nowrap: true,
       hideOnMobile: true,
-      className: "hidden xl:table-cell",
-      cellClassName: "hidden xl:table-cell",
+      hideBelow: "xl",
       render: (v) =>
         v.numero ? <span className="tabular text-muted-foreground">{v.numero}</span> : <Vazio />,
     },
@@ -160,8 +159,7 @@ function BoardingsPage() {
       align: "right",
       nowrap: true,
       hideOnMobile: true,
-      className: "hidden xl:table-cell",
-      cellClassName: "hidden xl:table-cell",
+      hideBelow: "xl",
       render: (v) => <span className="tabular">{num(v.emb?.reentradas ?? 0)}</span>,
     },
     {
@@ -181,8 +179,7 @@ function BoardingsPage() {
       header: "Última leitura",
       nowrap: true,
       hideOnMobile: true,
-      className: "hidden xl:table-cell",
-      cellClassName: "hidden xl:table-cell",
+      hideBelow: "xl",
       render: (v) =>
         v.emb?.ultimo_evento_em ? (
           <span className="tabular text-muted-foreground">{hora(v.emb.ultimo_evento_em)}</span>
@@ -242,7 +239,7 @@ function BoardingsPage() {
               type="date"
               value={data ?? ""}
               onChange={(e) => e.target.value && setData(e.target.value)}
-              className="tabular h-11 w-full bg-card sm:h-9 sm:w-[10.5rem]"
+              className="tabular h-11 w-full bg-card sm:h-10 sm:w-[10.5rem]"
             />
           </label>
           <FilterSelect

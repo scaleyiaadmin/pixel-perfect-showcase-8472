@@ -56,7 +56,7 @@ import {
   useSair,
 } from "@/services/acesso";
 import { getSupabase } from "@/lib/supabase";
-import { hojeISO, hora, tituloNome } from "@/lib/format";
+import { cidadeNome, hojeISO, hora, tituloNome } from "@/lib/format";
 import type { Bilhete, Papel, Viagem } from "@/services/gestao-tipos";
 
 type NavItem = {
@@ -234,7 +234,7 @@ function ResultadosBusca({ results, total, busca }: ReturnType<typeof useResulta
             >
               <span className="min-w-0 truncate">
                 {t.previsto_em ? `${hora(t.previsto_em)} · ` : ""}
-                {tituloNome(t.destino)}
+                {cidadeNome(t.destino)}
               </span>
               {t.numero && (
                 <span className="tabular shrink-0 text-xs text-muted-foreground">#{t.numero}</span>
@@ -263,7 +263,7 @@ function ResultadosBusca({ results, total, busca }: ReturnType<typeof useResulta
             <Link key={t.id} to="/passagens" className={itemBusca}>
               <span className="min-w-0 truncate">
                 {t.codigo}
-                {t.destino ? ` · ${tituloNome(t.destino)}` : ""}
+                {t.destino ? ` · ${cidadeNome(t.destino)}` : ""}
               </span>
             </Link>
           ))}
@@ -273,7 +273,7 @@ function ResultadosBusca({ results, total, busca }: ReturnType<typeof useResulta
         <SearchGroup title="Destinos">
           {results.destinos.map((d) => (
             <Link key={d} to="/operacao/destinos" className={itemBusca}>
-              <span className="min-w-0 truncate">{tituloNome(d)}</span>
+              <span className="min-w-0 truncate">{cidadeNome(d)}</span>
             </Link>
           ))}
         </SearchGroup>
@@ -503,7 +503,7 @@ function SidebarContent({
       <div
         className={cn(
           "relative flex shrink-0 items-center justify-center border-b border-black/[0.07] dark:border-white/[0.06]",
-          recolhido ? "h-16 px-2" : drawer ? "h-24 justify-start pr-12 pl-4" : "h-[6.75rem] px-3",
+          recolhido ? "h-16 px-2" : drawer ? "h-20 justify-start pr-12 pl-4" : "h-24 px-3.5",
         )}
       >
         {recolhido ? (
@@ -515,7 +515,8 @@ function SidebarContent({
             className="flex min-w-0 justify-center rounded-lg"
             aria-label="SisRodov — início"
           >
-            <MarcaSisRodovPrefeitura size="md" />
+            {/* No drawer (escala 100%) o lockup é reduzido para caber ao lado do X. */}
+            <MarcaSisRodovPrefeitura size="md" className={drawer ? "[zoom:0.74]" : undefined} />
           </Link>
         )}
         {onClose && (
@@ -523,7 +524,7 @@ function SidebarContent({
             type="button"
             aria-label="Fechar menu"
             onClick={onClose}
-            className="absolute top-1 right-1 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-black/[0.06] hover:text-sidebar-foreground dark:hover:bg-white/[0.06]"
+            className="absolute top-1/2 right-1 grid h-11 w-11 shrink-0 -translate-y-1/2 place-items-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-black/[0.06] hover:text-sidebar-foreground dark:hover:bg-white/[0.06]"
           >
             <X className="h-5 w-5" />
           </button>
@@ -744,7 +745,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <aside
           className={cn(
             "sticky top-0 z-30 hidden h-screen shrink-0 transition-[width] duration-300 lg:block",
-            recolhido ? "w-[4.5rem]" : "w-[15rem]",
+            recolhido ? "w-[4.5rem]" : "w-[19rem]",
           )}
         >
           <SidebarContent recolhido={recolhido} onAlternar={alternarMenu} />

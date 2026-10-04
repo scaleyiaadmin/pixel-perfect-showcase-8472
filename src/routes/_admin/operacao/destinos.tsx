@@ -4,7 +4,7 @@ import { ChevronDown, MapPin, Ticket } from "lucide-react";
 import { EmptyState, PageHeader, QueryState, SectionCard, SourceNote } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { mesAno, useLinhas, usePassagensMensais } from "@/services/dados-publicos";
-import { num, tituloNome } from "@/lib/format";
+import { cidadeNome, num } from "@/lib/format";
 
 export const Route = createFileRoute("/_admin/operacao/destinos")({
   head: () => ({
@@ -24,11 +24,6 @@ export const Route = createFileRoute("/_admin/operacao/destinos")({
 
 const MANHUACU = "Manhuaçu";
 
-/** Cidade em title-case mantendo a UF em maiúsculas ("CARATINGA/MG" → "Caratinga/MG"). */
-function cidadeNome(c: string) {
-  const m = c.match(/^(.*?)(\s*[/-]\s*)([A-Za-z]{2})$/);
-  return m ? `${tituloNome(m[1])}${m[2]}${m[3].toUpperCase()}` : tituloNome(c);
-}
 /** Quantos itens aparecem antes do "ver todos" (mantém os dois cartões equilibrados). */
 const TOP_RANKING = 10;
 const TOP_CIDADES = 30;
@@ -80,11 +75,7 @@ function DestinationsPage() {
 
   return (
     <>
-      <PageHeader
-        eyebrow="Operação"
-        title="Destinos"
-        subtitle="Cidades ligadas ao Terminal Rodoviário de Manhuaçu."
-      />
+      <PageHeader title="Destinos" subtitle="Cidades ligadas ao Terminal Rodoviário de Manhuaçu." />
 
       <div className="grid items-start gap-5 lg:grid-cols-[1.3fr_1fr]">
         <SectionCard

@@ -24,7 +24,6 @@ import {
   StatCard,
   StatGrid,
   StatusBadge,
-  toneText,
   Vazio,
   type Column,
   type Tone,
@@ -198,7 +197,7 @@ export function AvisoConfiguracaoTaxa() {
         <AlertTriangle className="h-[1.125rem] w-[1.125rem]" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="font-display text-sm font-bold">Cobrança não configurada</p>
+        <p className="text-sm font-bold">Cobrança não configurada</p>
         <p className="mt-0.5 text-sm text-pretty opacity-90">
           Defina {faltando.join(" e ")} para que as taxas possam ser geradas no fechamento da
           competência.
@@ -623,7 +622,6 @@ function FeesPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Financeiro"
         title="Taxas"
         subtitle="Taxas de uso do terminal geradas no fechamento de cada competência."
         actions={
@@ -645,21 +643,24 @@ function FeesPage() {
         />
         <StatCard
           label="Pagas"
-          value={<span className={toneText.success}>{brl(totais.pago)}</span>}
+          value={brl(totais.pago)}
           icon={CheckCircle2}
           tone="success"
+          valueTone
         />
         <StatCard
           label="Pendentes"
-          value={<span className={toneText.warning}>{brl(totais.pendente)}</span>}
+          value={brl(totais.pendente)}
           icon={Clock}
           tone="warning"
+          valueTone
         />
         <StatCard
           label="Inadimplentes"
-          value={<span className={toneText.danger}>{brl(totais.inadimplente)}</span>}
+          value={brl(totais.inadimplente)}
           icon={TrendingDown}
           tone="danger"
+          valueTone
         />
       </StatGrid>
 

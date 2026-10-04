@@ -14,7 +14,6 @@ import {
   StatCard,
   StatGrid,
   StatusBadge,
-  toneText,
   Vazio,
   type Column,
   type Tone,
@@ -204,7 +203,6 @@ function PaymentsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Financeiro"
         title="Pagamentos"
         subtitle="Pagamentos recebidos pela integração de pagamento ou lançados pela equipe."
         actions={
@@ -219,9 +217,10 @@ function PaymentsPage() {
       <StatGrid>
         <StatCard
           label="Confirmados"
-          value={<span className={toneText.success}>{brl(confirmado.valor)}</span>}
+          value={brl(confirmado.valor)}
           icon={CheckCircle2}
           tone="success"
+          valueTone
           hint={qtdLabel(confirmado.qtd, "pagamento", "pagamentos")}
         />
         <StatCard
@@ -240,9 +239,10 @@ function PaymentsPage() {
         />
         <StatCard
           label="Ainda em aberto"
-          value={<span className={toneText.warning}>{brl(emAberto)}</span>}
+          value={brl(emAberto)}
           icon={Clock}
           tone="warning"
+          valueTone
           hint={qtdLabel(abertas.length, "taxa pendente", "taxas pendentes")}
         />
       </StatGrid>

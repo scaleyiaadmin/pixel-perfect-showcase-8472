@@ -175,7 +175,7 @@ function AbaPerfis() {
           <SectionCard key={p.valor} className={cn(i === 0 && "md:col-span-2 lg:col-span-3")}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h3 className="font-display text-base font-bold text-foreground">{p.nome}</h3>
+                <h3 className="text-base font-bold text-foreground">{p.nome}</h3>
                 <p className="mt-0.5 text-sm text-muted-foreground">{p.descricao}</p>
               </div>
               {edita.length === 0 && (

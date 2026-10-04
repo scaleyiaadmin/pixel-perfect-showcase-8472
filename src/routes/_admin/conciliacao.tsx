@@ -30,7 +30,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { brl, dataHora, hojeISO, hora, num, tituloNome } from "@/lib/format";
+import { brl, dataHora, hojeISO, hora, num, tituloNome, cidadeNome } from "@/lib/format";
 import { usePermissao } from "@/services/acesso";
 import { useEmpresas } from "@/services/dados-publicos";
 import {
@@ -80,12 +80,6 @@ const situationMap: Record<SituacaoConferencia, { tone: Tone; label: string }> =
 };
 
 type Linha = ConciliacaoViagem & { id: string };
-
-/** Cidade em title-case mantendo a UF em maiúsculas ("CARATINGA/MG" → "Caratinga/MG"). */
-function cidadeNome(c: string) {
-  const m = c.match(/^(.*?)(\s*[/-]\s*)([A-Za-z]{2})$/);
-  return m ? `${tituloNome(m[1])}${m[2]}${m[3].toUpperCase()}` : tituloNome(c);
-}
 
 const TODOS = "todos";
 
@@ -285,11 +279,20 @@ function ReconciliationPage() {
                 ? `${pct(contagem.conciliado)}% conciliadas, ${pct(contagem.analise)}% em análise, ${pct(contagem.divergencia)}% com divergência`
                 : "Sem viagens no período"
             }
-            className="flex h-2 overflow-hidden rounded-full bg-muted"
+            className="flex h-2 gap-0.5 overflow-hidden rounded-full bg-muted"
           >
-            <div className="bg-success" style={{ width: `${pct(contagem.conciliado)}%` }} />
-            <div className="bg-warning" style={{ width: `${pct(contagem.analise)}%` }} />
-            <div className="bg-danger" style={{ width: `${pct(contagem.divergencia)}%` }} />
+            <div
+              className="rounded-full bg-success"
+              style={{ width: `${pct(contagem.conciliado)}%` }}
+            />
+            <div
+              className="rounded-full bg-warning"
+              style={{ width: `${pct(contagem.analise)}%` }}
+            />
+            <div
+              className="rounded-full bg-danger"
+              style={{ width: `${pct(contagem.divergencia)}%` }}
+            />
           </div>
           <p className="mt-2 text-xs text-pretty text-muted-foreground">
             {todas.length === 0
@@ -567,7 +570,7 @@ function Metric({ label, value }: { label: string; value: number | string }) {
       <dt className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground">
         {label}
       </dt>
-      <dd className="tabular mt-0.5 font-display text-lg font-bold">{value}</dd>
+      <dd className="tabular mt-0.5 text-lg font-bold">{value}</dd>
     </div>
   );
 }
@@ -584,9 +587,7 @@ function Line({
   return (
     <div className="flex items-center justify-between border-b border-border/60 pb-2 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span
-        className={`tabular font-display text-lg font-bold ${highlight ? "text-warning-foreground" : ""}`}
-      >
+      <span className={`tabular text-lg font-bold ${highlight ? "text-warning-foreground" : ""}`}>
         {value === null ? "—" : num(value)}
       </span>
     </div>

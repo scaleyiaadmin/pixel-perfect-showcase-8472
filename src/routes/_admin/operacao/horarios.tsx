@@ -13,7 +13,7 @@ import {
   Vazio,
   type Column,
 } from "@/components/common";
-import { num, tituloNome } from "@/lib/format";
+import { cidadeNome, num, tituloNome } from "@/lib/format";
 import {
   descreverDias,
   destinoDaPartida,
@@ -46,7 +46,7 @@ const colunas: Column<Horario>[] = [
     cellClassName: "min-w-[9rem]",
     render: (h) => (
       <span className="font-medium">
-        {tituloNome(destinoDaPartida(h))}
+        {cidadeNome(destinoDaPartida(h))}
         {h.tipo_servico && (
           <span className="ml-2 text-xs font-normal text-muted-foreground">
             {tituloNome(h.tipo_servico)}

@@ -23,7 +23,7 @@ import {
   type Column,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { PrefeituraLogo, RodoviariaLogo } from "@/components/brand/Logos";
+import { MarcaSisRodovPrefeitura } from "@/components/brand/Logos";
 import { cn } from "@/lib/utils";
 import { brl, dataHora, hojeISO, num, tituloNome } from "@/lib/format";
 import { mesAno, useEmpresas, usePassagensMensais } from "@/services/dados-publicos";
@@ -145,15 +145,13 @@ function ReportsPage() {
             <button
               type="button"
               onClick={() => setPreview(r.id)}
-              className="surface-card group flex w-full items-start gap-4 p-4 text-left transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none sm:p-5"
+              className="surface-card card-hover group flex w-full items-start gap-4 p-4 text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none sm:p-5"
             >
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
                 <r.icon className="h-5 w-5" aria-hidden="true" />
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="font-display text-base leading-snug font-bold text-foreground">
-                  {r.title}
-                </span>
+                <span className="text-base leading-snug font-bold text-foreground">{r.title}</span>
                 <span className="mt-1 text-sm text-pretty text-muted-foreground">
                   {r.description}
                 </span>
@@ -249,20 +247,17 @@ function ReportPreview({
 
             <div className="surface-card p-4 sm:p-8">
               <header className="flex flex-wrap items-center justify-center gap-4 border-b border-border pb-6 sm:justify-between sm:gap-6">
-                <PrefeituraLogo />
-                <div className="order-first w-full text-center sm:order-none sm:w-auto">
-                  <p className="font-display text-lg font-extrabold tracking-[0.12em] uppercase">
-                    SisRodov Manhuaçu
-                  </p>
+                <MarcaSisRodovPrefeitura size="md" />
+                <div className="w-full text-center sm:w-auto sm:text-right">
+                  <p className="text-sm font-bold tracking-[0.12em] uppercase">Relatório oficial</p>
                   <p className="text-xs tracking-wide text-muted-foreground uppercase">
                     {config.data?.nomeTerminal ?? "Terminal Rodoviário de Manhuaçu"}
                   </p>
                 </div>
-                <RodoviariaLogo />
               </header>
 
               <div className="py-6 text-center">
-                <h1 className="font-display text-lg font-bold tracking-wide text-balance uppercase sm:text-xl">
+                <h1 className="text-lg font-bold tracking-wide text-balance uppercase sm:text-xl">
                   {def.title}
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -686,7 +681,7 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="text-[11px] font-bold tracking-[0.12em] uppercase text-muted-foreground">
         {label}
       </p>
-      <p className="tabular mt-0.5 font-display text-lg font-bold">{value}</p>
+      <p className="tabular mt-0.5 text-lg font-bold">{value}</p>
     </div>
   );
 }

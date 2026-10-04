@@ -132,7 +132,7 @@ export function BoardShell({
   const titulo = tela === "partidas" ? "Partidas" : "Chegadas";
 
   const controle =
-    "inline-flex min-h-11 items-center gap-2 rounded-lg border border-board-foreground/25 px-4 font-sans text-sm font-semibold tracking-wide uppercase transition-colors hover:bg-board-row focus-visible:outline-2 focus-visible:outline-primary";
+    "inline-flex min-h-11 items-center gap-2 rounded-lg border border-board-foreground/25 px-4 font-sans text-sm font-semibold tracking-wide uppercase transition-colors hover:bg-board-row focus-visible:outline-2 focus-visible:outline-board-accent";
 
   return (
     <div
@@ -143,8 +143,13 @@ export function BoardShell({
     >
       <header className="grid shrink-0 grid-cols-[1fr_auto] items-center gap-x-6 gap-y-3 border-b border-board-foreground/15 px-4 py-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-x-10 md:px-[3vw] md:py-[2.2vh]">
         <div className="min-w-0">
-          <RodoviariaLogo inverted className="md:hidden" />
-          <RodoviariaLogo inverted size="lg" className="hidden md:flex" />
+          <RodoviariaLogo inverted accent="text-board-accent" className="md:hidden" />
+          <RodoviariaLogo
+            inverted
+            accent="text-board-accent"
+            size="lg"
+            className="hidden md:flex"
+          />
         </div>
 
         <h1 className="order-last col-span-2 font-board text-4xl leading-none font-bold tracking-[0.12em] uppercase md:order-none md:col-span-1 md:text-center md:text-[clamp(2.75rem,7.5vh,6rem)]">
@@ -163,11 +168,9 @@ export function BoardShell({
               {data}
             </p>
           </div>
-          <PrefeituraLogo
-            variant="light"
-            size="sm"
-            className="hidden border-l border-board-foreground/15 pl-6 xl:flex"
-          />
+          <div className="hidden border-l border-board-foreground/15 pl-6 xl:flex">
+            <PrefeituraLogo inverted size="md" />
+          </div>
         </div>
       </header>
 
@@ -185,14 +188,14 @@ export function BoardShell({
             to="/painel"
             className={controle}
             activeOptions={{ exact: true }}
-            activeProps={{ className: "bg-board-row border-primary/60" }}
+            activeProps={{ className: "bg-board-row border-board-accent/60" }}
           >
             Partidas
           </Link>
           <Link
             to="/painel/chegadas"
             className={controle}
-            activeProps={{ className: "bg-board-row border-primary/60" }}
+            activeProps={{ className: "bg-board-row border-board-accent/60" }}
           >
             Chegadas
           </Link>
@@ -235,7 +238,7 @@ export type StatusPainel =
 const pilula: Record<StatusPainel, { label: string; className: string }> = {
   prevista: {
     label: "Previsto",
-    className: "border-primary bg-primary/25 text-board-foreground",
+    className: "border-board-accent bg-board-accent/20 text-board-foreground",
   },
   embarque: { label: "Embarque", className: "border-success bg-success text-success-foreground" },
   "ultima-chamada": {
@@ -386,7 +389,7 @@ function QuadroTV({ linhas, colunaLocal }: { linhas: LinhaPainel[]; colunaLocal:
                   key={i}
                   className={cn(
                     "h-1.5 rounded-full transition-all",
-                    i === atual ? "w-10 bg-primary" : "w-5 bg-board-foreground/25",
+                    i === atual ? "w-10 bg-board-accent" : "w-5 bg-board-foreground/25",
                   )}
                 />
               ))}
@@ -414,7 +417,10 @@ function LinhaTV({ linha: l, zebra }: { linha: LinhaPainel; zebra: boolean }) {
       )}
     >
       {l.destaque && (
-        <span aria-hidden className="absolute inset-y-[12%] left-0 w-1.5 rounded-r bg-primary" />
+        <span
+          aria-hidden
+          className="absolute inset-y-[12%] left-0 w-1.5 rounded-r bg-board-accent"
+        />
       )}
       <span
         className={cn(
@@ -471,7 +477,7 @@ function ListaCelular({ linhas }: { linhas: LinhaPainel[] }) {
             key={l.id}
             className={cn(
               "flex items-center gap-3 px-4 py-3",
-              l.destaque && "border-l-4 border-primary bg-board-row pl-3",
+              l.destaque && "border-l-4 border-board-accent bg-board-row pl-3",
             )}
           >
             <span className="tabular w-[4.25rem] shrink-0 font-board text-3xl leading-none font-bold">

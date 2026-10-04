@@ -61,7 +61,7 @@ import {
   type EmpresaCadastro,
 } from "@/services/acesso";
 import type { Viagem } from "@/services/gestao-tipos";
-import { brl, dataCurta, hojeISO, hora, num, tituloNome } from "@/lib/format";
+import { brl, cidadeNome, dataCurta, hojeISO, hora, num, tituloNome } from "@/lib/format";
 
 export const Route = createFileRoute("/_admin/empresas/$companyId")({
   head: () => ({
@@ -146,7 +146,7 @@ function CompanyDetail() {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
         <ShieldAlert className="h-8 w-8 text-muted-foreground" />
-        <h1 className="font-display text-xl font-bold">Acesso não permitido</h1>
+        <h1 className="text-xl font-bold">Acesso não permitido</h1>
         <p className="max-w-md text-sm text-muted-foreground">
           Seu usuário só tem acesso aos dados da própria empresa.
         </p>
@@ -312,7 +312,7 @@ function CompanyDetail() {
                       render: (l) =>
                         l.cidades_atendidas.length ? (
                           <span className="text-muted-foreground">
-                            {l.cidades_atendidas.map((c) => tituloNome(c)).join(", ")}
+                            {l.cidades_atendidas.map((c) => cidadeNome(c)).join(", ")}
                           </span>
                         ) : (
                           <Vazio />
@@ -345,7 +345,7 @@ function CompanyDetail() {
                       key: "dest",
                       header: "Destino",
                       mobile: "title",
-                      render: (h) => tituloNome(destinoDaPartida(h)),
+                      render: (h) => cidadeNome(destinoDaPartida(h)),
                     },
                     {
                       key: "type",
@@ -416,7 +416,7 @@ function CompanyDetail() {
                       cellClassName: "min-w-[12rem]",
                       render: (v) => (
                         <span>
-                          {tituloNome(v.origem)} → {tituloNome(v.destino)}
+                          {cidadeNome(v.origem)} → {cidadeNome(v.destino)}
                           {v.numero && (
                             <span className="ml-1.5 text-xs text-muted-foreground">
                               #{v.numero}

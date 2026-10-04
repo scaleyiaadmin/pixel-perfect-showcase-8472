@@ -15,7 +15,7 @@ import {
   type Tone,
 } from "@/components/common";
 import { Input } from "@/components/ui/input";
-import { hora, num, tituloNome } from "@/lib/format";
+import { cidadeNome, hora, num } from "@/lib/format";
 import type { EventoEmbarque } from "@/services/gestao-tipos";
 import {
   dataBR,
@@ -146,7 +146,7 @@ function GateControlPage() {
         e.viagem ? (
           <span className="text-muted-foreground">
             <span className="tabular">{horaPrevista(e.viagem)}</span> ·{" "}
-            {tituloNome(e.viagem.tipo === "chegada" ? e.viagem.origem : e.viagem.destino)}
+            {cidadeNome(e.viagem.tipo === "chegada" ? e.viagem.origem : e.viagem.destino)}
           </span>
         ) : (
           <Vazio title="Sem viagem vinculada" />
@@ -189,7 +189,7 @@ function GateControlPage() {
               type="date"
               value={data ?? ""}
               onChange={(e) => e.target.value && setData(e.target.value)}
-              className="tabular h-11 w-full bg-card sm:h-9 sm:w-[10.5rem]"
+              className="tabular h-11 w-full bg-card sm:h-10 sm:w-[10.5rem]"
             />
           </label>
         }
@@ -234,9 +234,9 @@ function GateControlPage() {
           {dispositivos.map((g) => {
             const recente = eHoje && agora - new Date(g.ultimo).getTime() < RECENTE_MS;
             return (
-              <div key={g.nome} className="surface-card min-w-0 rounded-xl bg-card p-4 sm:p-5">
+              <div key={g.nome} className="surface-card min-w-0 p-4 sm:p-5">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="min-w-0 font-display text-lg font-bold break-words">{g.nome}</p>
+                  <p className="min-w-0 text-lg font-bold break-words">{g.nome}</p>
                   <ScanLine
                     className={`h-5 w-5 shrink-0 ${recente ? "text-success" : "text-muted-foreground"}`}
                     aria-hidden="true"

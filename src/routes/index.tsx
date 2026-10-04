@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PrefeituraLogo, RodoviariaLogo, SisRodovLogo } from "@/components/brand/Logos";
+import { MarcaSisRodovPrefeitura, RodoviariaLogo } from "@/components/brand/Logos";
 import { supabaseConfigured } from "@/lib/supabase";
 import {
   criarConta,
@@ -52,14 +52,14 @@ function LoginPage() {
   return (
     <div className="grid min-h-dvh bg-background lg:grid-cols-[1.1fr_1fr]">
       {/* Lado institucional */}
-      <div className="hidden flex-col justify-between bg-primary p-12 xl:p-16 lg:flex">
-        <RodoviariaLogo inverted size="lg" />
+      <div className="hidden flex-col justify-between bg-primary p-12 lg:flex xl:p-16">
+        <MarcaSisRodovPrefeitura size="lg" tone="dark" />
 
         <div className="max-w-lg">
-          <p className="font-display text-sm font-semibold tracking-[0.2em] text-primary-foreground/80 uppercase">
+          <p className="text-sm font-semibold tracking-[0.2em] text-primary-foreground/80 uppercase">
             Terminal Rodoviário de Manhuaçu
           </p>
-          <h2 className="mt-4 font-display text-4xl leading-tight font-extrabold text-balance text-primary-foreground">
+          <h2 className="mt-4 text-4xl leading-tight font-extrabold text-balance text-primary-foreground">
             Informação, controle e transparência em cada embarque.
           </h2>
           <p className="mt-5 max-w-md text-lg leading-relaxed text-primary-foreground/85">
@@ -81,19 +81,21 @@ function LoginPage() {
           </ul>
         </div>
 
-        <PrefeituraLogo variant="light" size="sm" />
+        <RodoviariaLogo inverted />
       </div>
 
       {/* Formulário */}
       <div className="flex flex-col px-5 py-8 sm:px-14 sm:py-12">
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
-          <SisRodovLogo />
+          {/* No desktop a marca fica no painel azul; aqui só abaixo de lg. */}
+          <div className="flex justify-center lg:hidden">
+            <MarcaSisRodovPrefeitura size="md" className="sm:hidden" />
+            <MarcaSisRodovPrefeitura size="lg" className="max-sm:hidden" />
+          </div>
 
           <div className="flex flex-1 flex-col justify-center py-8">
             <div className="rounded-2xl bg-card p-6 shadow-sm sm:p-8">
-              <h1 className="font-display text-3xl font-extrabold tracking-tight">
-                Acesso ao sistema
-              </h1>
+              <h1 className="text-3xl font-extrabold tracking-tight">Acesso ao sistema</h1>
               <p className="mt-2 text-sm text-muted-foreground">
                 Sistema Municipal de Gestão e Controle do Terminal Rodoviário de Manhuaçu
               </p>
@@ -109,10 +111,6 @@ function LoginPage() {
                 </Button>
               </div>
             </div>
-          </div>
-
-          <div className="flex items-center justify-center lg:hidden">
-            <PrefeituraLogo size="sm" />
           </div>
         </div>
       </div>

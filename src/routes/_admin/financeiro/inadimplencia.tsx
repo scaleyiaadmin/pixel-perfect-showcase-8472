@@ -12,7 +12,6 @@ import {
   StatCard,
   StatGrid,
   StatusBadge,
-  toneText,
   type Column,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
@@ -160,7 +159,6 @@ function OverduePage() {
   return (
     <>
       <PageHeader
-        eyebrow="Financeiro"
         title="Inadimplência"
         subtitle="Taxas vencidas e não quitadas, agrupadas por empresa."
         actions={
@@ -175,9 +173,10 @@ function OverduePage() {
       <StatGrid cols={3}>
         <StatCard
           label="Total vencido"
-          value={<span className={toneText.danger}>{brl(total)}</span>}
+          value={brl(total)}
           icon={TrendingDown}
           tone="danger"
+          valueTone
         />
         <StatCard
           label="Empresas com valores em aberto"

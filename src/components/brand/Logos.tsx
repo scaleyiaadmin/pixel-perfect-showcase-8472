@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { cn } from "@/lib/utils";
 import prefeituraLogo from "@/assets/prefeitura-logo.png";
 
@@ -102,7 +103,7 @@ export function RodoviariaLogo({
       <div className="leading-tight">
         <p
           className={cn(
-            "font-display font-bold tracking-[0.14em] uppercase",
+            "font-bold tracking-[0.14em] uppercase",
             large ? "text-base" : "text-[11px]",
             inverted ? "text-white" : "text-foreground",
           )}
@@ -111,7 +112,7 @@ export function RodoviariaLogo({
         </p>
         <p
           className={cn(
-            "font-display font-semibold tracking-[0.14em] uppercase",
+            "font-semibold tracking-[0.14em] uppercase",
             large ? "text-sm" : "text-[10px]",
             inverted ? "text-white/80" : "text-muted-foreground",
           )}
@@ -124,117 +125,130 @@ export function RodoviariaLogo({
 }
 
 /**
- * Marca do sistema: selo com ônibus + "SisRodov" e subtítulo.
- * - `inverted`: para fundo escuro/azul (texto branco).
- * - `compact`: só o selo.
- * - `size="sm"`: selo de 32px (header do celular).
- * - `subtitle`: padrão "Manhuaçu".
- * - `stacked`: versão grande centralizada (topo da sidebar, como o logo do ERP).
+ * Símbolo do SisRodov: frente de ônibus em silhueta (para-brisa, letreiro,
+ * faróis e rodas recortados), sem caixa. Os recortes são transparentes
+ * (máscara), então funciona sobre qualquer fundo. A cor vem de `text-*`
+ * (padrão `text-primary`).
+ */
+export function SisRodovSimbolo({ className }: { className?: string }) {
+  const id = useId().replace(/:/g, "");
+  return (
+    <svg
+      viewBox="0 0 32 32"
+      className={cn("h-8 w-8 shrink-0 text-primary", className)}
+      aria-hidden="true"
+    >
+      <defs>
+        <mask id={`sr-${id}`}>
+          <rect width="32" height="32" fill="white" />
+          {/* letreiro */}
+          <rect x="11" y="4.6" width="10" height="1.8" rx="0.9" fill="black" />
+          {/* para-brisa */}
+          <path d="M8.6 9.2c0-.9.7-1.6 1.6-1.6h11.6c.9 0 1.6.7 1.6 1.6v6.6H8.6z" fill="black" />
+          {/* faróis */}
+          <rect x="8.4" y="19.2" width="3.6" height="2.4" rx="1.2" fill="black" />
+          <rect x="20" y="19.2" width="3.6" height="2.4" rx="1.2" fill="black" />
+          {/* grade */}
+          <rect x="14" y="19.8" width="4" height="1.2" rx="0.6" fill="black" />
+        </mask>
+      </defs>
+      <g fill="currentColor" mask={`url(#sr-${id})`}>
+        <rect x="5.5" y="2.5" width="21" height="22.5" rx="5" />
+        {/* retrovisores */}
+        <rect x="3" y="8" width="2" height="5.5" rx="1" />
+        <rect x="27" y="8" width="2" height="5.5" rx="1" />
+        {/* rodas */}
+        <rect x="7.5" y="24" width="4.5" height="5.5" rx="1.6" />
+        <rect x="20" y="24" width="4.5" height="5.5" rx="1.6" />
+      </g>
+    </svg>
+  );
+}
+
+/**
+ * Marca do sistema, horizontal (conversa com a logo da Prefeitura):
+ * símbolo à esquerda + "SisRodov" em negrito e subtítulo em caixa alta espaçada.
+ * - `compact`: só o símbolo (menu recolhido).
+ * - `inverted`: fundo escuro/azul (símbolo e texto brancos).
+ * - `size`: sm (h-6) · md (h-8, padrão) · lg (h-11, login).
+ * - `subtitle`: padrão "Rodoviária"; `""` remove.
+ *
+ * <SisRodovLogo />  ·  <SisRodovLogo compact />  ·  <SisRodovLogo size="lg" inverted />
  */
 export function SisRodovLogo({
   className,
   inverted,
   compact,
-  stacked,
   size = "md",
-  subtitle = "Manhuaçu",
+  subtitle = "Rodoviária",
 }: {
   className?: string;
   inverted?: boolean;
   compact?: boolean;
-  stacked?: boolean;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   subtitle?: string;
 }) {
-  const small = size === "sm";
-  const selo = (
-    <div
-      role={compact ? "img" : undefined}
-      aria-hidden={compact ? undefined : true}
-      aria-label={compact ? "SisRodov" : undefined}
+  const simbolo = (
+    <SisRodovSimbolo
       className={cn(
-        "grid shrink-0 place-items-center",
-        stacked ? "h-12 w-12 rounded-2xl" : small ? "h-8 w-8 rounded-lg" : "h-10 w-10 rounded-xl",
-        inverted ? "bg-white" : "bg-primary shadow-[var(--shadow-xs)]",
+        size === "sm" ? "h-6 w-6" : size === "lg" ? "h-11 w-11" : "h-8 w-8",
+        inverted && "text-white",
+      )}
+    />
+  );
+  if (compact) {
+    return (
+      <span role="img" aria-label="SisRodov" className={cn("inline-flex", className)}>
+        {simbolo}
+      </span>
+    );
+  }
+  return (
+    <div
+      className={cn(
+        "flex min-w-0 items-center",
+        size === "sm" ? "gap-1.5" : size === "lg" ? "gap-3" : "gap-2",
+        className,
       )}
     >
-      <OnibusSvg
-        className={stacked ? "h-6 w-8" : small ? "h-4 w-5" : "h-5 w-6"}
-        corpo={inverted ? "text-primary" : "text-white"}
-        janela={inverted ? "text-white" : "text-primary"}
-        roda={inverted ? "text-primary/70" : "text-white/80"}
-      />
-    </div>
-  );
-
-  if (stacked && !compact) {
-    return (
-      <div className={cn("flex min-w-0 flex-col items-center text-center", className)}>
-        {selo}
+      {simbolo}
+      <div className="min-w-0 leading-none">
         <p
           className={cn(
-            "mt-2 text-[0.6875rem] leading-tight font-bold tracking-[0.16em] uppercase",
-            inverted ? "text-white" : "text-foreground",
-          )}
-        >
-          Nova Rodoviária
-        </p>
-        <p
-          className={cn(
-            "text-[0.625rem] leading-tight font-semibold tracking-[0.16em] uppercase",
-            inverted ? "text-white/80" : "text-muted-foreground",
-          )}
-        >
-          de Manhuaçu
-        </p>
-        <p
-          className={cn(
-            "mt-1.5 rounded-full px-2 py-0.5 text-[0.625rem] font-semibold tracking-wide",
-            inverted ? "bg-white/15 text-white" : "bg-primary/10 text-primary",
+            "font-extrabold tracking-[-0.02em]",
+            size === "sm" ? "text-[0.9375rem]" : size === "lg" ? "text-[1.75rem]" : "text-lg",
+            inverted ? "text-white" : "text-[hsl(222_38%_24%)] dark:text-foreground",
           )}
         >
           SisRodov
         </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className={cn("flex min-w-0 items-center", small ? "gap-2" : "gap-3", className)}>
-      {selo}
-      {!compact && (
-        <div className="min-w-0 leading-tight">
+        {subtitle && (
           <p
             className={cn(
-              "font-display font-bold tracking-tight",
-              small ? "text-[0.9375rem]" : "text-base",
-              inverted ? "text-white" : "text-foreground",
+              "font-semibold tracking-[0.22em] uppercase",
+              size === "sm"
+                ? "mt-0.5 text-[0.5rem]"
+                : size === "lg"
+                  ? "mt-1.5 text-[0.75rem]"
+                  : "mt-1 text-[0.5625rem]",
+              inverted ? "text-white/75" : "text-muted-foreground",
             )}
           >
-            SisRodov
+            {subtitle}
           </p>
-          {subtitle && (
-            <p
-              className={cn(
-                "truncate text-[11px] font-medium",
-                inverted ? "text-white/75" : "text-muted-foreground",
-              )}
-            >
-              {subtitle}
-            </p>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
 
 /**
- * Lockup institucional lado a lado: [SisRodov] | [Prefeitura de Manhuaçu],
- * separados por uma linha vertical fina. Use no topo da sidebar, no header do
- * celular, na tela de login e em relatórios impressos.
- * - `size`: sm (header do celular: só o selo + brasão pequeno) · md (sidebar:
- *   selo sobre o nome) · lg (login/relatório: selo + nome ao lado).
+ * Lockup institucional lado a lado: [SisRodov] | [Prefeitura de Manhuaçu].
+ * As duas marcas são horizontais, com a mesma altura, centralizadas e separadas
+ * por uma linha vertical fina com o mesmo respiro dos dois lados. Use no topo
+ * da sidebar, no header do celular, na tela de login e em relatórios.
+ * - `size`: sm (header do celular: símbolo + brasão; o nome aparece a partir
+ *   de 420px) · md (topo da sidebar) · lg (login/relatório).
  * - `tone`: "auto" (padrão; segue o tema claro/escuro) · "light" (sempre fundo
  *   claro — use em impressão) · "dark" (sempre fundo escuro/azul).
  *
@@ -252,51 +266,75 @@ export function MarcaSisRodovPrefeitura({
 }) {
   const escuro = tone === "dark";
   const auto = tone === "auto";
-  const texto = escuro ? "text-white" : cn("text-foreground", !auto && "text-[hsl(224_33%_14%)]");
-  // Brasão: colorido no claro; branco no escuro (no "auto", só quando o tema é escuro).
-  const brasaoEscuro = "[filter:brightness(0)_invert(1)]";
+  const sm = size === "sm";
+  const lg = size === "lg";
+  // Nome em azul-marinho próximo ao da logo da Prefeitura (no "auto", segue o tema).
+  const corNome = escuro
+    ? "text-white"
+    : auto
+      ? "text-[hsl(222_38%_24%)] dark:text-foreground"
+      : "text-[hsl(222_38%_24%)]";
+  const corSub = escuro
+    ? "text-white/70"
+    : auto
+      ? "text-muted-foreground"
+      : "text-[hsl(220_12%_42%)]";
   return (
     <div
       role="img"
       aria-label="SisRodov — Prefeitura de Manhuaçu"
       className={cn(
         "flex min-w-0 items-center",
-        size === "sm" ? "gap-2" : size === "md" ? "gap-2.5" : "gap-3.5",
+        sm ? "gap-2" : lg ? "gap-4" : "gap-2.5",
         className,
       )}
     >
-      {size === "md" ? (
-        <div className="flex shrink-0 flex-col items-center gap-1">
-          <SisRodovLogo compact inverted={escuro} className="[&>div]:h-10 [&>div]:w-10" />
-          <span className={cn("text-[0.8125rem] leading-none font-bold tracking-tight", texto)}>
+      {/* SisRodov: símbolo + nome em duas linhas (mesma altura da logo da Prefeitura). */}
+      <div className={cn("flex shrink-0 items-center", sm ? "gap-1.5" : lg ? "gap-2.5" : "gap-2")}>
+        <SisRodovSimbolo
+          className={cn(
+            sm ? "h-6 w-6" : lg ? "h-[3.25rem] w-[3.25rem]" : "h-[2.125rem] w-[2.125rem]",
+            escuro && "text-white",
+          )}
+        />
+        <div className={cn("leading-none", sm && "hidden min-[420px]:block")}>
+          <p
+            className={cn(
+              "font-extrabold tracking-[-0.02em]",
+              sm ? "text-[0.9375rem]" : lg ? "text-[1.75rem]" : "text-[1.125rem]",
+              corNome,
+            )}
+          >
             SisRodov
-          </span>
+          </p>
+          {!sm && (
+            <p
+              className={cn(
+                "font-semibold tracking-[0.2em] uppercase",
+                lg ? "mt-1.5 text-[0.6875rem]" : "mt-[0.3rem] text-[0.5625rem]",
+                corSub,
+              )}
+            >
+              Rodoviária
+            </p>
+          )}
         </div>
-      ) : size === "lg" ? (
-        <div className="flex shrink-0 items-center gap-2.5">
-          <SisRodovLogo compact inverted={escuro} className="[&>div]:h-11 [&>div]:w-11" />
-          <span className={cn("text-xl leading-none font-bold tracking-tight", texto)}>
-            SisRodov
-          </span>
-        </div>
-      ) : (
-        <SisRodovLogo compact size="sm" inverted={escuro} className="shrink-0" />
-      )}
+      </div>
       <span
         aria-hidden="true"
         className={cn(
-          "w-px shrink-0 self-stretch",
-          escuro ? "bg-white/30" : auto ? "bg-foreground/20" : "bg-[hsl(224_33%_14%/0.2)]",
-          size === "sm" ? "my-0.5" : "my-1",
+          "w-px shrink-0",
+          sm ? "h-6" : lg ? "h-12" : "h-[2.125rem]",
+          escuro ? "bg-white/30" : auto ? "bg-foreground/15" : "bg-[hsl(224_33%_14%/0.18)]",
         )}
       />
       <img
         src={prefeituraLogo}
         alt=""
         className={cn(
-          "w-auto min-w-0 shrink object-contain",
-          size === "sm" ? "h-6" : size === "lg" ? "h-12" : "h-10",
-          escuro && brasaoEscuro,
+          "w-auto min-w-0 shrink object-contain object-left",
+          sm ? "h-[1.625rem]" : lg ? "h-[3.5rem]" : "h-[2.375rem]",
+          escuro && "[filter:brightness(0)_invert(1)]",
           auto && "dark:[filter:brightness(0)_invert(1)]",
         )}
       />

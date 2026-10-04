@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { tituloNome } from "@/lib/format";
+import { cidadeNome } from "@/lib/format";
 import {
   emAberto,
   horaPrevista,
@@ -87,7 +87,7 @@ function BoardDepartures() {
   const linhas: LinhaPainel[] = proximas.map((v) => ({
     id: v.id,
     hora: horaPrevista(v),
-    local: tituloNome(v.destino),
+    local: cidadeNome(v.destino),
     empresa: empresaPainel(v),
     plataforma: v.plataforma ? String(v.plataforma.numero) : null,
     status: statusPartida(v),

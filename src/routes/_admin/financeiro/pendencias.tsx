@@ -11,12 +11,11 @@ import {
   StatCard,
   StatGrid,
   StatusBadge,
-  toneText,
   Vazio,
   type Column,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { brl, num, tituloNome } from "@/lib/format";
+import { brl, num, tituloNome, cidadeNome } from "@/lib/format";
 import { usePermissao } from "@/services/acesso";
 import { useEmpresas } from "@/services/dados-publicos";
 import {
@@ -43,12 +42,6 @@ export const Route = createFileRoute("/_admin/financeiro/pendencias")({
   }),
   component: PendingPage,
 });
-
-/** Cidade em title-case mantendo a UF em maiúsculas ("CARATINGA/MG" → "Caratinga/MG"). */
-function cidadeNome(c: string) {
-  const m = c.match(/^(.*?)(\s*[/-]\s*)([A-Za-z]{2})$/);
-  return m ? `${tituloNome(m[1])}${m[2]}${m[3].toUpperCase()}` : tituloNome(c);
-}
 
 function PendingPage() {
   const empresas = useEmpresas();
@@ -151,7 +144,6 @@ function PendingPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Financeiro"
         title="Pendências"
         subtitle="Taxas em aberto e divergências que podem alterar a cobrança."
       />
@@ -159,9 +151,10 @@ function PendingPage() {
       <StatGrid cols={3}>
         <StatCard
           label="Total em aberto"
-          value={<span className={toneText.warning}>{brl(total)}</span>}
+          value={brl(total)}
           icon={Wallet}
           tone="warning"
+          valueTone
         />
         <StatCard
           label="Taxas em aberto"

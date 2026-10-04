@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { hora, tituloNome } from "@/lib/format";
+import { cidadeNome, hora } from "@/lib/format";
 import { horaPrevista, useHoje, useViagensDoDia, type ViagemDetalhada } from "@/services/operacao";
 import {
   BoardShell,
@@ -73,7 +73,7 @@ function BoardArrivals() {
   const linhas: LinhaPainel[] = chegadas.map((v) => ({
     id: v.id,
     hora: v.previsto_em ? horaPrevista(v) : hora(v.chegou_em!),
-    local: tituloNome(v.origem),
+    local: cidadeNome(v.origem),
     empresa: empresaPainel(v),
     plataforma: v.plataforma ? String(v.plataforma.numero) : null,
     status: situacao(v),
