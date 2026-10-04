@@ -492,6 +492,29 @@ async function gravarJson(dados: Record<string, unknown>) {
   console.log(`JSON gravado em scripts/saida/`);
 }
 
+// A ANTT publica a mesma partida (linha, sentido, hora, serviço) em mais de uma linha,
+// cada uma com parte dos dias da semana. O banco guarda uma só: os dias são unidos.
+function unirHorariosRepetidos(horarios: HorarioRow[]) {
+  const porChave = new Map<string, HorarioRow>();
+  for (const h of horarios) {
+    const chave = [h.fonte, h.linha_codigo, h.sentido, h.hora, h.tipo_servico].join("|");
+    const atual = porChave.get(chave);
+    if (!atual) {
+      porChave.set(chave, { ...h });
+      continue;
+    }
+    atual.dias_semana = [...new Set([...atual.dias_semana, ...h.dias_semana])].sort();
+    // Meses vazio = o ano todo, então só une quando os dois têm meses definidos.
+    atual.meses =
+      atual.meses.length && h.meses.length
+        ? [...new Set([...atual.meses, ...h.meses])].sort((a, b) => a - b)
+        : [];
+    atual.parte_de_manhuacu ||= h.parte_de_manhuacu;
+    if (atual.feriado !== h.feriado) atual.feriado = atual.feriado || h.feriado;
+  }
+  return porChave;
+}
+
 async function gravarSupabase(
   empresas: EmpresaRow[],
   linhas: LinhaRow[],
@@ -556,10 +579,12 @@ async function gravarSupabase(
       .delete()
       .in("linha_id", [...linhaId.values()]),
   );
-  const horariosDb = horarios.map(({ fonte, linha_codigo, ...h }) => ({
-    ...h,
-    linha_id: linhaId.get(`${fonte}:${linha_codigo}`)!,
-  }));
+  const horariosDb = [...unirHorariosRepetidos(horarios).values()].map(
+    ({ fonte, linha_codigo, ...h }) => ({
+      ...h,
+      linha_id: linhaId.get(`${fonte}:${linha_codigo}`)!,
+    }),
+  );
   for (let i = 0; i < horariosDb.length; i += 500) {
     ok(
       await db

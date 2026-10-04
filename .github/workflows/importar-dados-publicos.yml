@@ -1,0 +1,22 @@
+name: Importar dados públicos
+
+# ANTT publica horários no dia 1º e passagens por volta do dia 15; o DER-MG atualiza
+# sem data fixa. Rodar todo dia pega cada publicação no mesmo dia, e a gravação é
+# idempotente (upsert), então dias sem novidade não mudam nada.
+on:
+  schedule:
+    - cron: "0 9 * * *" # 06:00 em Brasília
+  workflow_dispatch:
+
+jobs:
+  importar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun scripts/importar-dados-publicos.ts
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
