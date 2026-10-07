@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Ticket, TicketX, TicketCheck, TicketSlash } from "lucide-react";
+import { Ticket, TicketX, TicketCheck, TicketPercent, TicketSlash } from "lucide-react";
 import {
   DataTable,
   DateRangeFilter,
@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { brl, dataHora, hojeISO, num, tituloNome, cidadeNome } from "@/lib/format";
 import { mesAno, useEmpresas, usePassagensMensais } from "@/services/dados-publicos";
 import { mapaEmpresas, useBilhetes, type BilheteComViagem } from "@/services/financeiro";
+import { tipoBeneficio } from "@/lib/beneficio";
 
 export const Route = createFileRoute("/_admin/passagens")({
   head: () => ({
@@ -169,14 +170,19 @@ function BilhetesTab() {
       align: "right",
       nowrap: true,
       mobile: "meta",
-      render: (t) =>
-        t.gratuidade ? (
-          <span className="text-muted-foreground">{t.gratuidade}</span>
-        ) : t.valor === null ? (
-          <Vazio />
-        ) : (
-          <span className="tabular">{brl(t.valor)}</span>
-        ),
+      render: (t) => {
+        const beneficio = tipoBeneficio(t.gratuidade);
+        if (beneficio === "isencao")
+          return <span className="text-muted-foreground">Isenta · {t.gratuidade}</span>;
+        return (
+          <span className="inline-flex flex-col items-end">
+            {t.valor === null ? <Vazio /> : <span className="tabular">{brl(t.valor)}</span>}
+            {beneficio === "desconto" && (
+              <span className="text-xs text-muted-foreground">{t.gratuidade}</span>
+            )}
+          </span>
+        );
+      },
     },
     {
       key: "issued",
@@ -299,6 +305,7 @@ interface LinhaResumo {
   quantidade: number;
   normal: number;
   descontos: number;
+  isencoes: number;
   valorMedio: number;
 }
 
@@ -326,12 +333,15 @@ function ResumoAnttTab() {
         quantidade: 0,
         normal: 0,
         descontos: 0,
+        isencoes: 0,
         valorMedio: 0,
         somaValor: 0,
       };
       r.quantidade += p.quantidade;
-      if (p.tipo_gratuidade.startsWith("Tarifa Normal")) r.normal += p.quantidade;
-      else r.descontos += p.quantidade;
+      const beneficio = tipoBeneficio(p.tipo_gratuidade);
+      if (beneficio === "normal") r.normal += p.quantidade;
+      else if (beneficio === "desconto") r.descontos += p.quantidade;
+      else r.isencoes += p.quantidade;
       r.somaValor += Number(p.valor_medio) * p.quantidade;
       mapa.set(id, r);
     }
@@ -348,6 +358,7 @@ function ResumoAnttTab() {
     .filter((r) => r.sentido === "chegada")
     .reduce((s, r) => s + r.quantidade, 0);
   const descontos = rows.reduce((s, r) => s + r.descontos, 0);
+  const isencoes = rows.reduce((s, r) => s + r.isencoes, 0);
 
   const columns: Column<LinhaResumo>[] = [
     {
@@ -396,11 +407,18 @@ function ResumoAnttTab() {
     },
     {
       key: "disc",
-      header: "Gratuidade/desconto",
-      mobileLabel: "Gratuidade",
+      header: "Com desconto",
+      mobileLabel: "Desconto",
       align: "right",
       mobile: "meta",
       render: (r) => <span className="tabular">{num(r.descontos)}</span>,
+    },
+    {
+      key: "exempt",
+      header: "Isentas",
+      align: "right",
+      mobile: "meta",
+      render: (r) => <span className="tabular">{num(r.isencoes)}</span>,
     },
     {
       key: "avg",
@@ -414,7 +432,7 @@ function ResumoAnttTab() {
 
   return (
     <>
-      <StatGrid cols={3}>
+      <StatGrid>
         <StatCard label="Saindo de Manhuaçu" value={num(saindo)} icon={Ticket} tone="primary" />
         <StatCard
           label="Chegando a Manhuaçu"
@@ -422,12 +440,8 @@ function ResumoAnttTab() {
           icon={TicketCheck}
           tone="info"
         />
-        <StatCard
-          label="Com gratuidade ou desconto"
-          value={num(descontos)}
-          icon={TicketSlash}
-          tone="neutral"
-        />
+        <StatCard label="Com desconto" value={num(descontos)} icon={TicketPercent} tone="neutral" />
+        <StatCard label="Isentas" value={num(isencoes)} icon={TicketSlash} tone="neutral" />
       </StatGrid>
       <div className="mt-6">
         <FilterBar>

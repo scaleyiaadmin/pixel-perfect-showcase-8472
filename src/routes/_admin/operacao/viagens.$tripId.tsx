@@ -27,6 +27,7 @@ import {
   type ViagemCompleta,
 } from "@/services/operacao";
 import { AcoesViagem, EmpresaViagem } from "./viagens.index";
+import { beneficioLabel, tipoBeneficio } from "@/lib/beneficio";
 
 export const Route = createFileRoute("/_admin/operacao/viagens/$tripId")({
   head: () => ({
@@ -177,10 +178,18 @@ function Detalhe({
     },
     {
       key: "grat",
-      header: "Gratuidade",
+      header: "Benefício",
       mobile: "meta",
-      render: (b) =>
-        b.gratuidade ? <span className="text-muted-foreground">{b.gratuidade}</span> : <Vazio />,
+      render: (b) => {
+        const beneficio = tipoBeneficio(b.gratuidade);
+        return beneficio === "normal" ? (
+          <Vazio />
+        ) : (
+          <span className="text-muted-foreground">
+            {beneficioLabel[beneficio]} · {b.gratuidade}
+          </span>
+        );
+      },
     },
     {
       key: "emitido",
